@@ -4,6 +4,7 @@ import numpy as np
 import collections as col
 import matplotlib.pylab as plt
 import pandas as pd
+from __future__ import print_function 
 
 data = pd.read_csv("result128.txt", delimiter=";", usecols=range(1,129))
 data = data / data.sum(0)
@@ -35,4 +36,4 @@ for i in range(10):
     p[i]=1
     pr = nx.pagerank(G, alpha=0.85, personalization = p)
     result = pd.DataFrame.from_dict(pr, orient='index')
-    print i, result.sort_values(0, ascending = False)
+    print(i, result.sort_values(0, ascending = False))

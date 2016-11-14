@@ -3,6 +3,7 @@ import sklearn.decomposition as decomp
 import pandas as pd
 import os
 import re
+from __future__ import print_function 
 
 methods = [
   decomp.FactorAnalysis(n_components=4),
@@ -16,5 +17,5 @@ methods = [
 ]
 
 for method in methods:
-    print method
+    print(method)
 
