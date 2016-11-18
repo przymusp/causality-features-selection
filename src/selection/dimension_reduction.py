@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-                                                                                                                                                                                              
-from __future__ import print_function 
-import sklearn.decomposition as decomp                                                                                                                                                                               
+# -*- coding: utf-8 -*-
+from __future__ import print_function
+import sklearn.decomposition as decomp
 import pandas as pd
 import os
 import re
@@ -22,7 +22,7 @@ if __name__ == "__main__":
     sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
     from tools.csv_helper import *
 
-    if len(sys.argv) < 3: 
+    if len(sys.argv) < 3:
         print ('Error: wrong number of params')
         exit(0)
 

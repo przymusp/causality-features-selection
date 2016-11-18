@@ -8,13 +8,13 @@ def read_metadata_from_csv_file(filename):
 
     metadata = {}
     with open(filename) as f:
-        for line in f: 
+        for line in f:
             if line[:1] == '#':
                 key, values = __parse_metadata(line)
                 metadata[key] = values
-            else: 
+            else:
                 return metadata
-        
+
 def read_csv_and_metadata(filename):
     pd.DataFrame._metadata=["meta_header"]
     matrix =  pd.read_csv(filename, comment='#', delimiter=';')
@@ -30,7 +30,7 @@ def write_csv_with_metadata(df, filename, columns):
         for k in df.meta_header:
              f.write("# %s; " % (k,) + ';'.join(df.meta_header[k])+"\n")
         df.to_csv(f, sep=';', index=False, columns=columns)
-    
+
 
 
 if __name__ == "__main__":
