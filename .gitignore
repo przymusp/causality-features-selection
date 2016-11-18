@@ -1,3 +1,7 @@
+# Project stuff
+# ignore the results dir
+results/ 
+
 # Python stuff
 # Byte-compiled / optimized / DLL files
 __pycache__/
