@@ -15,12 +15,12 @@ benchmark <- function (target,p, methods, nbPreds)
 }
 
 #####
-evaluation <- function (target, indCible, gsm, p)
+evaluation <- function (fsdata, p, numData)
 {
-  numData <- 1
-  #mthds = methods[[1]]
-  mthds = gsm
+  mthds = fsdata
   results = list()
+  target = mthds[,1]
+  mthds[,1] = NULL
   
   for (ind in 1:numData)
   {
@@ -112,7 +112,8 @@ for (kl in 1 : 1)
 #python.load(script)
 #system (script)
 
-return (MSE)
+##return (MSE)
+  return (results)
 }
 
 ### Normalize a dataframe

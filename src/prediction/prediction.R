@@ -1,32 +1,32 @@
-#library(forecast)
+## Prediction using the VECM model
+## For each horizon forecats, 5 predictions can be made
+## The model is built on normalized data
+## 2 arguments are used : the name the file of one f-selection method
+
+library(forecast)
 library(cluster)
 library(tsDyn)
-#library(rPython)
 library(lmtest)
 
 ######### work directory
 setwd("/Users/youssef/Documents/python/causality")
+source("evaluation.R")
+args = commandArgs(trailingOnly=TRUE)
+method_name = args[1]
 
-
-###### Initialisations
-realData = data.frame()
-realData = read.csv("data/ts6.csv", header=FALSE, sep=";")
-realData = normalize(realData)
-
-# The index of the target variable
-indCible = 1
-# The lag parametre of the prediction model
+# let's take 100 for instance
 p = 100
 
-### Dataframe used
-gsm            = read.csv ("results/GSM.csv", header=FALSE, sep=";")
-ufs            = read.csv ("results/selectKc.csv", header=FALSE, sep=";")
-methods        = list (ufs, gsm,realData[,-indCible])
-names(methods) = c('ufs','gsm','model')
-target         =  realData[,indCible]
+### normalisation
+fs_method      = read.csv (paste0("results/",method_name), header=FALSE, sep=";")
+fs_method = normalize(fs_method)
 
 ###  Prediction
-gsm = normalize(gsm)
-mse = evaluation(target, indCible, gsm, p)
+nbrePreds = 10
+preds = evaluation(fs_method, p, 10)
+for (i in 1:length(preds))
+names(preds[[i]]) = c("predictions", "real_values")
+preds
+#path = paste0('results/','predictions_',method_name)
+#write.table(selectKc, file = path,row.names = FALSE, na = "",col.names = FALSE, sep = ";")
 
-#python.load("bar_chart.py")
