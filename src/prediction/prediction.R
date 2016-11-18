@@ -1,7 +1,7 @@
 ## Prediction using the VECM model
 ## For each horizon forecats, 5 predictions can be made
 ## The model is built on normalized data
-## 2 arguments are used : the name the file of one f-selection method
+## 2 arguments are used : the name the file of one f-selection method and output directory
 
 library(forecast)
 library(cluster)
