@@ -2,7 +2,6 @@
 from __future__ import print_function 
 import sklearn.decomposition as decomp                                                                                                                                                                               
 import pandas as pd
-from csv_helper import *
 import os
 import re
 import sys
@@ -19,6 +18,14 @@ def get_filename_from_method(fname, predicted_column, method_name, prefix = ""):
 
 
 if __name__ == "__main__":
+    from os import sys, path
+    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+    from tools.csv_helper import *
+
+    if len(sys.argv) < 3: 
+        print ('Error: wrong number of params')
+        exit(0)
+
     fname = sys.argv[1]
     df = read_csv_and_metadata(fname)
 
@@ -27,10 +34,10 @@ if __name__ == "__main__":
       decomp.NMF(n_components=4, init='nndsvda'),
       decomp.NMF(n_components=4, init='nndsvdar'),
       # decomp.LatentDirichletAllocation(n_topics=4),
-      # decomp.KernelPCA(n_components=4, kernel="rbf", fit_inverse_transform=True),
-      # decomp.FastICA(n_components=4),
-      # decomp.IncrementalPCA(n_components=4),
-      # decomp.PCA(n_components=4)
+      decomp.KernelPCA(n_components=4, kernel="rbf", fit_inverse_transform=True),
+      decomp.FastICA(n_components=4),
+      decomp.IncrementalPCA(n_components=4),
+      decomp.PCA(n_components=4)
     ]
 
 
