@@ -9,7 +9,8 @@ library(tsDyn)
 library(lmtest)
 
 ######### work directory
-setwd("/Users/youssef/Documents/python/causality")
+# setwd("/Users/youssef/Documents/python/causality")
+# setwd("/Users/youssef/Documents/python/causality")
 source("evaluation.R")
 args = commandArgs(trailingOnly=TRUE)
 method_name = args[1]
@@ -18,7 +19,7 @@ method_name = args[1]
 p = 100
 
 ### normalisation
-fs_method      = read.csv (paste0("results/",method_name), header=FALSE, sep=";")
+fs_method      = read.csv (paste0(method_name), header=TRUE, sep=";", comment.char="#" )
 fs_method = normalize(fs_method)
 
 ###  Prediction
