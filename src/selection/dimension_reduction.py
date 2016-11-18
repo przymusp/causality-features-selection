@@ -6,11 +6,21 @@ from csv_helper import *
 import os
 import re
 import sys
+import base64
+import hashlib
+
+def get_filename_from_method(fname, method_name, prefix = ""):
+    f = fname.split('/')
+    f = f[-1].split(".")[0]
+    name = mname.split("(")
+    hasher = hashlib.sha1(mname)
+    o = base64.urlsafe_b64encode(hasher.digest()[0:200])
+    return prefix + f + "_" + name[0] + "_" + o
 
 
 if __name__ == "__main__":
-
-    df = read_csv_and_metadata(sys.argv[1])
+    fname = sys.argv[1]
+    df = read_csv_and_metadata(fname)
 
     methods = [
       decomp.FactorAnalysis(n_components=4),
@@ -34,7 +44,8 @@ if __name__ == "__main__":
             t.meta_header['method'] = [mname,]
             cols=list(t.columns.values)
             t[c] = df[c]
-            write_csv_with_metadata(t, mname + ".csv", columns = [c, ].extend(cols))
+            cols.insert(0, c)
+            write_csv_with_metadata(t[cols], get_filename_from_method(fname, mname) + ".csv", columns = [c, ].extend(cols))
 
     # with open("gsm/data/pca.csv", "w") as new_ts:
     #     t.to_csv(new_ts, sep=';', index=False, header=None)
