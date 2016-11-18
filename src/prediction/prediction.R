@@ -15,8 +15,8 @@ args = commandArgs(trailingOnly=TRUE)
 method_name = args[1]
 prefix_out=args[2]
 
-prefix_out = '../../results/'
-method_name = '../../results/selection/ebob-l_CAC40_FactorAnalysis_zNDaHNvy-OLDnRnMsdastMyoRq0=.csv'
+#prefix_out = '../../results/'
+#method_name = '../../results/selection/ebob-l_CAC40_FactorAnalysis_zNDaHNvy-OLDnRnMsdastMyoRq0=.csv'
 
 command = paste0 ('awk /^#/ ',method_name)
 dat <- system(command,  intern = TRUE)
