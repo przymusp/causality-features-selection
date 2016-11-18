@@ -20,7 +20,7 @@ class UciSpider(scrapy.Spider):
     def parse_dataset_info(self, response):
         page = response.url.split("/")[-1]
         self.logger.info('Parsing dataset %s', page)
-        out_dir = "../../../data/"+page+"/"
+        out_dir = "../../../data/orginal"+page+"/"
         os.makedirs(out_dir,exist_ok=True)
         with open(out_dir+ page+".html", 'wb') as f:
             f.write(response.body)
