@@ -13,12 +13,24 @@ library(lmtest)
 source("evaluation.R")
 args = commandArgs(trailingOnly=TRUE)
 method_name = args[1]
+prefix_out=args[2]
 
-#method_name = "GSM.csv"
+command = paste0 ('awk /^#/ ',method_name)
+dat <- system(command,  intern = TRUE)
+#dat <- readLines(dat)
+dat <- strsplit(dat, ";")
+data_name = strsplit(method_name, "/")
+
+output_dir = paste0(prefix_out,data_name[[1]][length(data_name[[1]])])
+
+dat <-system( paste0('awk /^#/ ../../results/selection/ebob-l_CAC40.csv >', output_dir))
+
+
+
  # Example of the lag parametre of the prediction model
 p = 100
 ### normalisation
-fs_method      = read.csv (paste0(method_name), header=FALSE, sep=";")
+fs_method      = read.csv (paste0(method_name), comment.char = "#", header=FALSE, sep=";")
 fs_method = normalize(fs_method)
 ###  Prediction
 nbrePreds = 10
@@ -27,5 +39,5 @@ preds = evaluation(fs_method, p, nbrePreds)
 names(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")
 preds
 
-write.table(preds, file = paste0(method_name, "-predictions"),row.names = FALSE, na = "",col.names = FALSE, sep = ";")
+write.table(preds, file = fname,row.names = FALSE, na = "",col.names = FALSE, sep = ";",append = TRUE)
 

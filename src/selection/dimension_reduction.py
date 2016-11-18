@@ -26,11 +26,11 @@ if __name__ == "__main__":
       decomp.FactorAnalysis(n_components=4),
       decomp.NMF(n_components=4, init='nndsvda'),
       decomp.NMF(n_components=4, init='nndsvdar'),
-      # decomp.LatentDirichletAllocation(n_topics=4),
-      # decomp.KernelPCA(n_components=4, kernel="rbf", fit_inverse_transform=True),
-      # decomp.FastICA(n_components=4),
-      # decomp.IncrementalPCA(n_components=4),
-      # decomp.PCA(n_components=4)
+      #decomp.LatentDirichletAllocation(n_topics=4),
+      decomp.KernelPCA(n_components=4, kernel="rbf", fit_inverse_transform=True),
+      decomp.FastICA(n_components=4),
+      decomp.IncrementalPCA(n_components=4),
+      decomp.PCA(n_components=4)
     ]
 
 
