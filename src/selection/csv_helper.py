@@ -25,10 +25,11 @@ def exclude_column_generator(df):
     for c in df.meta_header['predict']:
         yield c, df[df.columns.difference([c,])]
 
-def write_csv_with_metadata(df, filename):
+def write_csv_with_metadata(df, filename, columns):
     with open(filename, "w") as f:
         for k in df.meta_header:
-            print "# %s; " % (k,) + ';'.join(df.meta_header[k])
+             f.write("# %s; " % (k,) + ';'.join(df.meta_header[k])+"\n")
+        df.to_csv(f, sep=';', index=False, columns=columns)
     
 
 

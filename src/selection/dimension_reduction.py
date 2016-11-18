@@ -32,7 +32,9 @@ if __name__ == "__main__":
             mname= str(method).replace("\n", " ")
             mname = ' '.join(mname.split())
             t.meta_header['method'] = [mname,]
-            write_csv_with_metadata(t, "test")
+            cols=list(t.columns.values)
+            t[c] = df[c]
+            write_csv_with_metadata(t, mname + ".csv", columns = [c, ].extend(cols))
 
     # with open("gsm/data/pca.csv", "w") as new_ts:
     #     t.to_csv(new_ts, sep=';', index=False, header=None)
