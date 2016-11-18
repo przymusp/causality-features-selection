@@ -15,8 +15,6 @@ method_name = args[1]
 # let's take 100 for instance
 p = 100
 
-# Example of the lag parametre of the prediction model
-p = 100
 ### normalisation
 fs_method      = read.csv (paste0("results/",method_name), header=FALSE, sep=";")
 fs_method = normalize(fs_method)
