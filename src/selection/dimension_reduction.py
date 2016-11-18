@@ -25,7 +25,7 @@ if __name__ == "__main__":
     methods = [
       decomp.FactorAnalysis(n_components=4),
       decomp.NMF(n_components=4, init='nndsvda'),
-      # decomp.NMF(n_components=4, init='nndsvdar'),
+      decomp.NMF(n_components=4, init='nndsvdar'),
       # decomp.LatentDirichletAllocation(n_topics=4),
       # decomp.KernelPCA(n_components=4, kernel="rbf", fit_inverse_transform=True),
       # decomp.FastICA(n_components=4),
@@ -45,10 +45,7 @@ if __name__ == "__main__":
             cols=list(t.columns.values)
             t[c] = df[c]
             cols.insert(0, c)
-            write_csv_with_metadata(t[cols], get_filename_from_method(fname, mname) + ".csv", columns = [c, ].extend(cols))
+            write_csv_with_metadata(t[cols], get_filename_from_method(fname, mname, prefix=sys.argv[2]+"/") + ".csv", columns = [c, ].extend(cols))
 
-    # with open("gsm/data/pca.csv", "w") as new_ts:
-    #     t.to_csv(new_ts, sep=';', index=False, header=None)
-    #     new_ts.close()
     
 
