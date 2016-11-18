@@ -11,15 +11,14 @@ import hashlib
 def get_filename_from_method(fname, predicted_column, method_name, prefix = "", postfix=".csv"):
     f = fname.split('/')
     f = f[-1].split(".")[0]
-    name = mname.split("(")
+    name = method_name.split("(")
     hasher = hashlib.sha1(mname)
     o = base64.urlsafe_b64encode(hasher.digest()[0:200])
     return prefix + "_".join([f,predicted_column,name[0], o]) + postfix
 
 def __pretty_print_method_name(method):
     mname = str(method).replace("\n", " ")
-    mname = ' '.join(mname.split())
-
+    return ' '.join(mname.split())
 
 if __name__ == "__main__":
     from os import sys, path
@@ -56,7 +55,8 @@ if __name__ == "__main__":
             t.meta_header['method'] = [mname,]
 
             # Output columns in corrrect order
-            cols=[c,].extend(t.columns.values)
+            cols=[c,]
+            cols.extend(t.columns.values)
 
             # Add predicted column to output
             t[c] = df[c]
