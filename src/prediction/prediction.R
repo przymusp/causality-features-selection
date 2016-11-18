@@ -17,13 +17,12 @@ prefix_out=args[2]
 
 command = paste0 ('awk /^#/ ',method_name)
 dat <- system(command,  intern = TRUE)
-#dat <- readLines(dat)
 dat <- strsplit(dat, ";")
 data_name = strsplit(method_name, "/")
 
 output_dir = paste0(prefix_out,data_name[[1]][length(data_name[[1]])])
 
-dat <-system( paste0('awk /^#/ ../../results/selection/ebob-l_CAC40.csv >', output_dir))
+dat <-system( paste0( method_name,' >', output_dir))
 
 
 
