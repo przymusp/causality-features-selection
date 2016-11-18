@@ -9,13 +9,13 @@ import sys
 import base64
 import hashlib
 
-def get_filename_from_method(fname, method_name, prefix = ""):
+def get_filename_from_method(fname, predicted_column, method_name, prefix = ""):
     f = fname.split('/')
     f = f[-1].split(".")[0]
     name = mname.split("(")
     hasher = hashlib.sha1(mname)
     o = base64.urlsafe_b64encode(hasher.digest()[0:200])
-    return prefix + f + "_" + name[0] + "_" + o
+    return prefix + "_".join([f,predicted_column,name[0], o])
 
 
 if __name__ == "__main__":
@@ -45,7 +45,7 @@ if __name__ == "__main__":
             cols=list(t.columns.values)
             t[c] = df[c]
             cols.insert(0, c)
-            write_csv_with_metadata(t[cols], get_filename_from_method(fname, mname, prefix=sys.argv[2]+"/") + ".csv", columns = [c, ].extend(cols))
+            write_csv_with_metadata(t[cols], get_filename_from_method(fname, c, mname, prefix=sys.argv[2]+"/") + ".csv", columns = [c, ].extend(cols))
 
     
 
