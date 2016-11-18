@@ -8,9 +8,6 @@ library(cluster)
 library(tsDyn)
 library(lmtest)
 
-######### work directory
-# setwd("/Users/youssef/Documents/python/causality")
-# setwd("/Users/youssef/Documents/python/causality")
 source("evaluation.R")
 args = commandArgs(trailingOnly=TRUE)
 method_name = args[1]
@@ -18,16 +15,14 @@ method_name = args[1]
 # let's take 100 for instance
 p = 100
 
+# Example of the lag parametre of the prediction model
+p = 100
 ### normalisation
-fs_method      = read.csv (paste0(method_name), header=TRUE, sep=";", comment.char="#" )
+fs_method      = read.csv (paste0("results/",method_name), header=FALSE, sep=";")
 fs_method = normalize(fs_method)
-
 ###  Prediction
 nbrePreds = 10
-preds = evaluation(fs_method, p, 10)
-for (i in 1:length(preds))
-names(preds[[i]]) = c("predictions", "real_values")
-preds
-#path = paste0('results/','predictions_',method_name)
-#write.table(selectKc, file = path,row.names = FALSE, na = "",col.names = FALSE, sep = ";")
+preds = evaluation(fs_method, p, nbrePreds)
 
+names(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")
+preds
