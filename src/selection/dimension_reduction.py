@@ -45,7 +45,7 @@ if __name__ == "__main__":
             cols=list(t.columns.values)
             t[c] = df[c]
             cols.insert(0, c)
-            write_csv_with_metadata(t[cols], get_filename_from_method(fname, c, mname, prefix=sys.argv[2]+"/") + ".csv", columns = [c, ].extend(cols))
+            write_csv_with_metadata(t[cols], get_filename_from_method(fname, c, mname, prefix=sys.argv[2]+"/") + ".csv", columns = cols)
 
     
 
