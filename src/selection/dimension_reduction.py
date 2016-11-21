@@ -6,26 +6,21 @@ import pandas as pd
 import os
 import re
 import sys
-import base64
-import hashlib
+from os import sys, path
+from tools.csv_helper import *
 
-def get_filename_from_method(fname, predicted_column, method_name, prefix = "", postfix=".csv"):
-    f = fname.split('/')
-    f = f[-1].split(".")[0]
-    name = method_name.split("(")
-    hasher = hashlib.sha1(mname)
-    o = base64.urlsafe_b64encode(hasher.digest()[0:200])
-    return prefix + "_".join([f,predicted_column,name[0], o]) + postfix
-
-def __pretty_print_method_name(method):
-    mname = str(method).replace("\n", " ")
-    return ' '.join(mname.split())
+methods = [
+  decomp.FactorAnalysis(n_components=4),
+  decomp.NMF(n_components=4, init='nndsvda'),
+  decomp.NMF(n_components=4, init='nndsvdar'),
+  #decomp.LatentDirichletAllocation(n_topics=4),
+  decomp.KernelPCA(n_components=4, kernel="rbf", fit_inverse_transform=True),
+  decomp.FastICA(n_components=4),
+  decomp.IncrementalPCA(n_components=4),
+  decomp.PCA(n_components=4)
+]
 
 if __name__ == "__main__":
-    from os import sys, path
-    # sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-    from tools.csv_helper import *
-
     if len(sys.argv) < 3:
         print ('Error: wrong number of params')
         exit(0)
@@ -33,21 +28,11 @@ if __name__ == "__main__":
     fname = sys.argv[1]
     df = read_csv_and_metadata(fname)
 
-    methods = [
-      decomp.FactorAnalysis(n_components=4),
-      decomp.NMF(n_components=4, init='nndsvda'),
-      decomp.NMF(n_components=4, init='nndsvdar'),
-      #decomp.LatentDirichletAllocation(n_topics=4),
-      decomp.KernelPCA(n_components=4, kernel="rbf", fit_inverse_transform=True),
-      decomp.FastICA(n_components=4),
-      decomp.IncrementalPCA(n_components=4),
-      decomp.PCA(n_components=4)
-    ]
 
     for c,d in exclude_column_generator(df):
         for method in methods:
             # output for method name
-            mname = __pretty_print_method_name(method)
+            mname = pretty_print_method_name(method)
             out_fname = get_filename_from_method(fname, c, mname, prefix=sys.argv[2]+"/")
 
             # if file exists skip selection for this method
