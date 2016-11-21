@@ -1,10 +1,13 @@
+from __future__ import print_function
 import networkx as nx
 
 import numpy as np
 import collections as col
 import matplotlib.pylab as plt
 import pandas as pd
-from __future__ import print_function
+
+if __name__ == '__main__':
+    exit()
 
 data = pd.read_csv("result128.txt", delimiter=";", usecols=range(1,129))
 data = data / data.sum(0)

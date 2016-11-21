@@ -11,7 +11,7 @@ def get_uci_dataset():
     with lcd("src/tools/download_uci_ml/"):
         local("scrapy crawl uci")
 
-def run_selection(method, timeseries):
+def __selection(method, timeseries):
     """Runs selection method on a timeseries file
 
     :method: path to selection method
@@ -32,6 +32,31 @@ def run_selection(method, timeseries):
     if methodtype == "R":
         _run = run_R_method
     _run([method, timeseries, outdir])
+
+def selection(timeseries, methods=None):
+
+    """Runs optionaly listed selection methods found in src/selection on a timeseries file
+
+    :timeseries: path to timeseries file
+    :methods: globing expresion in quotes for methods selection
+    :returns: None
+
+    """
+
+    # create output directory
+    outdir = __RESULTS_DIRECTORY_PREFIX + 'selection/' + timeseries.split("/")[-1].split(".")[0]
+    local('mkdir -p ' + outdir)
+
+    if methods is None:
+        scripts = glob.glob("src/selection/*.py")
+        scripts.extend(glob.glob("src/selection/*.R"))
+    else:
+        scripts = glob.glob(methods)
+
+    for method in scripts:
+        __selection(method, timeseries)
+
+
 
 def run_R_method(args):
     """Runs R script with args,
