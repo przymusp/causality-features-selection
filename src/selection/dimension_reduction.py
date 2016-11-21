@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
             t.meta_header = df.meta_header.copy()
             t.meta_header['method'] = [mname,]
-            t.meta_header['predict'] = c
+            t.meta_header['predict'] = [c,]
 
             # Output columns in corrrect order
             cols=[c,]
