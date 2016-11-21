@@ -28,7 +28,9 @@ def run_selection(method, timeseries):
     methodtype = method.split("/")[-1].split(".")[1]
 
     # TODO: maybe use Shebang approach for all scripts
-    local('python ' + method + ' ' + timeseries + ' ' + outdir)
+
+    with shell_env(PYTHONPATH="$PYTHONPATH:src/"):
+        local(' python ' + method + ' ' + timeseries + ' ' + outdir)
 
 
 def run_prediction(timeseries, method = "src/prediction/prediction.R", ):
