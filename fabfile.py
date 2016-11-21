@@ -27,9 +27,30 @@ def run_selection(method, timeseries):
     # guess interpreter type
     methodtype = method.split("/")[-1].split(".")[1]
 
-    # TODO: maybe use Shebang approach for all scripts
-    local('python ' + method + ' ' + timeseries + ' ' + outdir)
+    # Select runner to run script
+    _run = run_Python_method
+    if methodtype == "R":
+        _run = run_R_method
+    _run([method, timeseries, outdir])
 
+def run_R_method(args):
+    """Runs R script with args,
+
+    :args: list of args to run with R script
+
+    """
+
+    with settings(warn_only=True), lcd("src/prediction/"):#, shell_env(R_COMPILE_PKGS='TRUE', R_ENABLE_JIT='3'):
+        local("Rscript --vanilla " + " ".join(args))
+
+def run_Python_method(args):
+    """Runs Python method with args
+
+    :args: list of args to run with Python script
+
+    """
+    with shell_env(PYTHONPATH="$PYTHONPATH:src/"):
+        local(' python ' + " ".join(args))
 
 def run_prediction(timeseries, method = "src/prediction/prediction.R", ):
     # create output directory
@@ -41,10 +62,6 @@ def run_prediction(timeseries, method = "src/prediction/prediction.R", ):
     outdir = os.path.abspath(outdir)
 
     files = glob.glob(selection_step_directory + "/*.csv")
-    with settings(warn_only=True), lcd("src/prediction/"):
-        for f in files:
-            f_in = os.path.abspath(f)
-            local("Rscript " +" ".join([method, f_in, outdir]))
-
-
-
+    for f in files:
+        f_in = os.path.abspath(f)
+        run_R_method([method, f_in, outdir])

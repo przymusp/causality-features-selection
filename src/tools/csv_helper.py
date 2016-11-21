@@ -1,4 +1,18 @@
 import pandas as pd
+import base64
+import hashlib
+
+def get_filename_from_method(fname, predicted_column, method_name, prefix = "", postfix=".csv"):
+    f = fname.split('/')
+    f = f[-1].split(".")[0]
+    name = method_name.split("(")
+    hasher = hashlib.sha1(method_name)
+    o = base64.urlsafe_b64encode(hasher.digest()[0:200])
+    return prefix + "_".join([f,predicted_column,name[0], o]) + postfix
+
+def pretty_print_method_name(method):
+    mname = str(method).replace("\n", " ")
+    return ' '.join(mname.split())
 
 def read_metadata_from_csv_file(filename):
     def __parse_metadata(line):
