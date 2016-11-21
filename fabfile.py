@@ -1,5 +1,6 @@
 from fabric.api import *
 import glob
+import os
 
 __RESULTS_DIRECTORY_PREFIX='results/'
 
@@ -36,10 +37,14 @@ def run_prediction(timeseries, method = "src/prediction/prediction.R", ):
     outdir = __RESULTS_DIRECTORY_PREFIX + 'prediction/' + timeseries.split("/")[-1].split(".")[0] + "/"
     local('mkdir -p ' + outdir)
 
+    method = os.path.abspath(method)
+    outdir = os.path.abspath(outdir)
+
     files = glob.glob(selection_step_directory + "/*.csv")
-    with settings(warn_only=True):
+    with settings(warn_only=True), lcd("src/prediction/"):
         for f in files:
-            local("Rscript " +" ".join([method, f, outdir]))
+            f_in = os.path.abspath(f)
+            local("Rscript " +" ".join([method, f_in, outdir]))
 
 
 
