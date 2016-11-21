@@ -20,13 +20,19 @@ methods = [
   decomp.PCA(n_components=4)
 ]
 
-if __name__ == "__main__":
-    if len(sys.argv) < 3:
+def parse_selection_arguments(argv):
+    """Parse cmdline arguments for selection method script
+
+    :args: TODO
+    :returns: TODO
+
+    """
+    if len(argv) < 3:
         print ('Error: wrong number of params')
         exit(0)
 
-    fname = sys.argv[1]
-    output_directory = sys.argv[2]+"/"
+    fname = argv[1]
+    output_directory = argv[2]+"/"
 
     if not path.isdir(output_directory):
         print ("Error: output directory does not exist")
@@ -34,7 +40,11 @@ if __name__ == "__main__":
     if not path.isfile(fname):
         print ("Error: input CSV file does not exist")
         exit()
+    return fname, output_directory
 
+if __name__ == "__main__":
+
+    fname, output_directory = parse_selection_arguments(sys.argv)
     df = read_csv_and_metadata(fname)
 
     for c,d in exclude_column_generator(df):
