@@ -84,7 +84,7 @@ def prediction(timeseries, method = "src/prediction/prediction.R", ):
     local('mkdir -p ' + outdir)
 
     method = os.path.abspath(method)
-    outdir = os.path.abspath(outdir)
+    outdir = os.path.abspath(outdir) + '/'
 
     files = glob.glob(selection_step_directory + "/*.csv")
     for f in files:
