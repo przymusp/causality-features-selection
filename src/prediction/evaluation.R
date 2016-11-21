@@ -67,3 +67,13 @@ normalize <- function (F)
   return (F)
 }
 
+### denormalize a dataframe
+denormalize <- function (F,max,min)
+{
+  for (i in 1 : ncol(F))
+  {
+    for(j in 1:nrow(F))
+      F[j,i] =  min + F[j,i]*(max - min) 
+  }
+  return (F)
+}
