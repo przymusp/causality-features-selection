@@ -25,15 +25,25 @@ if __name__ == "__main__":
         print ('Error: wrong number of params')
         exit(0)
 
-    fname = sys.argv[1]
-    df = read_csv_and_metadata(fname)
+    path.isdir
 
+    fname = sys.argv[1]
+    output_directory = sys.argv[2]+"/"
+
+    if not path.isdir(output_directory):
+        print ("Error: output directory does not exist")
+        exit()
+    if not path.isfile(fname):
+        print ("Error: input CSV file does not exist")
+        exit()
+
+    df = read_csv_and_metadata(fname)
 
     for c,d in exclude_column_generator(df):
         for method in methods:
             # output for method name
             mname = pretty_print_method_name(method)
-            out_fname = get_filename_from_method(fname, c, mname, prefix=sys.argv[2]+"/")
+            out_fname = get_filename_from_method(fname, c, mname, prefix=output_directory)
 
             # if file exists skip selection for this method
             if path.isfile(out_fname):
@@ -46,6 +56,7 @@ if __name__ == "__main__":
 
             t.meta_header = df.meta_header.copy()
             t.meta_header['method'] = [mname,]
+            t.meta_header['predict'] = c
 
             # Output columns in corrrect order
             cols=[c,]
