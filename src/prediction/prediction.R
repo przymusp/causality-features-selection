@@ -40,8 +40,9 @@ nbrePreds = 10
 preds = evaluation(fs_method, p, nbrePreds)
 
 names(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")
+colnames(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")
 preds = denormalize(preds,max,min)
 preds
 
-write.table(preds, file = output_dir,row.names = FALSE, na = "",col.names = FALSE, sep = ";",append = TRUE)
+write.table(preds, file = output_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";",append = TRUE)
 
