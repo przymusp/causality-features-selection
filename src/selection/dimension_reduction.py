@@ -25,8 +25,6 @@ if __name__ == "__main__":
         print ('Error: wrong number of params')
         exit(0)
 
-    path.isdir
-
     fname = sys.argv[1]
     output_directory = sys.argv[2]+"/"
 
