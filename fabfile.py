@@ -77,7 +77,7 @@ def run_Python_method(args):
     with shell_env(PYTHONPATH="$PYTHONPATH:src/"):
         local(' python ' + " ".join(args))
 
-def run_prediction(timeseries, method = "src/prediction/prediction.R", ):
+def prediction(timeseries, method = "src/prediction/prediction.R", ):
     # create output directory
     selection_step_directory = __RESULTS_DIRECTORY_PREFIX + 'selection/' + timeseries.split("/")[-1].split(".")[0]
     outdir = __RESULTS_DIRECTORY_PREFIX + 'prediction/' + timeseries.split("/")[-1].split(".")[0] + "/"
