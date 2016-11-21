@@ -46,13 +46,20 @@ if __name__ == "__main__":
 
     for c,d in exclude_column_generator(df):
         for method in methods:
+            # output for method name
+            mname = __pretty_print_method_name(method)
+            out_fname = get_filename_from_method(fname, c, mname, prefix=sys.argv[2]+"/")
+
+            # if file exists skip selection for this method
+            if path.isfile(out_fname):
+                print ("File for method %s exists - skipping.\n  * Remove %s file to recompute it."%(mname,out_fname))
+                continue
 
             # Fit and transform using method
             t = method.fit_transform(d)
             t = pd.DataFrame(t)
 
             t.meta_header = df.meta_header.copy()
-            mname = __pretty_print_method_name(method)
             t.meta_header['method'] = [mname,]
 
             # Output columns in corrrect order
@@ -63,4 +70,4 @@ if __name__ == "__main__":
             t[c] = df[c]
 
             # Write t with cols in correct order (t[cols]) to filename generated from the method name with params
-            write_csv_with_metadata(t[cols], get_filename_from_method(fname, c, mname, prefix=sys.argv[2]+"/"))
+            write_csv_with_metadata(t[cols], out_fname)
