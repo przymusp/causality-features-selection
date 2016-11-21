@@ -11,17 +11,17 @@ def get_uci_dataset():
     with lcd("src/tools/download_uci_ml/"):
         local("scrapy crawl uci")
 
-def __selection(method, timeseries):
-    """Runs selection method on a timeseries file
+def __run_method(method, timeseries, method_prefix):
+    """Runs any method on a timeseries file
 
-    :method: path to selection method
+    :method: path to the method
     :timeseries: path to timeseries file
     :returns: None
 
     """
 
     # create output directory
-    outdir = __RESULTS_DIRECTORY_PREFIX + 'selection/' + timeseries.split("/")[-1].split(".")[0]
+    outdir = __RESULTS_DIRECTORY_PREFIX + method_prefix + timeseries.split("/")[-1].split(".")[0]
     local('mkdir -p ' + outdir)
 
     # guess interpreter type
@@ -33,30 +33,38 @@ def __selection(method, timeseries):
         _run = run_R_method
     _run([method, timeseries, outdir])
 
-def selection(timeseries, methods=None):
+def pre_selection(timeseries, methods=None):
 
-    """Runs optionaly listed selection methods found in src/selection on a timeseries file
+    """Runs pre_selection methods found in src/pre_selection on a timeseries file
 
     :timeseries: path to timeseries file
     :methods: globing expresion in quotes for methods selection
     :returns: None
 
     """
+    __run_methods(methods, timeseries, 'pre_selection')
 
-    # create output directory
-    outdir = __RESULTS_DIRECTORY_PREFIX + 'selection/' + timeseries.split("/")[-1].split(".")[0]
-    local('mkdir -p ' + outdir)
+def selection(timeseries, methods=None):
+
+    """Runs selection methods found in src/selection on a timeseries file
+
+    :timeseries: path to timeseries file
+    :methods: globing expresion in quotes for methods selection
+    :returns: None
+
+    """
+    __run_methods(methods, timeseries, 'selection')
+
+def __run_methods(methods, timeseries, methods_prefix):
 
     if methods is None:
-        scripts = glob.glob("src/selection/*.py")
-        scripts.extend(glob.glob("src/selection/*.R"))
+        scripts = glob.glob("src/%s/*.py"%(methods_prefix,))
+        scripts.extend(glob.glob("src/%s/*.R"%(methods_prefix,)))
     else:
         scripts = glob.glob(methods)
 
     for method in scripts:
-        __selection(method, timeseries)
-
-
+        __run_method(method, timeseries, '%s/'%(methods_prefix,))
 
 def run_R_method(args):
     """Runs R script with args,
