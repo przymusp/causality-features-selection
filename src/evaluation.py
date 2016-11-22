@@ -27,18 +27,18 @@ reals = np.ndarray(shape=(nbre_preds,5))
 
 inc = 0
 nlin = len (original_data.values[:,0])
-print nlin
+
 #print dframe.values[0:5,0]
 for i in range(0,nbre_preds):
     vect = original_data[[target]]
     reals[i,:] = vect[nlin-5-inc:nlin-inc].values[:,0]
     inc = inc + 5
 
-print reals,"\n",predictions.values
-
+print "==========="
 for i in range(0,5):
-    print "Prediction: ", i+1
-    print "mse: ", mean_squared_error (reals[:,1],predictions.values[:,1])
-    print "mae: ", mean_absolute_error (reals[:,1],predictions.values[:,1])
+    print "Prediction Horoizon: ",i+1
+    print "mse: ", round(mean_squared_error (reals[:,1],predictions.values[:,1]),4)
+    print "mae: ", round(mean_absolute_error (reals[:,1],predictions.values[:,1]),4)
+    print "variance: ", round(explained_variance_score (reals[:,1],predictions.values[:,1]),4)
     print "==========="
 
