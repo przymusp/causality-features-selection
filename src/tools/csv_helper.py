@@ -2,6 +2,28 @@ import pandas as pd
 import base64
 import hashlib
 
+def parse_selection_arguments(argv):
+    """Parse cmdline arguments for selection method script
+
+    :args: TODO
+    :returns: TODO
+
+    """
+    if len(argv) < 3:
+        print ('Error: wrong number of params')
+        exit(0)
+
+    fname = argv[1]
+    output_directory = argv[2]+"/"
+
+    if not path.isdir(output_directory):
+        print ("Error: output directory does not exist")
+        exit()
+    if not path.isfile(fname):
+        print ("Error: input CSV file does not exist")
+        exit()
+    return fname, output_directory
+
 def get_filename_from_method(fname, predicted_column, method_name, prefix = "", postfix=".csv"):
     f = fname.split('/')
     f = f[-1].split(".")[0]
