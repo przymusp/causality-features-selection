@@ -27,7 +27,7 @@ def __run_method(method, timeseries, method_prefix):
     # guess interpreter type
     methodtype = method.split("/")[-1].split(".")[1]
 
-    # Select runner to run script
+    # Select runner to run script (R or Python)
     _run = run_Python_method
     if methodtype == "R":
         _run = run_R_method
