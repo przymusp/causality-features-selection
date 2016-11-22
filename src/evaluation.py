@@ -34,6 +34,7 @@ for i in range(0,nbre_preds):
     reals[i,:] = vect[nlin-5-inc:nlin-inc].values[:,0]
     inc = inc + 5
 
+
 print "==========="
 for i in range(0,5):
     print "Prediction Horoizon: ",i+1

@@ -7,6 +7,11 @@ import matplotlib.pylab as plt
 import pandas as pd
 
 if __name__ == '__main__':
+
+    fname, output_directory = parse_selection_arguments(sys.argv)
+    df = read_csv_and_metadata(fname)
+
+
     exit()
 
 data = pd.read_csv("result128.txt", delimiter=";", usecols=range(1,129))

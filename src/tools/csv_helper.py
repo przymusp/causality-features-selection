@@ -1,6 +1,29 @@
 import pandas as pd
 import base64
 import hashlib
+from os import path
+
+def parse_selection_arguments(argv):
+    """Parse cmdline arguments for selection method script
+
+    :args: TODO
+    :returns: TODO
+
+    """
+    if len(argv) < 3:
+        print ('Error: wrong number of params')
+        exit(0)
+
+    fname = argv[1]
+    output_directory = argv[2]+"/"
+
+    if not path.isdir(output_directory):
+        print ("Error: output directory does not exist")
+        exit()
+    if not path.isfile(fname):
+        print ("Error: input CSV file does not exist")
+        exit()
+    return fname, output_directory
 
 def get_filename_from_method(fname, predicted_column, method_name, prefix = "", postfix=".csv"):
     f = fname.split('/')
@@ -29,9 +52,14 @@ def read_metadata_from_csv_file(filename):
             else:
                 return metadata
 
-def read_csv_and_metadata(filename):
+def read_csv_and_metadata(filename, **kwargs):
     pd.DataFrame._metadata=["meta_header"]
-    matrix =  pd.read_csv(filename, comment='#', delimiter=';')
+
+    # if not set in kwargs, use defaults for this project
+    if 'comment' not in kwargs: kwargs['comment'] = '#'
+    if 'delimiter' not in kwargs or 'sep' not in kwargs: kwargs['delimiter'] = ';'
+
+    matrix = pd.read_csv(filename, **kwargs)
     matrix.meta_header = read_metadata_from_csv_file(filename)
     return matrix
 
@@ -49,6 +77,6 @@ if __name__ == "__main__":
     import sys
     m = read_csv_and_metadata(sys.argv[1])
     for v in exclude_column_generator(m):
-        print v[0]
-        print v[1]
+        print (v[0])
+        print (v[1])
 
