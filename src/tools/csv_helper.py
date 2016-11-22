@@ -1,6 +1,7 @@
 import pandas as pd
 import base64
 import hashlib
+from os import path
 
 def parse_selection_arguments(argv):
     """Parse cmdline arguments for selection method script
@@ -51,9 +52,12 @@ def read_metadata_from_csv_file(filename):
             else:
                 return metadata
 
-def read_csv_and_metadata(filename):
+def read_csv_and_metadata(filename, **kwargs):
     pd.DataFrame._metadata=["meta_header"]
-    matrix =  pd.read_csv(filename, comment='#', delimiter=';')
+    if 'comment' not in kwargs: kwargs['comment'] = '#'
+    if 'delimiter' not in kwargs or 'sep' not in kwargs: kwargs['delimiter'] = ';'
+
+    matrix =  pd.read_csv(filename, **kwargs)
     matrix.meta_header = read_metadata_from_csv_file(filename)
     return matrix
 
