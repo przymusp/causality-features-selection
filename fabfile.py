@@ -72,9 +72,12 @@ def run_R_method(args):
     :args: list of args to run with R script
 
     """
+    method = os.path.abspath(args[0])
+    ts = os.path.abspath(args[1])
+    outdir = os.path.abspath(args[2]) + '/'
 
     with settings(warn_only=True), lcd("src/prediction/"):#, shell_env(R_COMPILE_PKGS='TRUE', R_ENABLE_JIT='3'):
-        local("Rscript --vanilla " + " ".join(args))
+        local("Rscript --vanilla " + " ".join([method, ts, outdir]))
 
 def run_Python_method(args):
     """Runs Python method with args
