@@ -6,7 +6,7 @@ library(stats) ##hclus
 library(fpc)  ## for pamkCBI : pam with no k
 
 
-source("tools.R")
+source("../tools/selection_tools.R")
 args = commandArgs(trailingOnly=TRUE)
 
 ##### Read arguments
