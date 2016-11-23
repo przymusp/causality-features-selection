@@ -33,12 +33,12 @@ fgsm <- function (F,gmat, targetIndex, k)
   ######
   if (k < ncol(x))
   {
-    
+
     for (l in 2:ncol(x))
       for(m in 1: (l-1))
         x[l,m] = x[m,l] = 1 - max(x[l,m], x[m,l])
-      
-      
+
+
       #km = kcca(x, k, family = kccaFamily ("kmeans"), weights=NULL, group=NULL, control=NULL, simple=FALSE)
       #symmetrize(x, rule="strong")
       #clusters = pamk(as.dist(x),krange=5:15,criterion="ch",critout=TRUE)
@@ -52,10 +52,10 @@ fgsm <- function (F,gmat, targetIndex, k)
       clusters = pam (as.dist(x),10)
       clusteringVector = clusters$cluster
       #clusteringVector = clusters (clusters)
-      
+
       classes = data.frame()
       for (j in 1:k)
-      { 
+      {
         l = 1
         for ( i in 1:ncol(x))
           if (clusteringVector[i] == j)
@@ -68,7 +68,7 @@ fgsm <- function (F,gmat, targetIndex, k)
             l = l + 1
           }
       }
-      
+
       ### buildind the gsm cluster from the PAM clusters
       for (j in 1:k)
       {
@@ -94,7 +94,7 @@ fgsm <- function (F,gmat, targetIndex, k)
       GSM = F [,gsmCluster]
       return (GSM)
   }
-  else 
+  else
     return (F[,-target])
   #return (gsmCluster)
 }
@@ -136,21 +136,21 @@ gsmPCA <- function (F,gmat, targetIndex, k)
   ######
   if (k < ncol(x))
   {
-    
+
     for (l in 2:ncol(x))
       for(m in 1: (l-1))
         x[l,m] = x[m,l] = 1 - max(x[l,m], x[m,l])
-      
-      
+
+
       #km = kcca(x, k, family = kccaFamily ("kmeans"), weights=NULL, group=NULL, control=NULL, simple=FALSE)
       #symmetrize(x, rule="strong")
       clusters = pam (as.dist(x), k)
       clusteringVector = clusters$cluster
       #clusteringVector = clusters (km)
-      
+
       classes = data.frame()
       for (j in 1:k)
-      { 
+      {
         l = 1
         for ( i in 1:ncol(x))
           if (clusteringVector[i] == j)
@@ -163,7 +163,7 @@ gsmPCA <- function (F,gmat, targetIndex, k)
             l = l + 1
           }
       }
-      
+
       ### buildind the gsm cluster from the PAM clusters
       for (j in 1:k)
       {
@@ -189,7 +189,7 @@ gsmPCA <- function (F,gmat, targetIndex, k)
       GSM = F [,gsmCluster]
       return (GSM)
   }
-  else 
+  else
     return (F[,-target])
   #return (gsmCluster)
 }
@@ -202,9 +202,9 @@ naiveSelection <- function (gmat, targetIndex, threshold)
   ##F = data.frame ()
   ind  = 1
   index = c()
-  
+
   for (i in 1:ncol(gmat))
-  {  
+  {
     if (i != targetIndex)
     {
       #F[ind,1] = i;
@@ -219,7 +219,7 @@ naiveSelection <- function (gmat, targetIndex, threshold)
   #G = F[order(-F[,2]),c(1,2)]
   #for (i in 1:k)
     #naiveClasse = union(naiveClasse, c(G[i,1]))
-  
+
   return (index)
 }
 ### Normalize a dataframe
@@ -230,31 +230,31 @@ normalize <- function (F)
     max = max(F[,i])
     min = min(F[,i])
     for(j in 1:nrow(F))
-      F[j,i] = (F[j,i] - min) / (max - min) 
+      F[j,i] = (F[j,i] - min) / (max - min)
   }
   return (F)
 }
-  
+
 #### neural network function
 disc <- function (F,p, dec, cible)
 {
-  
+
   G = F[1:(nrow(F) - (dec + 1)),]
-  hiddenLayers = c((ncol(G) * p* 2 / 3), (ncol(G) * p * 2 / 3),(ncol(G) * p * 2 / 3)) 
+  hiddenLayers = c((ncol(G) * p* 2 / 3), (ncol(G) * p * 2 / 3),(ncol(G) * p * 2 / 3))
   module = varnnet(G, p, 1, hiddenLayers, 1000)
   result = data.frame()
   ts = data.frame()
   for (ind in 1:dec)
   {
     ts = F[1:(nrow(F) - (dec - ind + 1)),]
-    
+
     y = module$forecast(ts)
-    
+
     for (ij in 1:ncol(y))
       result[ind,ij] = y[nrow(y),ij]
-    
+
     iter = 1
-    
+
     while (iter < 2)
     {
       module$learn (F[1:(nrow(F) - (dec - ind)),])
@@ -263,6 +263,6 @@ disc <- function (F,p, dec, cible)
   }
   return (result)
 }
-  
-  
-  
+
+
+
