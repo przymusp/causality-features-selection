@@ -1,7 +1,8 @@
 from __future__ import print_function
-
 import sys
 import collections as col
+import itertools
+from os import path
 
 import networkx as nx
 import numpy as np
@@ -9,11 +10,7 @@ import matplotlib.pylab as plt
 import pandas as pd
 from sklearn import preprocessing
 
-from os import path
-
 from tools.csv_helper import *
-
-import itertools
 
 if __name__ == '__main__':
 
@@ -32,14 +29,15 @@ if __name__ == '__main__':
 
     df = read_csv_and_metadata(fname_te_graph, index_col=0)
 
-    # TODO: clean the graph
+    # TODO: future work, clean the graph, some ideas
     # for a,b in itertools.product(df.columns.values, repeat=2):
     #     if abs(df[a][b] - df[b][a]) < 0.05:
     #         df[a][b]=0
     #         df[b][a]=0
 
-    # columns should sum to 1. sum and divide by column by column
 
+
+    # Columns should sum to 1. sum and divide by column by column
     # Fix the pandas metadata handling problem
     meta_header = df.meta_header
     df /= df.sum(1)
@@ -50,10 +48,9 @@ if __name__ == '__main__':
     G = nx.DiGraph(df.as_matrix())
     G.reverse()
 
+    # Nodes to variable names map and inverted map
     nodes_map = dict(zip(df.columns.values, range(len(df.columns.values))))
     inv_nodes_map = {v: k for k, v in nodes_map.items()}
-    # print(nodes_map)
-    # G1=nx.relabel_nodes(G, nodes_map)
 
     df_out = read_csv_and_metadata(fname)
     mname = "LinkAnalysisTE(select_top_percent=0.5)"
