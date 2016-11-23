@@ -11,7 +11,7 @@ naiveSelection <- function (F, targetIndex, threshold, lag_max)
   naiveClasse = c()
   p = 1
   causalities = data.frame()
-
+  
   for (j in 1:ncol(F))
   {
    # var = VARselect(F,lag.max=lag_max)
@@ -28,7 +28,7 @@ naiveSelection <- function (F, targetIndex, threshold, lag_max)
                      # causality[p,1] = 1 - test$`Pr(>F)`[2]
                       causalities[p,1] = 1 - test$`Pr(>F)`[2]
               }
-
+      
               if(test1[1] == "Error in vc[ovar, ovar] : indice hors limites\n")
                 {
                   causalities[p,2] = 0
@@ -45,7 +45,7 @@ naiveSelection <- function (F, targetIndex, threshold, lag_max)
 
   p = 1
    for (i in 1:nrow(causalities))
-   {
+   {  
        if (causalities[i,1] >= threshold && causalities[i,2] < threshold)
        {
          results[p] = causalities[i,3]
@@ -106,9 +106,9 @@ for (i in 2:length(target_names)) {
 
     # Bref description of the file
     system(paste0(command,' > ', out_dir))
-    header = paste0("#Predict;",target_name,"\r","#name_prefix;", data_name,"\r", description,"#method; Univariate selection method")
+    header = paste0("# Predict;",target_name,"\r","# name_prefix;", data_name,"\r", description,"# method; Univariate selection method")
     writeLines (header,out_dir)
-
-    ## Store the files that contains the selected variables
+    
+    ## Store the selected variables
     write.table(selectKc, out_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
 }
