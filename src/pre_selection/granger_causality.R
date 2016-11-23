@@ -36,9 +36,6 @@ data_name = gsub(".csv", "",data_name, fixed=TRUE)
 output_dir = paste0(output_dir,data_name,"_","granger_graph.csv")
 system(paste0(command,' > ', output_dir))
 
-mindv = 0.2
-eps = 0.01
-
 #data = normalize(data)
 
 #### calculate the matrix
@@ -47,7 +44,7 @@ for (i in 1:ncol(data))
 {
   for (j in 1:ncol(data))
   {
-    var = VARselect(data.frame(data[,j], data [,i]),lag.max=20)
+    var = VARselect(data.frame(data[,j], data [,i]),lag.max= 5*nrow(data)/100)
     lag = var$selection[1]
     if (j != i) {
       tryCatch({
