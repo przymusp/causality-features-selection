@@ -56,7 +56,7 @@ for (i in 1:ncol(data))
         else causality = try (1 - test$`Pr(>F)`[2])
         gMat[i,j] = 1 - test$`Pr(>F)`[2]    }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
     }
-    else 
+    else
       gMat[i,j] = 1
   }
 }
