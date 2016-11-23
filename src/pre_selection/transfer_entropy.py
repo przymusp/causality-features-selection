@@ -23,5 +23,5 @@ if __name__ == "__main__":
     df_out.meta_header = df_in.meta_header
     df_out.meta_header['pre_selection']= ["Transfer Entropy Pairwise",]
 
-    write_csv_with_metadata(df_out, out_fname)
+    write_csv_with_metadata(df_out, out_fname, index=True)
 
