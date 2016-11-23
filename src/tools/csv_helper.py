@@ -68,11 +68,16 @@ def exclude_column_generator(df):
     for c in df.meta_header['predict']:
         yield c, df[df.columns.difference([c,])]
 
-def write_csv_with_metadata(df, filename):
+def write_csv_with_metadata(df, filename, **kwargs):
+
+    # if not set in kwargs, use defaults for this project
+    if 'index' not in kwargs: kwargs['index'] = False
+    if 'delimiter' not in kwargs or 'sep' not in kwargs: kwargs['delimiter'] = ';'
+
     with open(filename, "w") as f:
         for k in df.meta_header:
              f.write("# %s; " % (k,) + ';'.join(df.meta_header[k])+"\n")
-        df.to_csv(f, sep=';', index=False)
+        df.to_csv(f, **kwargs)
 
 if __name__ == "__main__":
     import sys
