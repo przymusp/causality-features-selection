@@ -49,7 +49,7 @@ fgsm <- function (F,gmat, targetIndex, k)
         #evals[kchoice] = clusters$objective[1]
       #}
       #k = which.min(evals)
-      clusters = pam (as.dist(x),10)
+      clusters = pam (as.dist(x),k)
       clusteringVector = clusters$cluster
       #clusteringVector = clusters (clusters)
 

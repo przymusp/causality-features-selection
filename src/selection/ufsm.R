@@ -106,7 +106,7 @@ for (i in 2:length(target_names)) {
 
     # Bref description of the file
     system(paste0(command,' > ', out_dir))
-    header = paste0("# Predict;",target_name,"\r","# name_prefix;", data_name,"\r", description,"# method; Univariate selection method")
+    header = paste0("# Predict;",target_name,"\r","# name_prefix;", data_name,"\r", description,"# method; Univariate feature selection method")
     writeLines (header,out_dir)
     
     ## Store the selected variables
