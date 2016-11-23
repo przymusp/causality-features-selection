@@ -40,7 +40,7 @@ selectKc = data.frame()
 GSM = fgsm (data, matrix, targetIndex, 10)
 
 # Univariate feature selection method (machine learning paper)
-causSelect = naiveSelection (matrix, targetIndex, 0.2)
+causSelect = naiveSelection (matrix, targetIndex, 0.6)
 selectKc = data [,causSelect]
 
 path1 = paste0('results/','/GSM.csv')
