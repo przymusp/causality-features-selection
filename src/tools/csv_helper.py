@@ -72,7 +72,7 @@ def write_csv_with_metadata(df, filename, **kwargs):
 
     # if not set in kwargs, use defaults for this project
     if 'index' not in kwargs: kwargs['index'] = False
-    if 'delimiter' not in kwargs or 'sep' not in kwargs: kwargs['delimiter'] = ';'
+    if 'delimiter' not in kwargs or 'sep' not in kwargs: kwargs['sep'] = ';'
 
     with open(filename, "w") as f:
         for k in df.meta_header:
