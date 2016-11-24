@@ -82,7 +82,5 @@ def write_csv_with_metadata(df, filename, **kwargs):
 if __name__ == "__main__":
     import sys
     m = read_csv_and_metadata(sys.argv[1])
-    for v in exclude_column_generator(m):
-        print (v[0])
-        print (v[1])
+    print (m.size)
 

@@ -98,3 +98,8 @@ def prediction(timeseries, methods = None):
     files = glob.glob(selection_step_directory + "/*.csv")
     for f in files:
         __run_methods(methods, f, 'prediction', timeseries_prefix)
+
+def check_step_csv_files(step_directory):
+    files = glob.glob(step_directory + "/*.csv")
+    for f in files:
+        run_Python_method(["src/tools/csv_helper.py", f])
