@@ -34,14 +34,16 @@ if __name__ == "__main__":
         reals[i,:] = vect[nlin-5-inc:nlin-inc].values[:,0]
         inc = inc + 5
     results = np.ndarray(shape=(5,3))
+
+    print predictions.values[:,1]
     columns = ["mse","mae","variance"]
     rows = []
     print ("===========")
     for i in range(0,5):
         rows.append ("h" + str(i+1))
-        results[i,0] = round(mean_squared_error (reals[:,1],predictions.values[:,1]),4)
-        results[i,1] = round(mean_absolute_error (reals[:,1],predictions.values[:,1]),4)
-        results[i,2] = round(explained_variance_score (reals[:,1],predictions.values[:,1]),4)
+        results[i,0] = round(mean_squared_error (reals[:,i],predictions.values[:,i]),4)
+        results[i,1] = round(mean_absolute_error (reals[:,i],predictions.values[:,i]),4)
+        results[i,2] = round(explained_variance_score (reals[:,i],predictions.values[:,i]),4)
 
     df_results = pd.DataFrame(results, index = rows, columns = columns)
     print (df_results)
