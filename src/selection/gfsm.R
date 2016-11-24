@@ -4,8 +4,10 @@ library(lmtest)
 library(vars)
 library(stats) ##hclus
 library(fpc)  ## for pamkCBI : pam with no k
+library (utils)
 
 
+#getwd()
 source("../tools/selection_tools.R")
 args = commandArgs(trailingOnly=TRUE)
 
@@ -42,7 +44,9 @@ target_names = c(dat[[3]])
 ## read the dataset
 data = read.csv(data_dir, header = TRUE, dec = '.',sep=";", comment.char = "#")
 colnames = colnames(data)
-
+graph_dir = paste0("../../results/pre_selection/",data_name,"/",data_name,"_granger_graph.csv")
+#getSrcDirectory()
+#graph_dir
 matrix = read.table(graph_dir, header = TRUE,row.names = 1, dec = '.',sep=";", comment.char = "#")
 ############# Execute the method  for each target
 for (i in 2:length(target_names)) {
