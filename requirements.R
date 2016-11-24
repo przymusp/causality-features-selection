@@ -1,0 +1,6 @@
+chooseCRANmirror()
+install.packages("cluster")
+install.packages("lmtest")
+install.packages("fpc")
+install.packages("vars")
+install.packages("tsDyn")
