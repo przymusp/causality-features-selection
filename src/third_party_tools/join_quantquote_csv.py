@@ -24,4 +24,4 @@ if __name__ == "__main__":
         # concatenate them horizontally
         merged = pd.concat(dfs[c],axis=1)
         # write it out
-        merged.to_csv("%s_%s.csv" %(output_prefix, c) )
+        merged.to_csv("%s_%s.csv" %(output_prefix, c), sep=';')
