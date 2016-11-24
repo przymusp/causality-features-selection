@@ -35,11 +35,10 @@ if __name__ == "__main__":
         inc = inc + 5
 
 
-    print "==========="
+    print ("===========")
     for i in range(0,5):
-        print "Prediction Horoizon: ",i+1
-        print "mse: ", round(mean_squared_error (reals[:,1],predictions.values[:,1]),4)
-        print "mae: ", round(mean_absolute_error (reals[:,1],predictions.values[:,1]),4)
-        print "variance: ", round(explained_variance_score (reals[:,1],predictions.values[:,1]),4)
-        print "==========="
-
+        print ("Prediction Horoizon: ",i+1)
+        print ("mse: ", round(mean_squared_error (reals[:,1],predictions.values[:,1]),4))
+        print ("mae: ", round(mean_absolute_error (reals[:,1],predictions.values[:,1]),4))
+        print ("variance: ", round(explained_variance_score (reals[:,1],predictions.values[:,1]),4))
+        print ("===========")
