@@ -20,7 +20,7 @@ if __name__ == "__main__":
     target = predictions.meta_header['predict'][0]
 
     ## number of prediction or points from which 5 predictions are made with the vecm.
-    nbre_preds = int (sys.argv[3])
+    nbre_preds = len(predictions.index)
 
     reals = np.ndarray(shape=(nbre_preds,5))
     #print result.size
@@ -33,12 +33,15 @@ if __name__ == "__main__":
         vect = original_data[[target]]
         reals[i,:] = vect[nlin-5-inc:nlin-inc].values[:,0]
         inc = inc + 5
-
-
+    results = np.ndarray(shape=(5,3))
+    columns = ["mse","mae","variance"]
+    rows = []
     print ("===========")
     for i in range(0,5):
-        print ("Prediction Horoizon: ",i+1)
-        print ("mse: ", round(mean_squared_error (reals[:,1],predictions.values[:,1]),4))
-        print ("mae: ", round(mean_absolute_error (reals[:,1],predictions.values[:,1]),4))
-        print ("variance: ", round(explained_variance_score (reals[:,1],predictions.values[:,1]),4))
-        print ("===========")
+        rows.append ("h" + str(i+1))
+        results[i,0] = round(mean_squared_error (reals[:,1],predictions.values[:,1]),4)
+        results[i,1] = round(mean_absolute_error (reals[:,1],predictions.values[:,1]),4)
+        results[i,2] = round(explained_variance_score (reals[:,1],predictions.values[:,1]),4)
+
+    df_results = pd.DataFrame(results, index = rows, columns = columns)
+    print (df_results)
