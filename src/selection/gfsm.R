@@ -60,7 +60,7 @@ for (i in 2:length(target_names)) {
     }
     ### G-feature selection method
     out_dir = paste0(output_dir,data_name,"_",target_name,"_","GFSM.csv")
-    gfsm = gsmPCA (data, matrix, target_index, 4)
+    gfsm = fgsm (data, matrix, target_index, 4)
     gfsm = data.frame (data[,target_name],gfsm)
     colnames(gfsm)[1] = target_name
     
