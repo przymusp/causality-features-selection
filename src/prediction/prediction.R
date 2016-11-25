@@ -1,5 +1,7 @@
+# Use compiler and jit for this file (when processing multiple files this improves performance)
 require(compiler)
 enableJIT(3)
+
 ## Prediction using the VECM model
 ## For each horizon forecats, 5 predictions can be made
 ## The model is built on normalized data

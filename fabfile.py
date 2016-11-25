@@ -91,16 +91,18 @@ def run_Python_method(args):
     with shell_env(PYTHONPATH="$PYTHONPATH:src/"):
         local(' python ' + " ".join(args))
 
-def prediction(timeseries, methods = None):
+def prediction(timeseries, methods = None, selected_files=None):
     timeseries_prefix = timeseries.split("/")[-1].split(".")[0]
     selection_step_directory = __RESULTS_DIRECTORY_PREFIX + 'selection/' + timeseries_prefix
 
-    files = glob.glob(selection_step_directory + "/*.csv")
+    if selected_files is None:
+        files = glob.glob(selection_step_directory + "/*.csv")
+    else:
+        files = glob.glob(selected_files)
+
     files = [os.path.abspath(f) for f in files]
     f_in = " ".join(files)
     __run_methods(methods, f_in, 'prediction', timeseries_prefix)
-    # for f in files:
-        # __run_methods(methods, f, 'prediction', timeseries_prefix)
 
 def check_step_csv_files(step_directory):
     files = glob.glob(step_directory + "/*.csv")
