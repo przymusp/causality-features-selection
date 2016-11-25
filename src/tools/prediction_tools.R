@@ -15,41 +15,41 @@ benchmark <- function (target,p, methods, nbPreds)
 }
 
 #####
-evaluation <- function (fsdata, p, numData)
+vec_prediction <- function (ts, p, perc)
 {
-  mthds = fsdata
-  #results = list()
+  # ts: multivariate time series to predict the first attribut
+  # p: the lag parameter
+  # perc: percentage of the data to predict
+  
+  nb_preds = as.integer ((nrow(ts) * perc/100))
+  
+  training_ts = ts
+  
   results = data.frame ()
-  target = mthds[,1]
-  mthds[,1] = NULL
+  target = training_ts[,1]
+  training_ts[,1] = NULL
 
-  for (ind in 1:numData)
+  for (ind in 1:nb_preds)
   {
     pred = data.frame()
-    #results[[ind]] = data.frame ()
-    cutTarget = target[1:(length(target) - 5)]
-
-    #for (inc in 1 : length(mthds))
-      mthds = mthds[1:(nrow(mthds) - 5),]
+    cutTarget = target[1:(length(target) - (nb_preds-ind)  - 5)]
+    mthds = training_ts[1:(nrow(training_ts) - (nb_preds-ind) - 5),]
+    real = target[(length(target)- (nb_preds-ind) -4):(length(target) - (nb_preds-ind))]
 
     ####### Apply the VECM model
-    #for (inc in 1 : length(mthds))
-    #{
       tryCatch({
       model = VECM (data.frame(cutTarget, mthds ), p, include = c("const"), estim = c("ML"))
       }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
       y = predict(model)
       for (ink in 1 : 5)
         pred[ink,1] = y[ink,1]
-
-    #}
     ########
-    real = target[(length(target)-4):length(target)]
+    
     pred [,2] = real
     #results[[ind]] = data.frame(pred)
     for (j in 1:nrow(pred))
       results[ind,j] = pred[j,1]
-    target = target[1:(length(target) - 5)]
+   # target = target[1:(length(target) - 5)]
   }
   return (results)
 }

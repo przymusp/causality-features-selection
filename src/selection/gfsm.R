@@ -4,7 +4,7 @@ library(lmtest)
 library(vars)
 library(stats) ##hclus
 library(fpc)  ## for pamkCBI : pam with no k
-library (utils)
+library (kernlab)
 
 
 #getwd()
@@ -44,7 +44,7 @@ target_names = c(dat[[3]])
 ## read the dataset
 data = read.csv(data_dir, header = TRUE, dec = '.',sep=";", comment.char = "#")
 colnames = colnames(data)
-graph_dir = paste0("../../results/pre_selection/",data_name,"/",data_name,"_granger_graph.csv")
+graph_dir = paste0("../../results/pre_selection/",data_name,"/",data_name,"_te_graph.csv")
 #getSrcDirectory()
 #graph_dir
 matrix = read.table(graph_dir, header = TRUE,row.names = 1, dec = '.',sep=";", comment.char = "#")

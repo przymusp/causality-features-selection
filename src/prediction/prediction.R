@@ -21,15 +21,23 @@ predictbase <- function (method_name, prefix_out){
     # print(prefix_out)
 
     command = paste0 ('awk /^#/ ',method_name)
-    # print(command)
-    dat <- system(command,  intern = TRUE)
-    dat <- strsplit(dat, ";")
-    data_name = strsplit(method_name, "/")
+    dat = system(command,  intern = TRUE)
+    dat = strsplit(dat, "\r") 
+    predict = as.character (dat[[1]][1])
+    name_pref = as.character (dat[[1]][2])
+    description = as.character (dat[[1]][3])
+    
+    target_name = strsplit(predict, ";")[[1]][2]
+    data_name = strsplit(name_pref, ";")[[1]][2]
+    target_name = gsub(" ", "", target_name, fixed = TRUE)
+    data_name = gsub(" ", "", data_name, fixed = TRUE)
+    
+    
+    output_dir = paste0(prefix_out,data_name,"_",target_name,"_","VECModel.csv")
 
-
-    output_dir = paste0(prefix_out,"predictions_",data_name[[1]][length(data_name[[1]])])
-
-    system(paste0(command,' > ', output_dir))
+    #system(paste0(command,' > ', output_dir))
+    header = paste0(predict,"\r",name_pref,"\r", description,"\r# method; VECModel\r")
+    writeLines (header,output_dir)
 
     # TODO: Example of the lag parametre of the prediction model, !!use the Varselect method in the futur
     p = 100
@@ -39,8 +47,9 @@ predictbase <- function (method_name, prefix_out){
     min = min(fs_method[,1])
     fs_method = normalize(fs_method)
     ###  Prediction
-    nbrePreds = 10
-    preds = evaluation(fs_method, p, nbrePreds)
+    percPreds = 10 # 10% predictions of the size of the data
+    preds = vec_prediction(fs_method, p, percPreds)
+    preds
 
     names(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")
     colnames(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")
