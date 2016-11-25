@@ -88,7 +88,7 @@ def run_Python_method(args):
     :args: list of args to run with Python script
 
     """
-    with shell_env(PYTHONPATH="$PYTHONPATH:src/"):
+    with shell_env(PYTHONPATH="$PYTHONPATH:src/"), settings(warn_only=True):
         local(' python ' + " ".join(args))
 
 def prediction(timeseries, methods = None, selected_files=None):
