@@ -102,7 +102,7 @@ fgsm <- function (F,gmat, targetIndex, k)
 ##### gsm with PCA method
 gsmPCA <- function (F,gmat, targetIndex, k)
 {
-  gsmCluster = c()
+  gsmCluster = data.frame()
   mincaus = 0
   #### eliminate variables that not cause the target
   delet = c()
@@ -167,27 +167,12 @@ gsmPCA <- function (F,gmat, targetIndex, k)
       ### buildind the gsm cluster from the PAM clusters
       for (j in 1:k)
       {
-        bestInGroup = 1;
-        if (ncol(classes) >= j)
-        {
-          caus = gmat[classes[1,j],target];
-          for (l in 2:length(classes[,j]))
-          {
-            if(is.na(classes[l,j]) == FALSE)
-            {
-              if (gmat[classes[l,j],target] > caus)
-              {
-                caus = gmat[classes[l,j],target];
-                bestInGroup = l;
-              }
-            }
-            gsmCluster[j] = classes[bestInGroup,j];
-          }
-        }
+          prinComp = kpca(data=F, kernel="stringdot",features=1)$pcv
+          gsmCluster[j] = prinComp[,1]
       }
-      GSM = data.frame()
-      GSM = F [,gsmCluster]
-      return (GSM)
+      #GSM = data.frame()
+      #GSM = F [,gsmCluster]
+      return (gsmCluster)
   }
   else
     return (F[,-target])
