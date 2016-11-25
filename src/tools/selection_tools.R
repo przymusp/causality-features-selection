@@ -113,7 +113,7 @@ gsmPCA <- function (F,gmat, targetIndex, k)
     if (i == targetIndex)
       target = m
     if (i != targetIndex)
-      if (gmat[i,targetIndex] < 0.9)
+      if (gmat[i,targetIndex] < 0.0)
       {
         delet[n] = i
         n = n + 1
@@ -167,16 +167,22 @@ gsmPCA <- function (F,gmat, targetIndex, k)
       ### buildind the gsm cluster from the PAM clusters
       for (j in 1:k)
       {
-          prinComp = kpca(data=F, kernel="stringdot",features=1)$pcv
-          gsmCluster[j] = prinComp[,1]
+          vect = classes[,j]
+          vect <- vect[!is.na(vect)]
+          if (length(vect) > 1) {
+              prinComp = kpca(~.,data=F[,vect], kernel="rbfdot",sigma=0.2,features=1)
+              variables = pcv(prinComp)
+              for (l in 1:nrow(variables))
+                gsmCluster[l,j] = variables[l,1]
+                #print (variables)
+          }
+          else
+            gsmCluster[,j] = F[,vect[1]]
       }
-      #GSM = data.frame()
-      #GSM = F [,gsmCluster]
       return (gsmCluster)
   }
   else
     return (F[,-target])
-  #return (gsmCluster)
 }
 
 
