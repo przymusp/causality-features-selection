@@ -96,8 +96,11 @@ def prediction(timeseries, methods = None):
     selection_step_directory = __RESULTS_DIRECTORY_PREFIX + 'selection/' + timeseries_prefix
 
     files = glob.glob(selection_step_directory + "/*.csv")
-    for f in files:
-        __run_methods(methods, f, 'prediction', timeseries_prefix)
+    files = [os.path.abspath(f) for f in files]
+    f_in = " ".join(files)
+    __run_methods(methods, f_in, 'prediction', timeseries_prefix)
+    # for f in files:
+        # __run_methods(methods, f, 'prediction', timeseries_prefix)
 
 def check_step_csv_files(step_directory):
     files = glob.glob(step_directory + "/*.csv")
