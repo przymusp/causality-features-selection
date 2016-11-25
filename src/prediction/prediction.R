@@ -32,8 +32,13 @@ predictbase <- function (method_name, prefix_out){
     target_name = gsub(" ", "", target_name, fixed = TRUE)
     data_name = gsub(" ", "", data_name, fixed = TRUE)
     
+    selection_method_name = strsplit(method_name, "/")[[1]]
+    selection_method_name = selection_method_name[length(selection_method_name)]
+    selection_method_name = gsub(".csv", "", selection_method_name, fixed = TRUE)
     
-    output_dir = paste0(prefix_out,data_name,"_",target_name,"_","VECModel.csv")
+    
+    #output_dir = paste0(prefix_out,data_name,"_",target_name,"_","VECModel.csv")
+    output_dir = paste0(prefix_out,selection_method_name,"_VECModel.csv")
 
     #system(paste0(command,' > ', output_dir))
     header = paste0(predict,"\r",name_pref,"\r", description,"\r# method; VECModel\r")
