@@ -31,7 +31,7 @@ predictbase <- function (method_name, prefix_out){
 
     system(paste0(command,' > ', output_dir))
 
-    # Example of the lag parametre of the prediction model, !!use the Varselect method in the futur
+    # TODO: Example of the lag parametre of the prediction model, !!use the Varselect method in the futur
     p = 100
     ### normalisation
     fs_method      = read.csv (paste0(method_name), comment.char = "#", header=TRUE, sep=";")
