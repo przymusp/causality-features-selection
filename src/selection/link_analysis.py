@@ -72,6 +72,7 @@ def link_analysis(fname_graph, graph_type):
         out_fname = get_filename_from_method(fname, c, mname, prefix=output_directory)
 
         df_out.meta_header['predict']=[c,]
+        df_out.meta_header['method']=["LinkAnalysis%s(select_top_percent=0.5)"%(graph_type)]
         write_csv_with_metadata(df_out[output_dimensions], out_fname)
 
 
