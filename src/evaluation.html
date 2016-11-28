@@ -42,6 +42,33 @@
                 {% endfor %}
             </div>
         </div>
+
+        <div class="container">
+            <div aria-multiselectable="true" class="panel-group" id="accordion" role="tablist">
+
+                <div class="panel panel-danger">
+                    <div class="panel-heading" id="headingErrorList" role="tab">
+                        <h4 class="panel-title">
+                            <a aria-controls="collapseErrorList" aria-expanded="true" data-parent="#accordion" data-toggle="collapse" href="#collapseErrorList">
+                                Evaluation error list
+                            </a>
+                        </h4>
+                    </div>
+
+
+                    <div aria-labelledby="headingErrorList" class="panel-collapse collapse " id="collapseErrorList" role="tabpanel">
+                        <div class="panel-body">
+                            <ul class="list-group">
+                                {% for error in error_list %}
+                                <li>   {{ error }} </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
         <script src="http://przymus.org/theme/js/jquery.min.js"></script>
 
         <!-- Include all compiled plugins (below), or include individual files as needed -->

@@ -60,11 +60,17 @@ def evaluate_prediction(original_data, predictions):
 
     return results
 
+def check_field_exist_with_and_has_only_one_value(dict_to_check, field, error_list):
+    if field not in predictions.meta_header or  len(predictions.meta_header[field])  != 1:
+        error_list.append("Error: Field %s not found in meta header or has more then one value." %(field))
+        return False
+    return True
+
 
 if __name__ == "__main__":
 
     if len(sys.argv) < 3:
-        # print("Error: at least 2 files are needed to compare")
+        print("Error: at least 2 files are needed to compare")
         exit(0)
 
     ## Read first prediction file to guess the number of predicted values
@@ -76,11 +82,7 @@ if __name__ == "__main__":
     # Results
     results_collection = collections.defaultdict(lambda : collections.defaultdict(dict))
 
-    def check_field_exist_with_and_has_only_one_value(dict_to_check, field):
-        if field not in predictions.meta_header or  len(predictions.meta_header[field])  != 1:
-            # print("Error: Field %s not found in meta header or has more then one value." %(field))
-            return False
-        return True
+    error_list = []
 
     required_meta_header_fields_checkers = {}
 
@@ -91,12 +93,12 @@ if __name__ == "__main__":
         try:
             predictions = tools.read_csv_and_metadata(f)
         except Exception as e:
-            # print ("Error: Could not read file %s, moving to next file" %(f))
+            error_list.append("Error: Could not read file %s, moving to next file" %(f))
             continue
 
         # Complain and continue if fields are messed up in input file meta_header
-        if not check_field_exist_with_and_has_only_one_value(predictions.meta_header, 'predict')\
-                or not check_field_exist_with_and_has_only_one_value(predictions.meta_header, 'predict_model'):
+        if not check_field_exist_with_and_has_only_one_value(predictions.meta_header, 'predict', error_list)\
+                or not check_field_exist_with_and_has_only_one_value(predictions.meta_header, 'predict_model', error_list):
             continue
 
         predict_model = predictions.meta_header['predict_model'][0]
@@ -114,18 +116,17 @@ if __name__ == "__main__":
             folded_orginal_data_dict[nbre_preds] = transform_real_values(original_data, nbre_preds, target)
             real_data = folded_orginal_data_dict[nbre_preds]
 
-        if len(folded_orginal_data_dict[target]) > 1:
-            # print("Error: more then different number of predictions detected in files. Moving to the next file.")
-            continue
+        # if len(folded_orginal_data_dict[target]) > 1:
+        #     # print("Error: more then different number of predictions detected in files. Moving to the next file.")
+        #     continue
 
         ret = evaluate_prediction(real_data, predictions)
 
         for k,v in ret.items():
             results_collection[target][k][selection_method] = ret[k]
 
-    # print("</ul>")
 
     tables = preaty_print(results_collection)
-    script = template.render(tables=tables)
+    script = template.render(tables=tables, error_list=error_list)
     print (script.encode('utf-8'))
 
