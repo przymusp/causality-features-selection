@@ -60,9 +60,9 @@ def evaluate_prediction(original_data, predictions):
 
     return results
 
-def check_field_exist_with_and_has_only_one_value(dict_to_check, field, error_list):
+def check_field_in_header(dict_to_check, field, fname, error_list):
     if field not in predictions.meta_header or  len(predictions.meta_header[field])  != 1:
-        error_list.append("Error: Field %s not found in meta header or has more then one value." %(field))
+        error_list.append("Error: File %s, field %s\n not found in meta header or has more then one value." %(fname, field))
         return False
     return True
 
@@ -74,7 +74,11 @@ if __name__ == "__main__":
         exit(0)
 
     ## Read first prediction file to guess the number of predicted values
-    original_data = tools.read_csv_and_metadata(sys.argv[1])
+    try:
+        original_data = tools.read_csv_and_metadata(sys.argv[1])
+    except Exception as e:
+        print ("Error: Could not read the file %s, exiting." %(f))
+        exit(0)
 
     # Cache for orginal data representation suitable for prediction comparison
     folded_orginal_data_dict = collections.defaultdict(dict)
@@ -96,9 +100,11 @@ if __name__ == "__main__":
             error_list.append("Error: Could not read file %s, moving to next file" %(f))
             continue
 
+        meta_header = predictions.meta_header
         # Complain and continue if fields are messed up in input file meta_header
-        if not check_field_exist_with_and_has_only_one_value(predictions.meta_header, 'predict', error_list)\
-                or not check_field_exist_with_and_has_only_one_value(predictions.meta_header, 'predict_model', error_list):
+        if not check_field_in_header(meta_header, 'predict', f, error_list)\
+                or not check_field_in_header(meta_header, 'predict_model', f, error_list)\
+                or not check_field_in_header(meta_header, 'method', f, error_list):
             continue
 
         predict_model = predictions.meta_header['predict_model'][0]
@@ -122,8 +128,9 @@ if __name__ == "__main__":
 
         ret = evaluate_prediction(real_data, predictions)
 
+        short_selection_method = tools.get_filename_from_method("", "", selection_method, "", "")
         for k,v in ret.items():
-            results_collection[target][k][selection_method] = ret[k]
+            results_collection[target][k][short_selection_method] = ret[k]
 
 
     tables = preaty_print(results_collection)
