@@ -20,29 +20,16 @@ predictbase <- function (method_name, prefix_out){
     print(method_name)
     # print(prefix_out)
 
-    command = paste0 ('awk /^#/ ',method_name)
-    dat = system(command,  intern = TRUE)
-    dat = strsplit(dat, "\r") 
-    predict = as.character (dat[[1]][1])
-    name_pref = as.character (dat[[1]][2])
-    description = as.character (dat[[1]][3])
-    
-    target_name = strsplit(predict, ";")[[1]][2]
-    data_name = strsplit(name_pref, ";")[[1]][2]
-    target_name = gsub(" ", "", target_name, fixed = TRUE)
-    data_name = gsub(" ", "", data_name, fixed = TRUE)
-    
-    selection_method_name = strsplit(method_name, "/")[[1]]
-    selection_method_name = selection_method_name[length(selection_method_name)]
-    selection_method_name = gsub(".csv", "", selection_method_name, fixed = TRUE)
-    
-    
-    #output_dir = paste0(prefix_out,data_name,"_",target_name,"_","VECModel.csv")
-    output_dir = paste0(prefix_out,selection_method_name,"_VECModel.csv")
+    command = paste0 ('awk \' BEGIN{printf("#predict_model; VECM\\n");}/^#/ \' ',method_name)
+    # print(command)
+    dat <- system(command,  intern = TRUE)
+    dat <- strsplit(dat, ";")
+    data_name = strsplit(method_name, "/")
 
-    #system(paste0(command,' > ', output_dir))
-    header = paste0(predict,"\r",name_pref,"\r", description,"\r# method; VECModel\r")
-    writeLines (header,output_dir)
+
+    output_dir = paste0(prefix_out,"predictions_",data_name[[1]][length(data_name[[1]])])
+
+    system(paste0(command,' > ', output_dir))
 
     # TODO: Example of the lag parametre of the prediction model, !!use the Varselect method in the futur
     p = 100
