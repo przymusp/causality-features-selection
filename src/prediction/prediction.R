@@ -20,7 +20,7 @@ predictbase <- function (method_name, prefix_out){
     print(method_name)
     # print(prefix_out)
 
-    command = paste0 ('awk \' BEGIN{printf("#predict_model; VECM\\n");}/^#/ \' ',method_name)
+    command = paste0 ('awk \' BEGIN{printf("# predict_model; VECM\\n");}/^#/ \' ',method_name)
     # print(command)
     dat <- system(command,  intern = TRUE)
     dat <- strsplit(dat, ";")
