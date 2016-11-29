@@ -61,8 +61,11 @@ def evaluate_prediction(original_data, predictions):
     return results
 
 def check_field_in_header(dict_to_check, field, fname, error_list):
-    if field not in predictions.meta_header or  len(predictions.meta_header[field])  != 1:
-        error_list.append("Error: File %s, field %s\n not found in meta header or has more then one value." %(fname, field))
+    if field not in predictions.meta_header:
+        error_list.append("Error: File %s, field %s\n not found in meta header." %(fname, field))
+        return False
+    if len(predictions.meta_header[field])  != 1:
+        error_list.append("Error: File %s, field %s\n has more then one value in  meta_header." %(fname, field))
         return False
     return True
 
