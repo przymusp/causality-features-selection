@@ -11,7 +11,7 @@ naiveSelection <- function (F, targetIndex, threshold, lag_max)
   naiveClasse = c()
   p = 1
   causalities = data.frame()
-  
+
   for (j in 1:ncol(F))
   {
    # var = VARselect(F,lag.max=lag_max)
@@ -28,7 +28,7 @@ naiveSelection <- function (F, targetIndex, threshold, lag_max)
                      # causality[p,1] = 1 - test$`Pr(>F)`[2]
                       causalities[p,1] = 1 - test$`Pr(>F)`[2]
               }
-      
+
               if(test1[1] == "Error in vc[ovar, ovar] : indice hors limites\n")
                 {
                   causalities[p,2] = 0
@@ -45,7 +45,7 @@ naiveSelection <- function (F, targetIndex, threshold, lag_max)
 
   p = 1
    for (i in 1:nrow(causalities))
-   {  
+   {
        if (causalities[i,1] >= threshold && causalities[i,2] < threshold)
        {
          results[p] = causalities[i,3]
@@ -105,10 +105,12 @@ for (i in 2:length(target_names)) {
     colnames(selectKc) = c(target_name,colnames[causSelect])
 
     # Bref description of the file
+    command = paste0 ('awk \'/^#/ && !/^# *predict/\' ',data_dir)
     system(paste0(command,' > ', out_dir))
-    header = paste0("# predict;",target_name,"\r","# name_prefix;", data_name,"\r", description,"# method; Univariate feature selection method\r")
-    writeLines (header,out_dir)
-    
+    cat ("# predict;", file=out_dir,append=TRUE)
+    cat (target_name, file=out_dir,append=TRUE, sep='\n')
+    cat ("# method; UFSM(Univariate feature selection method)",file=out_dir,append=TRUE, sep='\n')
+
     ## Store the selected variables
     write.table(selectKc, out_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
 }
