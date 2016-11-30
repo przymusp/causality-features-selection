@@ -44,7 +44,6 @@ def link_analysis(fname_graph, graph_type):
     inv_nodes_map = {v: k for k, v in nodes_map.items()}
 
     df_out = read_csv_and_metadata(fname)
-    mname = "LinkAnalysis%s(select_top_percent=0.5)"%(graph_type)
 
     for c in df.meta_header['predict']:
         # print (G.edges(nodes_map[c],data=True))
@@ -60,20 +59,21 @@ def link_analysis(fname_graph, graph_type):
         # print (result.columns.values)
         r = result.sort_values(0, ascending = False)
 
-        # Take top 50% columns
-        # TODO: Add automatic selection of the number of the columns
-        output_dimensions = r[:len(r)/2].transpose()
+        for i in range(1,len(r)+1):
+            # TODO: Add automatic selection of the number of the columns
+            output_dimensions = r[:i].transpose()
 
-        # If predicted column is in the set - remove it
-        # Normally the predicted column should be the first column in this set, so this is just a precaution. As we will add this column back in next step.
-        output_dimensions = list(output_dimensions.drop([c,], axis=1).columns.values)
-        output_dimensions.insert(0,c)
+            # If predicted column is in the set - remove it
+            # Normally the predicted column should be the first column in this set, so this is just a precaution. As we will add this column back in next step.
+            output_dimensions = list(output_dimensions.drop([c,], axis=1).columns.values)
+            output_dimensions.insert(0,c)
 
-        out_fname = get_filename_from_method(fname, c, mname, prefix=output_directory)
+            mname = "LinkAnalysis_%s_%d(select_top_percent=%d)"%(graph_type,i,i)
+            out_fname = get_filename_from_method(fname, c, mname, prefix=output_directory)
 
-        df_out.meta_header['predict']=[c,]
-        df_out.meta_header['method']=["LinkAnalysis%s(select_top_percent=0.5)"%(graph_type)]
-        write_csv_with_metadata(df_out[output_dimensions], out_fname)
+            df_out.meta_header['predict']=[c,]
+            df_out.meta_header['method']=["LinkAnalysis_%s_%d(select_top_percent=%d)"%(graph_type,i,i)]
+            write_csv_with_metadata(df_out[output_dimensions], out_fname)
 
 
 if __name__ == '__main__':
