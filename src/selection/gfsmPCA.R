@@ -63,12 +63,14 @@ for (i in 2:length(target_names)) {
     gfsm = gsmPCA (data, matrix, target_index, 4)
     gfsm = data.frame (data[,target_name],gfsm)
     colnames(gfsm)[1] = target_name
-    
+
     # Bref description of the file
+    command = paste0 ('awk \'/^#/ && !/^# *predict/\' ',data_dir)
     system(paste0(command,' > ', out_dir))
-    header = paste0("# predict;",target_name,"\r","# name_prefix;", data_name,"\r", description,"# method; Granger_PCA feature selection method\r")
-    writeLines (header,out_dir)
-    
+    cat ("# predict;", file=out_dir,append=TRUE)
+    cat (target_name, file=out_dir,append=TRUE, sep='\n')
+    cat ("# method; Granger_cluster_PCA(Granger_PCA feature selection method)",file=out_dir,append=TRUE, sep='\n')
+
     ## Store the selected variables
     write.table(gfsm, out_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
 }
