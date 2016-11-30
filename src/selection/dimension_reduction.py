@@ -17,7 +17,15 @@ methods = [
   decomp.KernelPCA(n_components=4, kernel="rbf", fit_inverse_transform=True),
   decomp.FastICA(n_components=4),
   decomp.IncrementalPCA(n_components=4),
-  decomp.PCA(n_components=4)
+  decomp.PCA(n_components=4),
+
+  # Auto guessing the number of dimensions for method
+  decomp.PCA(n_components='mle', svd_solver='full'), # Uses The method from "Probabilistic Principal Component Analysis"
+  decomp.KernelPCA(kernel="rbf", fit_inverse_transform=True), # Removes zero components
+  # TODO: NMF from sklearn documentation n_components may be None (use all components) or set to specyfic value. Saddly no mention of auto guessing.
+  # TODO: FactorAnalysis from sklearn documentation n_components may be None (use all components) or set to specyfic value. Saddly no mention of auto guessing.
+  # TODO: FastICA from sklearn documentation n_components may be None (use all components) or set to specyfic value. Saddly no mention of auto guessing.
+  # TODO: IncrementalPCA from sklearn documentation n_components may be None (use min(n_samples, n_features)) or set to specyfic value. Saddly no mention of auto guessing.
 ]
 
 
