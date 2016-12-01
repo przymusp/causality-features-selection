@@ -54,6 +54,38 @@ vec_prediction <- function (ts, p, perc)
   return (results)
 }
 
+## evaluation using arima model
+arima_prediction <- function (target, p, ns, perc)
+{
+  # ts: multivariate time series to predict the first attribut
+  # p: the lag parameter
+  # perc: percentage of the data to predict
+  
+  nb_preds = as.integer ((nrow(ts) * perc/100))
+  
+  for (ind in 1:nb_preds)
+  {
+    pred = data.frame()
+    cutTarget = target[1:(length(target) - (nb_preds-ind)  - 5)]
+    real = target[(length(target)- (nb_preds-ind) -4):(length(target) - (nb_preds-ind))]
+    
+    ####### Apply the VECM model
+    tryCatch({
+      model = arima (cutTarget,  order = c(p, ns, 0))
+    }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
+    y = predict(model, n.ahead = 5)$pred
+    for (ink in 1 : 5)
+      pred[ink,1] = y[ink]
+    ########
+    
+    #pred [,2] = real
+    #results[[ind]] = data.frame(pred)
+    for (j in 1:nrow(pred))
+      results[ind,j] = pred[j,1]
+    # target = target[1:(length(target) - 5)]
+  }
+  return (results)
+}
 ### Normalize a dataframe
 normalize <- function (F)
 {

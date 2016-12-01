@@ -11,6 +11,7 @@ enableJIT(3)
 library(tsDyn)
 library(lmtest)
 library(vars)
+library(forecast)
 
 source("../tools/prediction_tools.R")
 
@@ -42,12 +43,27 @@ predictbase <- function (method_name, prefix_out){
   var = VARselect(data.frame(fs_method[,1]),lag.max=lagMax)
   p = var$selection[1] ## AIC criteria
 
-  ###  Prediction
+  ## determmine the number of predictions
   nbrePreds = as.integer(nrow(fs_method) * 10 / 100) # 10% predictions of the size of the data
-  mod_vecm = VECM(data.frame(fs_method[,1]), lag=p)
-  preds_roll = predict_rolling(mod_vecm,n.ahead = 1, nroll=nbrePreds)
+  
+  ## detect the order of stationarity
+  x = fs_method[,1]
+  nd = 0
+  continue = TRUE
+  while (continue)
+  {
+      ns = ndiffs (x,test="adf")
+      if(ns == 0)
+      {
+          continue = FALSE
+      }
+      nd = nd + 1
+  }
+
+  preds = arima_prediction (fs_method[,1], p, ns, nbrePreds)
+  #preds_roll = predict_rolling(mod_vecm,n.ahead = 1, nroll=nbrePreds)
   #preds = data.frame(c(preds_roll$pred[,1]),c(preds_roll$true[,1])) 
-  preds = data.frame(c(preds_roll$pred[,1])) 
+  #preds = data.frame(c(preds_roll$pred[,1]))
   ####
 
   names(preds) = c("predictions")
