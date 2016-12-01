@@ -45,7 +45,7 @@ vec_prediction <- function (ts, p, perc)
         pred[ink,1] = y[ink,1]
     ########
     
-    pred [,2] = real
+    #pred [,2] = real
     #results[[ind]] = data.frame(pred)
     for (j in 1:nrow(pred))
       results[ind,j] = pred[j,1]
