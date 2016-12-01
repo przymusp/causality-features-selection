@@ -64,7 +64,12 @@ print(args[largs])
 
 cl <- makeCluster(4)
 registerDoParallel(cl)
-foreach (i=1:(length(args)-1)) %dopar% try(predictbase(args[i], args[largs]))
+foreach (i=1:(length(args)-1)) %dopar%
+{
+    res <- tryCatch({
+        predictbase(args[i], args[largs])
+    }, error=function(e) NULL)
+}
 
 # # file to predict
 # method_name = args[1]
