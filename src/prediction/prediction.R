@@ -11,8 +11,7 @@ enableJIT(3)
 library(tsDyn)
 library(lmtest)
 library(vars)
-library(foreach)
-library(doParallel)
+library(parallel)
 
 source("../tools/prediction_tools.R")
 
@@ -20,11 +19,11 @@ predictbase <- function (method_name, prefix_out){
 
     #prefix_out = '../../results/'
     #method_name = '../../results/selection/ebob-l_CAC40_FactorAnalysis_zNDaHNvy-OLDnRnMsdastMyoRq0=.csv'
-    print(method_name)
+    # print(method_name)
     # print(prefix_out)
 
-    command = paste0 ('awk \' BEGIN{printf("# predict_model; VECM\\n");}/^#/ \' ',method_name)
-    print(command)
+    command = paste0 ('awk \'BEGIN{printf("# predict_model; VECM\\n");} /^#/\' ', method_name)
+    # print(command)
     dat <- system(command,  intern = TRUE)
     dat <- strsplit(dat, ";")
     data_name = strsplit(method_name, "/")
@@ -44,7 +43,7 @@ predictbase <- function (method_name, prefix_out){
     lagMax = 100
     var = VARselect(fs_method,lag.max=lagMax)
     p = var$selection[1] ## AIC criteria
-    print(p)
+    # print(p)
 
     ###  Prediction
     percPreds = 10 # 10% predictions of the size of the data
@@ -62,14 +61,13 @@ args = commandArgs(trailingOnly=TRUE)
 largs = length(args)
 print(args[largs])
 
-cl <- makeCluster(4)
-registerDoParallel(cl)
-foreach (i=1:(length(args)-1)) %dopar%
-{
-    res <- tryCatch({
-        predictbase(args[i], args[largs])
-    }, error=function(e) NULL)
-}
+#Calculate the number of cores
+no_cores <- detectCores()
+
+# Initiate cluster
+cl <- makeCluster(no_cores, type='FORK')
+
+parLapply(cl, 1:(length(args)-1), function(i) try(predictbase(args[i], args[largs])))
 
 # # file to predict
 # method_name = args[1]
