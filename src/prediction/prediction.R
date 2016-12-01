@@ -22,13 +22,13 @@ predictbase <- function (method_name, prefix_out){
     # print(prefix_out)
 
     command = paste0 ('awk \' BEGIN{printf("# predict_model; VECM\\n");}/^#/ \' ',method_name)
-    # print(command)
+    print(command)
     dat <- system(command,  intern = TRUE)
     dat <- strsplit(dat, ";")
     data_name = strsplit(method_name, "/")
 
 
-    output_dir = paste0(prefix_out,"predictions_",data_name[[1]][length(data_name[[1]])])
+    output_dir = paste0(prefix_out,"VECM_",data_name[[1]][length(data_name[[1]])])
 
     system(paste0(command,' > ', output_dir))
 
@@ -52,7 +52,6 @@ predictbase <- function (method_name, prefix_out){
     names(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")
     colnames(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")
     preds = denormalize(preds,max,min)
-    preds
 
     write.table(preds, file = output_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";",append = TRUE)
 }
