@@ -18,33 +18,36 @@ global_measures = {
         'evc': explained_variance_score,
         }
 
-def preaty_print(results_collection):
+def preaty_print(results_collection, methods_to_hotizon_dict):
     # TODO: Fix colors if more measures appear
     colors = ["#9b59b6", "#3498db", "#95a5a6", "#e74c3c", "#34495e", "#2ecc71"]
     measures = global_measures.keys()
     cmap = dict(zip(measures, colors[:len(measures)]))
 
-    tables = collections.defaultdict(dict)
-    for target in results_collection:
-        for h in range(5): # diffrent timehorizons
-            # print ("<h3 style='text-align:center'>Target: %s Time horizon: %s</h3>" % (target, h))
-            df = pd.DataFrame.from_dict(results_collection[target][h]).transpose()
+    # TODO: get the horizon from the data not param
 
-            s = df.style
-            # s.set_properties(**{'font-size':'10pt'})
-            for m in measures:
-               s.bar(subset=[m,], color=cmap[m])
-            tables[target][h]=s.render()
+    tables = collections.defaultdict(lambda : collections.defaultdict(dict))
+    for predict_model in results_collection:
+        for target in results_collection[predict_model]:
+            for h in range(methods_to_hotizon_dict[predict_model]): # diffrent timehorizons
+                # print ("<h3 style='text-align:center'>Target: %s Time horizon: %s</h3>" % (target, h))
+                df = pd.DataFrame.from_dict(results_collection[predict_model][target][h]).transpose()
+
+                s = df.style
+                # s.set_properties(**{'font-size':'10pt'})
+                for m in measures:
+                   s.bar(subset=[m,], color=cmap[m])
+                tables[predict_model][target][h]=s.render()
     return tables
 
-def transform_real_values(df, nbre_preds, target):
+def transform_real_values(df, nbre_preds, target, horizon):
     # transform real values into correct form
     reals = []
     for h in range(nbre_preds):
-        reals.append(df[[target]][-nbre_preds - 5 + h: -nbre_preds + h].values.T[0])
+        reals.append(df[[target]][-nbre_preds - horizon + h: -nbre_preds + h].values.T[0])
     return np.stack(reals)
 
-def evaluate_prediction(original_data, predictions):
+def evaluate_prediction(original_data, predictions, horizon):
     """Evaluate prediction results
 
     :real_values: a transformed data frame with real values
@@ -55,7 +58,7 @@ def evaluate_prediction(original_data, predictions):
 
     results = collections.defaultdict(dict)
     for m in global_measures:
-        for i in range(5):
+        for i in range(horizon):
             results[i][m] = global_measures[m](original_data[:,i],predictions.values[:,i])
 
     return results
@@ -84,10 +87,11 @@ if __name__ == "__main__":
         exit(0)
 
     # Cache for orginal data representation suitable for prediction comparison
-    folded_orginal_data_dict = collections.defaultdict(dict)
+    folded_orginal_data_dict = collections.defaultdict(lambda : collections.defaultdict(dict))
+    prediction_method_horizon = {}
 
     # Results
-    results_collection = collections.defaultdict(lambda : collections.defaultdict(dict))
+    results_collection = collections.defaultdict(lambda : collections.defaultdict(lambda : collections.defaultdict(dict)))
 
     error_list = []
 
@@ -110,33 +114,44 @@ if __name__ == "__main__":
                 or not check_field_in_header(meta_header, 'method', f, error_list):
             continue
 
+        # Prediction model used
         predict_model = predictions.meta_header['predict_model'][0]
+        # Selection method used
         selection_method = predictions.meta_header['method'][0]
-
-        ## Get the target variable from metadata
+        ## The target variable from metadata
         target = predictions.meta_header['predict'][0]
 
-        ## number of prediction or points from which 5 predictions are made with the vecm.
+        # The size of predicted horizon
+        horizon = len(predictions.columns)
+        # For each prediction method only one prediction horizon is available
+        if predict_model in prediction_method_horizon and prediction_method_horizon[predict_model] != horizon:
+            error_list.append("Error: more then one horizon detected for method %s skipping file %s"  %(predict_model,f))
+            continue
+        else:
+            prediction_method_horizon[predict_model] = horizon
+
+        ## The number of predicted vectors (vector may be one dimensional or may include some additional time horizon prediction)
         nbre_preds = len(predictions.index)
 
-        if nbre_preds in folded_orginal_data_dict[target]:
-            real_data = folded_orginal_data_dict[nbre_preds]
+        #TODO: add the horizon guessing here
+        if nbre_preds in folded_orginal_data_dict[predict_model][target]:
+            real_data = folded_orginal_data_dict[predict_model][target][nbre_preds]
         else:
-            folded_orginal_data_dict[nbre_preds] = transform_real_values(original_data, nbre_preds, target)
-            real_data = folded_orginal_data_dict[nbre_preds]
+            folded_orginal_data_dict[predict_model][target][nbre_preds] = transform_real_values(original_data, nbre_preds, target, horizon)
+            real_data = folded_orginal_data_dict[predict_model][target][nbre_preds]
 
         # if len(folded_orginal_data_dict[target]) > 1:
         #     # print("Error: more then different number of predictions detected in files. Moving to the next file.")
         #     continue
 
-        ret = evaluate_prediction(real_data, predictions)
+        ret = evaluate_prediction(real_data, predictions, horizon)
 
         short_selection_method = tools.get_filename_from_method("", "", selection_method, "", "")
         for k,v in ret.items():
-            results_collection[target][k][short_selection_method] = ret[k]
+            results_collection[predict_model][target][k][short_selection_method] = ret[k]
 
 
-    tables = preaty_print(results_collection)
+    tables = preaty_print(results_collection, prediction_method_horizon)
     script = template.render(tables=tables, error_list=error_list)
     print (script.encode('utf-8'))
 

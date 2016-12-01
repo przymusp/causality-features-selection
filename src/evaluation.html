@@ -20,26 +20,42 @@
 
         <div class="container">
             <div aria-multiselectable="true" class="panel-group" id="accordion" role="tablist">
-                {% for target in tables %}
-                {% for horizon in tables[target] %}
+                {% for predict_model in tables %}
 
-                <div class="panel panel-default">
-                    <div class="panel-heading" id="heading{{ target }}{{ horizon }}" role="tab">
+                <div class="panel panel-success">
+                    <div class="panel-heading" id="heading{{ predict_model }}" role="tab">
                         <h4 class="panel-title">
-                            <!-- <a aria-controls="collapse{{ target }}{{ horizon }}" aria-expanded="true" data-parent="#accordion" data-toggle="collapse" href="#collapse{{ target }}{{ horizon }}"> -->
-                            <a aria-controls="collapse{{ target }}{{ horizon }}" aria-expanded="true" data-toggle="collapse" href="#collapse{{ target }}{{ horizon }}">
-                                Target {{ target }} in horizon {{ horizon + 1 }}
+                            <a aria-controls="collapse{{ predict_model }}" aria-expanded="true" data-toggle="collapse" href="#collapse{{ predict_model }}">
+                                Prediction model {{ predict_model }}
                             </a>
                         </h4>
                     </div>
-                    <div aria-labelledby="heading{{ target }}{{ horizon }}" class="panel-collapse collapse " id="collapse{{ target }}{{ horizon }}" role="tabpanel">
+                    <div aria-labelledby="heading{{ predict_model }}" class="panel-collapse collapse " id="collapse{{ predict_model }}" role="tabpanel">
                         <div class="panel-body">
-                            {{ tables[target][horizon] }}
+                            {% for target in tables[predict_model] %}
+                            {% for horizon in tables[predict_model][target] %}
+
+                            <div class="panel panel-default">
+                                <div class="panel-heading" id="heading{{ predict_model }}{{ target }}{{ horizon }}" role="tab">
+                                    <h4 class="panel-title">
+                                        <!-- <a aria-controls="collapse{{ target }}{{ horizon }}" aria-expanded="true" data-parent="#accordion" data-toggle="collapse" href="#collapse{{ target }}{{ horizon }}"> -->
+                                        <a aria-controls="collapse{{ predict_model }}{{ target }}{{ horizon }}" aria-expanded="true" data-toggle="collapse" href="#collapse{{ predict_model }}{{ target }}{{ horizon }}">
+                                            Target {{ target }} in horizon {{ horizon + 1 }}
+                                        </a>
+                                    </h4>
+                                </div>
+                                <div aria-labelledby="heading{{ predict_model }}{{ target }}{{ horizon }}" class="panel-collapse collapse " id="collapse{{ predict_model }}{{ target }}{{ horizon }}" role="tabpanel">
+                                    <div class="panel-body">
+                                        {{ tables[predict_model][target][horizon] }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% endfor %}
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
-
-                {% endfor %}
                 {% endfor %}
             </div>
         </div>
