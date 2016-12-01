@@ -11,6 +11,8 @@ enableJIT(3)
 library(tsDyn)
 library(lmtest)
 library(vars)
+library(foreach)
+library(doParallel)
 
 source("../tools/prediction_tools.R")
 
@@ -60,9 +62,9 @@ args = commandArgs(trailingOnly=TRUE)
 largs = length(args)
 print(args[largs])
 
-for (i in 1:(length(args)-1)) {
-    try(predictbase(args[i], args[largs]))
-}
+cl <- makeCluster(4)
+registerDoParallel(cl)
+foreach (i=1:(length(args)-1)) %dopar% try(predictbase(args[i], args[largs]))
 
 # # file to predict
 # method_name = args[1]
