@@ -40,10 +40,11 @@ if __name__ == "__main__":
             mname = pretty_print_method_name(method)
             out_fname = get_filename_from_method(fname, c, mname, prefix=output_directory)
 
+            # TODO: only update the files ?
             # if file exists skip selection for this method
-            if path.isfile(out_fname):
-                print ("File for method %s exists - skipping.\n  * Remove %s file to recompute it."%(mname,out_fname))
-                continue
+            # if path.isfile(out_fname):
+            #     print ("File for method %s exists - skipping.\n  * Remove %s file to recompute it."%(mname,out_fname))
+            #     continue
 
             # Fit and transform using method
             t = method.fit_transform(d)
