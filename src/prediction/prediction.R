@@ -37,13 +37,13 @@ predictbase <- function (method_name, prefix_out){
     max = max(fs_method[,1])
     min = min(fs_method[,1])
     fs_method = normalize(fs_method)
-    
+
     # determine the lag parameter
     lagMax = 100
     var = VARselect(fs_method,lag.max=lagMax)
-    p = var$selection[1] ## BIC criteria
+    p = var$selection[1] ## AIC criteria
     print(p)
-    
+
     ###  Prediction
     percPreds = 10 # 10% predictions of the size of the data
     preds = vec_prediction(fs_method, p, percPreds)
