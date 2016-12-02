@@ -98,6 +98,7 @@ def run_Python_method(args):
         local(' python ' + " ".join(args))
 
 def prediction(timeseries, methods = None, selected_files=None, filter_by_mdate=True):
+    ## TODO : manage the univariate model separately
     timeseries_prefix = timeseries.split("/")[-1].split(".")[0]
     selection_step_directory = __RESULTS_DIRECTORY_PREFIX + 'selection/' + timeseries_prefix
 

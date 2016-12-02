@@ -41,7 +41,8 @@ predictbase <- function (method_name, prefix_out){
 
     # determine the lag parameter
     lagMax = 100
-    var = VARselect(fs_method[,1],fs_method[,-1],lag.max=lagMax)
+    #var = VARselect(fs_method[,1],fs_method[,-1],lag.max=lagMax)
+    var = VARselect(fs_method,lag.max=lagMax)
     p = var$selection[1] ## AIC criteria
     # print(p)
 
