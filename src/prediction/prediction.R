@@ -66,9 +66,10 @@ print(args[largs])
 no_cores <- detectCores()
 
 # Initiate cluster
-cl <- makeCluster(no_cores, type='FORK')
+# cl <- makeCluster(no_cores, type='FORK')
 
-parLapply(cl, 1:(length(args)-1), function(i) try(predictbase(args[i], args[largs])))
+# parLapply(cl, 1:(length(args)-1), function(i) try(predictbase(args[i], args[largs])))
+mclapply(1:(length(args)-1), function(i) try(predictbase(args[i], args[largs])), mc.cores=no_cores, mc.preschedule = FALSE)
 
 # # file to predict
 # method_name = args[1]
