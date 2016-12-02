@@ -116,7 +116,20 @@ def prediction(timeseries, methods = None, selected_files=None, filter_by_mdate=
     #     print (files)
 
     f_in = " ".join(files)
-    __run_methods(methods, f_in, 'prediction', timeseries_prefix)
+
+    methods_prefix='prediction'
+
+    if methods is None:
+        scripts = glob.glob("src/%s/*.py"%(methods_prefix,))
+        scripts.extend(glob.glob("src/%s/*.R"%(methods_prefix,)))
+    else:
+        scripts = glob.glob(methods)
+
+    for method in scripts:
+        if 'src/prediction/univariate_model.R' in method:
+            __run_method(method, timeseries, '%s/'%(methods_prefix,), timeseries_prefix)
+        else:
+            __run_method(method, f_in, '%s/'%(methods_prefix,), timeseries_prefix)
 
 def evaluation(timeseries, f_out=None, selected_files=None):
     timeseries_prefix = timeseries.split("/")[-1].split(".")[0]
