@@ -17,7 +17,6 @@ source("../tools/prediction_tools.R")
 
 predictbase <- function (method_name, prefix_out){
   command = paste0 ('awk \' BEGIN{printf("# predict_model; univariate model\\n");}/^#/ \' ',method_name)
-  print(command)
   dat <- system(command,  intern = TRUE)
   dat <- strsplit(dat, ";")
   data_name = strsplit(method_name, "/")
@@ -28,7 +27,6 @@ predictbase <- function (method_name, prefix_out){
   dat[[4]] = gsub("\n", "", dat[[4]], fixed = TRUE)
   
   target_names = c(dat[[4]])
-  print (target_names)
   
   data      = read.csv (method_name, comment.char = "#", header=TRUE, sep=";")
   colnames = colnames(data)
