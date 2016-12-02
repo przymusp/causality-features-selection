@@ -29,7 +29,7 @@ predictbase <- function (method_name, prefix_out){
   data_name = strsplit(method_name, "/")
   
   
-  output_dir = paste0(prefix_out,"ECM-rolling_",data_name[[1]][length(data_name[[1]])])
+  output_dir = paste0(prefix_out,"ECM_",data_name[[1]][length(data_name[[1]])])
   
   system(paste0(command,' > ', output_dir))
   ### normalisation
@@ -40,7 +40,7 @@ predictbase <- function (method_name, prefix_out){
   
   #determine the lag parameter
   lagMax = 100
-  var = VARselect(data.frame(fs_method[,1]),lag.max=lagMax)
+  var = VARselect(fs_method[,1],fs_method[,-1],lag.max=lagMax)
   p = var$selection[1] ## AIC criteria
 
   ## determmine the number of predictions
@@ -52,15 +52,16 @@ predictbase <- function (method_name, prefix_out){
   continue = TRUE
   while (continue)
   {
-      ns = ndiffs (x,test="adf")
-      if(ns == 0)
-      {
-          continue = FALSE
-      }
-      nd = nd + 1
+     ns = ndiffs (x,test="adf")
+     if(ns == 0)
+     {
+         continue = FALSE
+     }
+     nd = nd + 1
   }
-
-  preds = arima_prediction (fs_method[,1], p, ns, nbrePreds)
+print (p)
+preds = arima_prediction (fs_method[,1], 1, nd, nbrePreds)
+print (preds)
   #preds_roll = predict_rolling(mod_vecm,n.ahead = 1, nroll=nbrePreds)
   #preds = data.frame(c(preds_roll$pred[,1]),c(preds_roll$true[,1])) 
   #preds = data.frame(c(preds_roll$pred[,1]))

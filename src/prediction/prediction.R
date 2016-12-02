@@ -41,14 +41,14 @@ predictbase <- function (method_name, prefix_out){
 
     # determine the lag parameter
     lagMax = 100
-    var = VARselect(fs_method,lag.max=lagMax)
+    var = VARselect(fs_method[,1],fs_method[,-1],lag.max=lagMax)
     p = var$selection[1] ## AIC criteria
     # print(p)
 
     ###  Prediction
-    percPreds = 10 # 10% predictions of the size of the data
-    preds = vec_prediction(fs_method, p, percPreds)
-    preds
+    nbrePreds = as.integer(nrow(fs_method) * 10 / 100) # 10% predictions of the size of the data
+    preds = vec_prediction(fs_method, p, nbrePreds)
+
 
     names(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")
     colnames(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")

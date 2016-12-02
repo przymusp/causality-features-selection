@@ -21,7 +21,7 @@ vec_prediction <- function (ts, p, perc)
   # p: the lag parameter
   # perc: percentage of the data to predict
   
-  nb_preds = as.integer ((nrow(ts) * perc/100))
+  nb_preds = perc
   
   training_ts = ts
   
@@ -61,7 +61,8 @@ arima_prediction <- function (target, p, ns, perc)
   # p: the lag parameter
   # perc: percentage of the data to predict
   
-  nb_preds = as.integer ((nrow(ts) * perc/100))
+  nb_preds = perc
+  results = data.frame()
   
   for (ind in 1:nb_preds)
   {
