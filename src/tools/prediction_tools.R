@@ -65,9 +65,6 @@ arima_prediction <- function (target, p, ns, nb_preds)
   for (ind in 1:nb_preds)
   {
     cutTarget = target[1:(length(target) - (nb_preds-ind)  - 5)]
-    print ((length(target)- (nb_preds-ind) -4))
-    print ((length(target) - (nb_preds-ind)))
-    print ("#########")
     real = target[(length(target)- (nb_preds-ind) -4):(length(target) - (nb_preds-ind))]
     
     ####### Apply the VECM model
@@ -75,9 +72,6 @@ arima_prediction <- function (target, p, ns, nb_preds)
       model = arima (cutTarget,  order = c(p, ns, 0))
     }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
     y = predict(model, n.ahead = 5)$pred
-    print (real)
-    print(y)
-
     for (j in 1:5)
       results[ind,j] = y[j]
   }
