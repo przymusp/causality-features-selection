@@ -1,0 +1,4 @@
+UCI Website: 
+============
+	- dow_jones: not enough observations.
+	- instanbul_stock_exchange: 8 variables, not enough for feature selection.
