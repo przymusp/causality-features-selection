@@ -4,6 +4,12 @@ import os
 
 __RESULTS_DIRECTORY_PREFIX='results/'
 
+def __get_min_max_dates_from_files(files):
+    dates = []
+    for f in files:
+        dates.append(os.path.getmtime(f))
+    return min(dates), max(dates)
+
 def update_requirements():
     local('gawk \'/^library/{test = gensub(/library\((.*)\).*/,"\\\\1","g"); A[test]=0}; BEGIN{printf("chooseCRANmirror()\\n");}END{for (k in A) printf("install.packages(\\\"%s\\\")\\n",k);}\' `find . -name "*.R"` > requirements.R')
     local('pipreqs --force .')
@@ -91,7 +97,7 @@ def run_Python_method(args):
     with shell_env(PYTHONPATH="$PYTHONPATH:src/"), settings(warn_only=True):
         local(' python ' + " ".join(args))
 
-def prediction(timeseries, methods = None, selected_files=None):
+def prediction(timeseries, methods = None, selected_files=None, filter_by_mdate=True):
     timeseries_prefix = timeseries.split("/")[-1].split(".")[0]
     selection_step_directory = __RESULTS_DIRECTORY_PREFIX + 'selection/' + timeseries_prefix
 
@@ -101,6 +107,13 @@ def prediction(timeseries, methods = None, selected_files=None):
         files = glob.glob(selected_files)
 
     files = [os.path.abspath(f) for f in files]
+
+    # if filter_by_mdate:
+    #     min_mdate_pfiles, max_mdate_pfiles = __get_min_max_dates_from_files(glob.glob(__RESULTS_DIRECTORY_PREFIX + 'prediction/' + timeseries_prefix + "/*.csv"))
+    #     print (min_mdate_pfiles, max_mdate_pfiles)
+    #     files = [f for f in files if os.path.getmtime(f) > min_mdate_pfiles ]
+    #     print (files)
+
     f_in = " ".join(files)
     __run_methods(methods, f_in, 'prediction', timeseries_prefix)
 
