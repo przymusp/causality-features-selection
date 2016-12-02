@@ -21,7 +21,8 @@ methods = [
 
   # Auto guessing the number of dimensions for method
   decomp.PCA(n_components='mle', svd_solver='full'), # Uses The method from "Probabilistic Principal Component Analysis"
-  decomp.KernelPCA(kernel="rbf", fit_inverse_transform=True), # Removes zero components
+  # TODO: we cannot use automatic selection for kernel PCA as it may generate excessive number of dimensions
+  # decomp.KernelPCA(kernel="rbf", fit_inverse_transform=True), # Removes zero components
   # TODO: NMF from sklearn documentation n_components may be None (use all components) or set to specyfic value. Saddly no mention of auto guessing.
   # TODO: FactorAnalysis from sklearn documentation n_components may be None (use all components) or set to specyfic value. Saddly no mention of auto guessing.
   # TODO: FastICA from sklearn documentation n_components may be None (use all components) or set to specyfic value. Saddly no mention of auto guessing.
