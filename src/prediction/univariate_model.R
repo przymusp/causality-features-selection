@@ -16,75 +16,61 @@ library(forecast)
 source("../tools/prediction_tools.R")
 
 predictbase <- function (method_name, prefix_out){
-
-  #prefix_out = '../../results/'
-  #method_name = '../../results/selection/ebob-l_CAC40_FactorAnalysis_zNDaHNvy-OLDnRnMsdastMyoRq0=.csv'
-  print(method_name)
-  # print(prefix_out)
-
-  command = paste0 ('awk \' BEGIN{printf("# predict_model; ECM-rolling (univariate model)\\n");}/^#/ \' ',method_name)
+  command = paste0 ('awk \' BEGIN{printf("# predict_model; univariate model\\n");}/^#/ \' ',method_name)
   print(command)
   dat <- system(command,  intern = TRUE)
   dat <- strsplit(dat, ";")
   data_name = strsplit(method_name, "/")
+  print (dat)
   
+  dat[[4]] = gsub(" ", "", dat[[4]], fixed = TRUE)
+  dat[[4]] = gsub("\r", "", dat[[4]], fixed = TRUE)
+  dat[[4]] = gsub("\n", "", dat[[4]], fixed = TRUE)
   
-  output_dir = paste0(prefix_out,"ECM_",data_name[[1]][length(data_name[[1]])])
+  target_names = c(dat[[4]])
+  print (target_names)
   
-  system(paste0(command,' > ', output_dir))
-  ### normalisation
-  fs_method      = read.csv (paste0(method_name), comment.char = "#", header=TRUE, sep=";")
-  max = max(fs_method[,1])
-  min = min(fs_method[,1])
-  fs_method = normalize(fs_method)
+  data      = read.csv (method_name, comment.char = "#", header=TRUE, sep=";")
+  colnames = colnames(data)
   
-  #determine the lag parameter
-  lagMax = 100
-  var = VARselect(fs_method[,1],fs_method[,-1],lag.max=lagMax)
-  p = var$selection[1] ## AIC criteria
+  for (i in 2:length(target_names)) {
+      target_name = target_names[i]
+      for(j in 1:length(colnames)) {
+          if (colnames[j] == target_name) {
+              target_index = j
+              break;
+          }
+      }
+        output_dir = paste0(prefix_out,"Univariate-Model_",target_name,"_",data_name[[1]][length(data_name[[1]])])
+        system(paste0(command,' > ', output_dir))
+        ### normalisation
+        max = max(data[,target_index])
+        min = min(data[,target_index])
+        fs_method = normalize(data)
+  
+        #determine the lag parameter
+        lagMax = 100
+        var = VARselect(data.frame(fs_method[,target_index]),lag.max=lagMax)
+        p = var$selection[1] ## AIC criteria
 
-  ## determmine the number of predictions
-  nbrePreds = as.integer(nrow(fs_method) * 10 / 100) # 10% predictions of the size of the data
-  
-  ## detect the order of stationarity
-  x = fs_method[,1]
-  nd = 0
-  continue = TRUE
-  while (continue)
-  {
-     ns = ndiffs (x,test="adf")
-     if(ns == 0)
-     {
-         continue = FALSE
-     }
-     nd = nd + 1
+        ## determmine the number of predictions
+        nbrePreds = as.integer(nrow(fs_method) * 10 / 100) # 10% predictions of the size of the data
+    
+        ## detect the order of stationarity
+        x = fs_method[,target_index]
+        nd = ndiffs(x,alpha=0.05,test="adf");
+        preds = arima_prediction (fs_method[,target_index], p, nd, nbrePreds)
+        ####
+
+        names(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")
+        colnames(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")
+        preds = denormalize(preds,max,min)
+        write.table(preds, file = output_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";",append = TRUE)
   }
-print (p)
-preds = arima_prediction (fs_method[,1], 1, nd, nbrePreds)
-print (preds)
-  #preds_roll = predict_rolling(mod_vecm,n.ahead = 1, nroll=nbrePreds)
-  #preds = data.frame(c(preds_roll$pred[,1]),c(preds_roll$true[,1])) 
-  #preds = data.frame(c(preds_roll$pred[,1]))
-  ####
-
-  names(preds) = c("predictions")
-  colnames(preds) = c("predictions")
-  preds = denormalize(preds,max,min)
-  write.table(preds, file = output_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";",append = TRUE)
 }
 
 args = commandArgs(trailingOnly=TRUE)
 largs = length(args)
 print(args[largs])
+try(predictbase(args[1],args[2]))
 
-for (i in 1:(length(args)-1)) {
-  try(predictbase(args[i], args[largs]))
-}
-
-# # file to predict
-# method_name = args[1]
-
-# # output directory
-# prefix_out=args[2]
-
-# predictbase(method_name, prefix_out)
