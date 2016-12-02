@@ -11,6 +11,7 @@ enableJIT(3)
 library(tsDyn)
 library(lmtest)
 library(vars)
+library(parallel)
 
 source("../tools/prediction_tools.R")
 
@@ -60,9 +61,14 @@ args = commandArgs(trailingOnly=TRUE)
 largs = length(args)
 print(args[largs])
 
-for (i in 1:(length(args)-1)) {
-  try(predictbase(args[i], args[largs]))
-}
+#Calculate the number of cores
+no_cores <- detectCores()
+
+# Initiate cluster
+cl <- makeCluster(no_cores, type='FORK')
+
+parLapply(cl, 1:(length(args)-1), function(i) try(predictbase(args[i], args[largs])))
+
 
 # # file to predict
 # method_name = args[1]

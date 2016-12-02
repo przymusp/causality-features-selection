@@ -20,7 +20,6 @@ predictbase <- function (method_name, prefix_out){
   dat <- system(command,  intern = TRUE)
   dat <- strsplit(dat, ";")
   data_name = strsplit(method_name, "/")
-  print (dat)
   
   dat[[4]] = gsub(" ", "", dat[[4]], fixed = TRUE)
   dat[[4]] = gsub("\r", "", dat[[4]], fixed = TRUE)
@@ -40,14 +39,21 @@ predictbase <- function (method_name, prefix_out){
           }
       }
         output_dir = paste0(prefix_out,"Univariate-Model_",target_name,"_",data_name[[1]][length(data_name[[1]])])
+        #system(paste0(command,' > ', output_dir))
+        # Bref description of the file
+        command = paste0 ('awk \'/^#/ && !/^# *predict/\' ',method_name)
         system(paste0(command,' > ', output_dir))
+        cat ("# predict;", file=output_dir,append=TRUE)
+        cat (target_name, file=output_dir,append=TRUE, sep='\n')
+        cat ("# method; Univariate model",file=output_dir,append=TRUE, sep='\n')
+
         ### normalisation
         max = max(data[,target_index])
         min = min(data[,target_index])
         fs_method = normalize(data)
   
         #determine the lag parameter
-        lagMax = 100
+        lagMax = as.integer(nrow(fs_method) * 10 / 100)
         var = VARselect(data.frame(fs_method[,target_index]),lag.max=lagMax)
         p = var$selection[1] ## AIC criteria
 

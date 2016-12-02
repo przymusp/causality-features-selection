@@ -72,7 +72,6 @@ arima_prediction <- function (target, p, ns, nb_preds)
       model = arima (cutTarget,  order = c(p, ns, 0))
     }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
     y = predict(model, n.ahead = 5)$pred
-
     for (j in 1:5)
       results[ind,j] = y[j]
   }
