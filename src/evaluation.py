@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from sklearn.metrics import mean_squared_error, mean_absolute_error, explained_variance_score, median_absolute_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error, explained_variance_score, median_absolute_error, r2_score
 import pandas as pd
 import numpy as np
 import sys
@@ -16,6 +16,8 @@ global_measures = {
         'mse': mean_squared_error,
         'mae': mean_absolute_error,
         'evc': explained_variance_score,
+        # 'r2': r2_score,
+        'medae': median_absolute_error,
         }
 
 def preaty_print(results_collection, methods_to_hotizon_dict):
