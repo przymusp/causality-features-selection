@@ -51,7 +51,6 @@ matrix = read.table(graph_dir, header = TRUE,row.names = 1, dec = '.',sep=";", c
 ############# Execute the method  for each target
 for (i in 2:length(target_names)) {
     target_name = target_names[i]
-    target_name
     for(j in 1:length(colnames)) {
       if (colnames[j] == target_name) {
         target_index = j

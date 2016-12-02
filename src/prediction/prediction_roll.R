@@ -18,11 +18,11 @@ predictbase <- function (method_name, prefix_out){
 
   #prefix_out = '../../results/'
   #method_name = '../../results/selection/ebob-l_CAC40_FactorAnalysis_zNDaHNvy-OLDnRnMsdastMyoRq0=.csv'
-  print(method_name)
+  #print(method_name)
   # print(prefix_out)
 
   command = paste0 ('awk \' BEGIN{printf("# predict_model; VECM-rolling\\n");}/^#/ \' ',method_name)
-  print(command)
+  #print(command)
   dat <- system(command,  intern = TRUE)
   dat <- strsplit(dat, ";")
   data_name = strsplit(method_name, "/")
