@@ -41,7 +41,7 @@ def preaty_print(results_collection, methods_to_hotizon_dict):
                 # df['R']=r
 
                 s = df.style
-                s.set_table_attributes('class="table table-striped table-sm')
+                # s.set_table_attributes('class="table table-striped table-sm')
                 # s.set_properties(**{'font-size':'10pt'})
                 for m in measures:
                    s.bar(subset=[m,], color=cmap[m])
