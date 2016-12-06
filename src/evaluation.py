@@ -160,5 +160,5 @@ if __name__ == "__main__":
 
     tables = preaty_print(results_collection, prediction_method_horizon)
     script = template.render(tables=tables, error_list=error_list)
-    print (script.encode('utf-8'))
+    print (str(script.encode('utf-8'))
 
