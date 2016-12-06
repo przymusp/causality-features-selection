@@ -84,7 +84,6 @@ fgsm <- function (F,gmat, targetIndex, k)
   }
   else
     return (F[,-target])
-  #return (gsmCluster)
 }
 
 ##### gsm with PCA method
