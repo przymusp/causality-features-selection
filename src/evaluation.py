@@ -6,6 +6,7 @@ import numpy as np
 import sys
 import tools.csv_helper as tools
 import collections
+import glob
 from jinja2 import Environment, PackageLoader, FileSystemLoader
 
 env = Environment(loader=FileSystemLoader('src'))
@@ -35,7 +36,11 @@ def preaty_print(results_collection, methods_to_hotizon_dict):
                 # print ("<h3 style='text-align:center'>Target: %s Time horizon: %s</h3>" % (target, h))
                 df = pd.DataFrame.from_dict(results_collection[predict_model][target][h]).transpose()
 
+                # for m in measures:
+                #     df['R%s'%(m,)]= df[m].rank(ascending=1)
+
                 s = df.style
+                s.set_table_attributes('class="table table-striped table-sm')
                 # s.set_properties(**{'font-size':'10pt'})
                 for m in measures:
                    s.bar(subset=[m,], color=cmap[m])
@@ -45,8 +50,9 @@ def preaty_print(results_collection, methods_to_hotizon_dict):
 def transform_real_values(df, nbre_preds, target, horizon):
     # transform real values into correct form
     reals = []
-    for h in range(nbre_preds):
-        reals.append(df[[target]][-nbre_preds - horizon + h: -nbre_preds + h].values.T[0])
+    for h in range(1,nbre_preds):
+        reals.append(df[[target]].iloc[-nbre_preds - horizon + h: -nbre_preds + h].values.T[0])
+    reals.append(df[[target]].tail(horizon).values.T[0])
     return np.stack(reals)
 
 def evaluate_prediction(original_data, predictions, horizon):
@@ -61,7 +67,7 @@ def evaluate_prediction(original_data, predictions, horizon):
     results = collections.defaultdict(dict)
     for m in global_measures:
         for i in range(horizon):
-            results[i][m] = global_measures[m](original_data[:,i],predictions.values[:,i])
+            results[i][m] = global_measures[m](original_data.values[:,i],predictions.values[:,i])
 
     return results
 
@@ -77,8 +83,8 @@ def check_field_in_header(dict_to_check, field, fname, error_list):
 
 if __name__ == "__main__":
 
-    if len(sys.argv) < 3:
-        print("Error: at least 2 files are needed to compare")
+    if len(sys.argv) != 3:
+        print("Error: wrong arguments. Use %s org_data_file globing_expression" %(sys.argv[0]))
         exit(0)
 
     ## Read first prediction file to guess the number of predicted values
@@ -99,9 +105,7 @@ if __name__ == "__main__":
 
     required_meta_header_fields_checkers = {}
 
-    # print("<ul>")
-    for f in sys.argv[2:]:
-        # print("<li> Processing file %s" %(f,))
+    for f in glob.glob(sys.argv[2]):
         ## Read the predictions
         try:
             predictions = tools.read_csv_and_metadata(f)
@@ -139,7 +143,7 @@ if __name__ == "__main__":
         if nbre_preds in folded_orginal_data_dict[predict_model][target]:
             real_data = folded_orginal_data_dict[predict_model][target][nbre_preds]
         else:
-            folded_orginal_data_dict[predict_model][target][nbre_preds] = transform_real_values(original_data, nbre_preds, target, horizon)
+            folded_orginal_data_dict[predict_model][target][nbre_preds] = pd.DataFrame(transform_real_values(original_data, nbre_preds, target, horizon))
             real_data = folded_orginal_data_dict[predict_model][target][nbre_preds]
 
         # if len(folded_orginal_data_dict[target]) > 1:
@@ -151,7 +155,6 @@ if __name__ == "__main__":
         short_selection_method = tools.get_filename_from_method("", "", selection_method, "", "")
         for k,v in ret.items():
             results_collection[predict_model][target][k][short_selection_method] = ret[k]
-
 
     tables = preaty_print(results_collection, prediction_method_horizon)
     script = template.render(tables=tables, error_list=error_list)

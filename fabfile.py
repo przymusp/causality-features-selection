@@ -2,6 +2,10 @@ from fabric.api import *
 import glob
 import os
 
+# TODO: use compressed csv format for all of the intermediate files
+# TODO: pandas should be ok with compressed filenames
+# TODO: some changes required for R scripts to read compressed csv files
+
 __RESULTS_DIRECTORY_PREFIX='results/'
 
 def __get_min_max_dates_from_files(files):
@@ -137,15 +141,13 @@ def evaluation(timeseries, f_out=None, selected_files=None):
     out_directory = __RESULTS_DIRECTORY_PREFIX + 'evaluation/'
 
     if selected_files is None:
-        files = glob.glob(prediction_step_directory + "/*.csv")
-    else:
-        files = glob.glob(selected_files)
+        selected_files = prediction_step_directory + "/*.csv"
 
     if f_out is None:
         local("mkdir -p %s"%(out_directory))
         f_out = out_directory + "/" + timeseries_prefix + ".html"
 
-    f_in = " ".join(files)
+    f_in = "'%s'"%(selected_files,)
     run_Python_method(['src/evaluation.py', timeseries, f_in, ">", f_out])
 
 def check_step_csv_files(step_directory):
