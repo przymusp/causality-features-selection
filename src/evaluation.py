@@ -16,9 +16,10 @@ template = env.get_template('evaluation.html')
 global_measures = {
         'mse': mean_squared_error,
         'mae': mean_absolute_error,
-        'evc': explained_variance_score,
+        # 'evc': explained_variance_score,
         # 'r2': r2_score,
         'medae': median_absolute_error,
+        # 'R': lambda x,y: 1, # placeholder
         }
 
 def preaty_print(results_collection, methods_to_hotizon_dict):
@@ -36,15 +37,16 @@ def preaty_print(results_collection, methods_to_hotizon_dict):
                 # print ("<h3 style='text-align:center'>Target: %s Time horizon: %s</h3>" % (target, h))
                 df = pd.DataFrame.from_dict(results_collection[predict_model][target][h]).transpose()
 
-                # for m in measures:
-                #     df['R%s'%(m,)]= df[m].rank(ascending=1)
+                # r = df['mse'] * df['medae']
+                # df['R']=r
 
                 s = df.style
                 s.set_table_attributes('class="table table-striped table-sm')
                 # s.set_properties(**{'font-size':'10pt'})
                 for m in measures:
                    s.bar(subset=[m,], color=cmap[m])
-                tables[predict_model][target][h]=s.render()
+                # tables[predict_model][target][h]=s.render()
+                tables[target][h][predict_model]=s.render()
     return tables
 
 def transform_real_values(df, nbre_preds, target, horizon):

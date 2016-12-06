@@ -20,39 +20,38 @@
 
         <div class="container">
             <div aria-multiselectable="true" class="panel-group" id="accordion" role="tablist">
-                {% for predict_model in tables %}
+                {% for target in tables %}
 
                 <div class="panel panel-success">
-                    <div class="panel-heading" id="heading{{ predict_model }}" role="tab">
+                    <div class="panel-heading" id="heading{{ target }}" role="tab">
                         <h4 class="panel-title">
-                            <a aria-controls="collapse{{ predict_model }}" aria-expanded="true" data-toggle="collapse" href="#collapse{{ predict_model }}">
-                                Prediction model {{ predict_model }}
+                            <a aria-controls="collapse{{ target }}" aria-expanded="true" data-toggle="collapse" href="#collapse{{ target }}">
+                                Target {{ target }}
                             </a>
                         </h4>
                     </div>
-                    <div aria-labelledby="heading{{ predict_model }}" class="panel-collapse collapse " id="collapse{{ predict_model }}" role="tabpanel">
+                    <div aria-labelledby="heading{{ target }}" class="panel-collapse collapse " id="collapse{{ target }}" role="tabpanel">
                         <div class="panel-body">
-                            {% for target in tables[predict_model] %}
-                            {% for horizon in tables[predict_model][target] %}
+                {% for horizon in tables[target] %}
 
                             <div class="panel panel-default">
                                 <div class="panel-heading" id="heading{{ predict_model }}{{ target }}{{ horizon }}" role="tab">
                                     <h4 class="panel-title">
-                                        <!-- <a aria-controls="collapse{{ target }}{{ horizon }}" aria-expanded="true" data-parent="#accordion" data-toggle="collapse" href="#collapse{{ target }}{{ horizon }}"> -->
                                         <a aria-controls="collapse{{ predict_model }}{{ target }}{{ horizon }}" aria-expanded="true" data-toggle="collapse" href="#collapse{{ predict_model }}{{ target }}{{ horizon }}">
                                             Target {{ target }} in horizon {{ horizon + 1 }}
                                         </a>
                                     </h4>
                                 </div>
                                 <div aria-labelledby="heading{{ predict_model }}{{ target }}{{ horizon }}" class="panel-collapse collapse " id="collapse{{ predict_model }}{{ target }}{{ horizon }}" role="tabpanel">
+                {% for predict_model in tables[target][horizon] %}
                                     <div class="panel-body">
-                                        {{ tables[predict_model][target][horizon] }}
+                                        {{ tables[target][horizon][predict_model]}}
                                     </div>
+                {% endfor %}
                                 </div>
                             </div>
 
-                            {% endfor %}
-                            {% endfor %}
+                {% endfor %}
                         </div>
                     </div>
                 </div>
