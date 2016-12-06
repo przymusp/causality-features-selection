@@ -11,7 +11,7 @@ fgsm <- function (F,gmat, targetIndex, k)
     if (i == targetIndex)
       target = m
     if (i != targetIndex)
-      if (gmat[i,targetIndex] < 0.01)
+      if (gmat[i,targetIndex] < 0.9)
       {
         delet[n] = i
         n = n + 1
@@ -20,7 +20,7 @@ fgsm <- function (F,gmat, targetIndex, k)
       m = m + 1
     }
   }
-  ###########
+
   ### Applying the PAM methode
   if (length(delet > 0))
   {
@@ -29,7 +29,6 @@ fgsm <- function (F,gmat, targetIndex, k)
     x = gmat[-target, -target]
   } else
     x = gmat[-target, -target]
-  #F = F[,-target]
   ######
   if (k < ncol(x))
   {
@@ -38,17 +37,6 @@ fgsm <- function (F,gmat, targetIndex, k)
       for(m in 1: (l-1))
         x[l,m] = x[m,l] = 1 - max(x[l,m], x[m,l])
 
-
-      #km = kcca(x, k, family = kccaFamily ("kmeans"), weights=NULL, group=NULL, control=NULL, simple=FALSE)
-      #symmetrize(x, rule="strong")
-      #clusters = pamk(as.dist(x),krange=5:15,criterion="ch",critout=TRUE)
-      #evals = c()
-      #for (kchoice in 2: (ncol(x)-2))
-      #{
-       # clusters =  pam(as.dist(x),kchoice)
-        #evals[kchoice] = clusters$objective[1]
-      #}
-      #k = which.min(evals)
       clusters = pam (as.dist(x),k)
       clusteringVector = clusters$cluster
       #clusteringVector = clusters (clusters)

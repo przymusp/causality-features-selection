@@ -44,9 +44,8 @@ target_names = c(dat[[3]])
 ## read the dataset
 data = read.csv(data_dir, header = TRUE, dec = '.',sep=";", comment.char = "#")
 colnames = colnames(data)
-graph_dir = paste0("../../results/pre_selection/",data_name,"/",data_name,"_te_graph.csv")
-#getSrcDirectory()
-#graph_dir
+graph_dir = paste0("../../results/pre_selection/",data_name,"/",data_name,"_granger_graph.csv")
+
 matrix = read.table(graph_dir, header = TRUE,row.names = 1, dec = '.',sep=";", comment.char = "#")
 ############# Execute the method  for each target
 for (i in 2:length(target_names)) {
