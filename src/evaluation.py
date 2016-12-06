@@ -161,7 +161,7 @@ if __name__ == "__main__":
     tables = preaty_print(results_collection, prediction_method_horizon)
     script = template.render(tables=tables, error_list=error_list)
 
-    timeseries_prefix = timeseries.split("/")[-1].split(".")[0]
+    timeseries_prefix = sys.argv[1].split("/")[-1].split(".")[0]
 
-    with open("results/evaluation/%s.html"%(timeseries_prefix,)) as f:
+    with open("results/evaluation/%s.html"%(timeseries_prefix,),"w") as f:
         f.write(script)
