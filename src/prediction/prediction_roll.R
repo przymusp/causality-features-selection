@@ -45,7 +45,7 @@ predictbase <- function (method_name, prefix_out){
 
   ###  Prediction
   nbrePreds = as.integer(nrow(fs_method) * 10 / 100) # 10% predictions of the size of the data
-  mod_vecm = VECM(fs_method, lag=p)
+  mod_vecm = VECM(fs_method[1:(nrow(fs_method) - 4),], lag=p)
   preds_roll = predict_rolling(mod_vecm,n.ahead = 1, nroll=nbrePreds, refit.every = 1)
   #preds = data.frame(c(preds_roll$pred[,1]),c(preds_roll$true[,1]))
   preds = data.frame(c(preds_roll$pred[,1]))

@@ -1,28 +1,9 @@
-####
-benchmark <- function (target,p, methods, nbPreds)
-{
-  result = c()
-  real = target[ (length(target) - nbPreds + 1) : length(target) ]
-  mthds = methods
-  pred = c()
-  for (i in 1 : length(mthds))
-  {
-    train = data.frame (target , methods[[i]])
-    pred = disc(train,p,nbPreds,indCible)
-    result[i] = mse (pred,real)
-  }
-  return (result)
-}
-
-#####
-vec_prediction <- function (ts, p, perc)
+vec_prediction <- function (ts, p, nb_preds)
 {
   # ts: multivariate time series to predict the first attribut
   # p: the lag parameter
-  # perc: percentage of the data to predict
-  
-  nb_preds = perc
-  
+  # nb_preds: percentage of the data to predict
+
   training_ts = ts
   
   results = data.frame ()
