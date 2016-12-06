@@ -1,28 +1,9 @@
-####
-benchmark <- function (target,p, methods, nbPreds)
-{
-  result = c()
-  real = target[ (length(target) - nbPreds + 1) : length(target) ]
-  mthds = methods
-  pred = c()
-  for (i in 1 : length(mthds))
-  {
-    train = data.frame (target , methods[[i]])
-    pred = disc(train,p,nbPreds,indCible)
-    result[i] = mse (pred,real)
-  }
-  return (result)
-}
-
-#####
-vec_prediction <- function (ts, p, perc)
+vec_prediction <- function (ts, p, nb_preds)
 {
   # ts: multivariate time series to predict the first attribut
   # p: the lag parameter
-  # perc: percentage of the data to predict
-  
-  nb_preds = perc
-  
+  # nb_preds: percentage of the data to predict
+
   training_ts = ts
   
   results = data.frame ()
@@ -67,17 +48,17 @@ arima_prediction <- function (target, p, ns, nb_preds)
     cutTarget = target[1:(length(target) - (nb_preds-ind)  - 5)]
     real = target[(length(target)- (nb_preds-ind) -4):(length(target) - (nb_preds-ind))]
     
-    print("######## begin #####")
-    print((length(target)- (nb_preds-ind) -4))
-    print((length(target)- (nb_preds-ind)))
+    #print("######## begin #####")
+    #print((length(target)- (nb_preds-ind) -4))
+    #print((length(target)- (nb_preds-ind)))
     ####### Apply the VECM model
     tryCatch({
       model = arima (cutTarget,  order = c(p, ns, 0))
     }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
     y = predict(model, n.ahead = 5)$pred
-    print (real)
-    print(y)
-    print("######## end #####")
+    #print (real)
+    #print(y)
+    #print("######## end #####")
     for (j in 1:5)
       results[ind,j] = y[j]
   }
