@@ -67,17 +67,17 @@ arima_prediction <- function (target, p, ns, nb_preds)
     cutTarget = target[1:(length(target) - (nb_preds-ind)  - 5)]
     real = target[(length(target)- (nb_preds-ind) -4):(length(target) - (nb_preds-ind))]
     
-    print("######## begin #####")
-    print((length(target)- (nb_preds-ind) -4))
-    print((length(target)- (nb_preds-ind)))
+    #print("######## begin #####")
+    #print((length(target)- (nb_preds-ind) -4))
+    #print((length(target)- (nb_preds-ind)))
     ####### Apply the VECM model
     tryCatch({
       model = arima (cutTarget,  order = c(p, ns, 0))
     }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
     y = predict(model, n.ahead = 5)$pred
-    print (real)
-    print(y)
-    print("######## end #####")
+    #print (real)
+    #print(y)
+    #print("######## end #####")
     for (j in 1:5)
       results[ind,j] = y[j]
   }
