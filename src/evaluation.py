@@ -160,4 +160,8 @@ if __name__ == "__main__":
 
     tables = preaty_print(results_collection, prediction_method_horizon)
     script = template.render(tables=tables, error_list=error_list)
-    print (str(script.encode('utf-8')))
+
+    timeseries_prefix = timeseries.split("/")[-1].split(".")[0]
+
+    with open("results/evaluation/%s.html"%(timeseries_prefix,)) as f:
+        f.write(script)

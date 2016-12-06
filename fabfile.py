@@ -148,7 +148,7 @@ def evaluation(timeseries, f_out=None, selected_files=None):
         f_out = out_directory + "/" + timeseries_prefix + ".html"
 
     f_in = "'%s'"%(selected_files,)
-    run_Python_method(['src/evaluation.py', timeseries, f_in, ">", f_out])
+    run_Python_method(['src/evaluation.py', timeseries, f_in])
 
 def check_step_csv_files(step_directory):
     files = glob.glob(step_directory + "/*.csv")
