@@ -61,13 +61,16 @@ for (i in 2:length(target_names)) {
     }
     ### G-feature selection method
     out_dir = paste0(output_dir,data_name,"_",target_name,"_","G_PCA_FSM.csv")
-    gfsm = gsmPCA (data, matrix, target_index, 4)
-    if (ncol(gfsm) > 0)
-      gfsm = data.frame (data[,target_name],gfsm)
-    else
+    gfsm = data.frame()
+    try({gfsm = gsmPCA (data, matrix, target_index, clus = FALSE,nk =2)})
+    #print(gfsm[1:10,])
+    if(nrow(data.frame(gfsm)) != nrow(data))
+   # if(nrow(data.frame(gfsm)) == 0 && ncol(data.frame(gfsm)) == 0)
       gfsm = data.frame (data[,target_name])
+    else
+      gfsm = data.frame (data[,target_name],data.frame(gfsm))
+    print("#######")
     colnames(gfsm)[1] = target_name
-
     # Bref description of the file
     command = paste0 ('awk \'/^#/ && !/^# *predict/\' ',data_dir)
     system(paste0(command,' > ', out_dir))

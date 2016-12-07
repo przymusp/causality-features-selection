@@ -1,4 +1,4 @@
-fgsm <- function (F,gmat, targetIndex, k)
+fgsm <- function (F,gmat, targetIndex, clus, nk)
 {
   gsmCluster = c()
   mincaus = 0
@@ -32,13 +32,17 @@ fgsm <- function (F,gmat, targetIndex, k)
   } 
   x = gmat[-target, -target]
   ## determine the optimal number of cluster
+  if(clus == TRUE)
+  {
   kmax = nrow(x)-1
   if (kmax < 2)
     return (F[,-target])
   
   a=fviz_nbclust(as.dist(x), pam, method = "silhouette",k.max = kmax)
   k = which.max(a$data[,2])
-  
+  }
+  else
+    k = nk
   ######
   if (k < ncol(x))
   {
@@ -95,7 +99,7 @@ fgsm <- function (F,gmat, targetIndex, k)
 }
 
 ##### gsm with PCA method
-gsmPCA <- function (F,gmat, targetIndex, k)
+gsmPCA <- function (F,gmat, targetIndex, clus, nk)
 {
   gsmCluster = data.frame()
   mincaus = 0
@@ -118,6 +122,8 @@ gsmPCA <- function (F,gmat, targetIndex, k)
     }
   }
   ###########
+  print(targetIndex)
+  print(delet)
   ### Applying the PAM methode
   if ((length(delet) + 1) == ncol(F))
     return (data.frame())
@@ -128,13 +134,19 @@ gsmPCA <- function (F,gmat, targetIndex, k)
     F = F[,-delet]
   } 
   x = gmat[-target, -target]
+
   ## determine the optimal number of cluster
-  kmax = nrow(x)-1
-  if (kmax < 2)
-    return (F[,-target])
-  
-  a=fviz_nbclust(as.dist(x), pam, method = "silhouette",k.max = kmax)
-  k = which.max(a$data[,2])
+  if(clus == TRUE)
+  {
+    kmax = nrow(x)-1
+    if (kmax < 2)
+      return (F[,-target])
+    
+    a=fviz_nbclust(as.dist(x), pam, method = "silhouette",k.max = kmax)
+    k = which.max(a$data[,2])
+  }
+  else
+    k = nk
   ######
   if (k < ncol(x))
   {
@@ -176,10 +188,10 @@ gsmPCA <- function (F,gmat, targetIndex, k)
               variables = pcv(prinComp)
               for (l in 1:nrow(variables))
                 gsmCluster[l,j] = variables[l,1]
-                #print (variables)
           }
-          else
-            gsmCluster[,j] = F[,vect[1]]
+          if (length(vect) == 1)
+            for(h in 1:nrow(F))
+              gsmCluster[h,j] = F[h,vect[1]]
       }
       return (gsmCluster)
   }
