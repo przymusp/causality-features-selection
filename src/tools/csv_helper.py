@@ -30,7 +30,7 @@ def get_filename_from_method(fname, predicted_column, method_name, prefix = "", 
     f = f[-1].split(".")[0]
     name = method_name.split("(")
     hasher = hashlib.sha1(method_name.encode('utf-8'))
-    o = str(base64.urlsafe_b64encode(hasher.digest()[0:200]))
+    o = base64.urlsafe_b64encode(hasher.digest()[0:200]).decode('utf-8')
     return prefix + "_".join([f,predicted_column,name[0], o]) + postfix
 
 def pretty_print_method_name(method):
