@@ -3,7 +3,8 @@ library(tsDyn)
 library(lmtest)
 library(vars)
 library(stats) ##hclus
-library(fpc)  ## for pamkCBI : pam with no k
+library(factoextra) # for the number of clusters
+library(NbClust) # for the number of clusters
 library (kernlab)
 
 
@@ -61,7 +62,10 @@ for (i in 2:length(target_names)) {
     ### G-feature selection method
     out_dir = paste0(output_dir,data_name,"_",target_name,"_","G_PCA_FSM.csv")
     gfsm = gsmPCA (data, matrix, target_index, 4)
-    gfsm = data.frame (data[,target_name],gfsm)
+    if (ncol(gfsm) > 0)
+      gfsm = data.frame (data[,target_name],gfsm)
+    else
+      gfsm = data.frame (data[,target_name])
     colnames(gfsm)[1] = target_name
 
     # Bref description of the file

@@ -3,7 +3,8 @@ library(tsDyn)
 library(lmtest)
 library(vars)
 library(stats) ##hclus
-library(fpc)  ## for pamkCBI : pam with no k
+library(factoextra) # for the number of clusters
+library(NbClust) # for the number of clusters
 library (kernlab)
 
 
@@ -57,9 +58,12 @@ for (i in 2:length(target_names)) {
       }
     }
     ### G-feature selection method
-    out_dir = paste0(output_dir,data_name,"_",target_name,"_","GFSM.csv")
-    gfsm = fgsm (data, matrix, target_index, 4)
+   out_dir = paste0(output_dir,data_name,"_",target_name,"_","GFSM.csv")
+   gfsm = fgsm (data, matrix, target_index, 4)
+   if (ncol(gfsm) > 0)
     gfsm = data.frame (data[,target_name],gfsm)
+   else
+     gfsm = data.frame (data[,target_name])
     colnames(gfsm)[1] = target_name
 
     # Bref description of the file
@@ -67,7 +71,7 @@ for (i in 2:length(target_names)) {
     system(paste0(command,' > ', out_dir))
     cat ("# predict;", file=out_dir,append=TRUE)
     cat (target_name, file=out_dir,append=TRUE, sep='\n')
-    cat ("# method; Granger_cluster(Granger feature selection method)",file=out_dir,append=TRUE, sep='\n')
+    cat ("# method; Granger feature selection method",file=out_dir,append=TRUE, sep='\n')
 
     ## Store the selected variables
     write.table(gfsm, out_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)

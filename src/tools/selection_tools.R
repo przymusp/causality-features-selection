@@ -11,7 +11,7 @@ fgsm <- function (F,gmat, targetIndex, k)
     if (i == targetIndex)
       target = m
     if (i != targetIndex)
-      if (gmat[i,targetIndex] < 0.9)
+      if (gmat[i,targetIndex] < 0.85)
       {
         delet[n] = i
         n = n + 1
@@ -22,17 +22,26 @@ fgsm <- function (F,gmat, targetIndex, k)
   }
 
   ### Applying the PAM methode
-  if (length(delet > 0))
+  if ((length(delet) + 1) == ncol(F))
+    return (data.frame())
+  
+  if (length(delet) > 0)
   {
     gmat = gmat[-delet, -delet]
     F = F[,-delet]
-    x = gmat[-target, -target]
-  } else
-    x = gmat[-target, -target]
+  } 
+  x = gmat[-target, -target]
+  ## determine the optimal number of cluster
+  kmax = nrow(x)-1
+  if (kmax < 2)
+    return (F[,-target])
+  
+  a=fviz_nbclust(as.dist(x), pam, method = "silhouette",k.max = kmax)
+  k = which.max(a$data[,2])
+  
   ######
   if (k < ncol(x))
   {
-
     for (l in 2:ncol(x))
       for(m in 1: (l-1))
         x[l,m] = x[m,l] = 1 - max(x[l,m], x[m,l])
@@ -56,7 +65,6 @@ fgsm <- function (F,gmat, targetIndex, k)
             l = l + 1
           }
       }
-
       ### buildind the gsm cluster from the PAM clusters
       for (j in 1:k)
       {
@@ -100,7 +108,7 @@ gsmPCA <- function (F,gmat, targetIndex, k)
     if (i == targetIndex)
       target = m
     if (i != targetIndex)
-      if (gmat[i,targetIndex] < 0.0)
+      if (gmat[i,targetIndex] < 0.85)
       {
         delet[n] = i
         n = n + 1
@@ -111,15 +119,22 @@ gsmPCA <- function (F,gmat, targetIndex, k)
   }
   ###########
   ### Applying the PAM methode
-  if (length(delet > 0))
+  if ((length(delet) + 1) == ncol(F))
+    return (data.frame())
+  
+  if (length(delet) > 0)
   {
     gmat = gmat[-delet, -delet]
     F = F[,-delet]
-    x = gmat[-target, -target]
-  }
-  else
-    x = gmat[-target, -target]
-  #F = F[,-target]
+  } 
+  x = gmat[-target, -target]
+  ## determine the optimal number of cluster
+  kmax = nrow(x)-1
+  if (kmax < 2)
+    return (F[,-target])
+  
+  a=fviz_nbclust(as.dist(x), pam, method = "silhouette",k.max = kmax)
+  k = which.max(a$data[,2])
   ######
   if (k < ncol(x))
   {
@@ -193,11 +208,6 @@ naiveSelection <- function (gmat, targetIndex, threshold)
       }
     }
   }
-  # Order by causality on the targer variable : targetIndex
-  #G = F[order(-F[,2]),c(1,2)]
-  #for (i in 1:k)
-    #naiveClasse = union(naiveClasse, c(G[i,1]))
-
   return (index)
 }
 ### Normalize a dataframe
