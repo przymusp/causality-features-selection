@@ -1,17 +1,9 @@
-#library(forecast)
 library(cluster)
 library(tsDyn)
-#library(NNVar)
 library(lmtest)
-#library(clue)
 library(vars)
 library(stats) ##hclus
-
-library(fpc)  ## for pamkCBI : pam with no k
-#library (hydroGOF)
-#library(flexclust) #kmeans
-#library(sna)
-#require(kernlab)
+library(fpc)  
 
 source("evaluation.R")
 source("gsm.R")
