@@ -43,12 +43,9 @@
                                     </h4>
                                 </div>
                                 <div aria-labelledby="heading{{ predict_model }}{{ target }}{{ horizon }}" class="panel-collapse collapse " id="collapse{{ predict_model }}{{ target }}{{ horizon }}" role="tabpanel">
-                {% for predict_model in tables[target][horizon] %}
                                     <div class="panel-body">
-                                        <h3>{{ predict_model }}</h3>
-                                        {{ tables[target][horizon][predict_model]}}
+                                        {{ tables[target][horizon]}}
                                     </div>
-                {% endfor %}
                                 </div>
                             </div>
 

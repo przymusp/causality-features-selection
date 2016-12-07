@@ -29,21 +29,31 @@ def preaty_print(results_collection, methods_to_hotizon_dict):
     cmap = dict(zip(measures, colors))
 
     tables = collections.defaultdict(lambda : collections.defaultdict(dict))
+
+    def underline_top_10(s):
+        '''
+        highlight the maximum in a Series yellow.
+        '''
+        return ['text-decoration: underline;' if v < 10 else '' for v in s.rank(method='max')]
+
     for predict_model in results_collection:
         for target in results_collection[predict_model]:
             for h in range(methods_to_hotizon_dict[predict_model]): # diffrent timehorizons
                 df = pd.DataFrame.from_dict(results_collection[predict_model][target][h]).transpose()
+                df.index=predict_model+df.index
+                tables[target][h][predict_model]=df
 
-                # r = df['mse'] * df['medae']
-                # df['R']=r
-
+    for target in results_collection[predict_model]:
+            for h in range(methods_to_hotizon_dict[predict_model]): # diffrent timehorizons
+                df = pd.concat(tables[target][h].values())
+                df.index.name = 'Method'
                 s = df.style
                 # s.set_table_attributes('class="table table-striped table-sm')
                 # s.set_properties(**{'font-size':'10pt'})
                 for m in measures:
                    s.bar(subset=[m,], color=cmap[m])
-                # tables[predict_model][target][h]=s.render()
-                tables[target][h][predict_model]=s.render()
+                   s.apply(underline_top_10)
+                tables[target][h]=s.render()
     return tables
 
 # max_horizon is hardcoded into the prediction scripts
