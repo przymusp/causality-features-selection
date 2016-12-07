@@ -7,6 +7,7 @@ import sys
 import tools.csv_helper as tools
 import collections
 import glob
+import itertools
 from jinja2 import Environment, PackageLoader, FileSystemLoader
 
 env = Environment(loader=FileSystemLoader('src'))
@@ -23,10 +24,9 @@ global_measures = {
         }
 
 def preaty_print(results_collection, methods_to_hotizon_dict):
-    # TODO: Fix colors if more measures appear
-    colors = ["#9b59b6", "#3498db", "#95a5a6", "#e74c3c", "#34495e", "#2ecc71"]
+    colors = itertools.cycle(["#9b59b6", "#3498db", "#95a5a6", "#e74c3c", "#34495e", "#2ecc71"])
     measures = global_measures.keys()
-    cmap = dict(zip(measures, colors[:len(measures)]))
+    cmap = dict(zip(measures, colors))
 
     # TODO: get the horizon from the data not param
 
@@ -50,6 +50,8 @@ def preaty_print(results_collection, methods_to_hotizon_dict):
     return tables
 
 def transform_real_values(df, nbre_preds, target, horizon):
+    if horizon == 1:
+        df.tail(nbre_preds)
     # transform real values into correct form
     reals = []
     for h in range(1,nbre_preds):
