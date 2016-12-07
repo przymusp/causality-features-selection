@@ -28,13 +28,10 @@ def preaty_print(results_collection, methods_to_hotizon_dict):
     measures = global_measures.keys()
     cmap = dict(zip(measures, colors))
 
-    # TODO: get the horizon from the data not param
-
     tables = collections.defaultdict(lambda : collections.defaultdict(dict))
     for predict_model in results_collection:
         for target in results_collection[predict_model]:
             for h in range(methods_to_hotizon_dict[predict_model]): # diffrent timehorizons
-                # print ("<h3 style='text-align:center'>Target: %s Time horizon: %s</h3>" % (target, h))
                 df = pd.DataFrame.from_dict(results_collection[predict_model][target][h]).transpose()
 
                 # r = df['mse'] * df['medae']
