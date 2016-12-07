@@ -46,17 +46,11 @@ def preaty_print(results_collection, methods_to_hotizon_dict):
                 tables[target][h][predict_model]=s.render()
     return tables
 
-def transform_real_values(df, nbre_preds, target, horizon):
-    if horizon == 1:
-        df.tail(nbre_preds)
-    # transform real values into correct form
-    reals = []
-    for h in range(1,nbre_preds):
-        reals.append(df[[target]].iloc[-nbre_preds - horizon + h: -nbre_preds + h].values.T[0])
-    reals.append(df[[target]].tail(horizon).values.T[0])
-    return np.stack(reals)
+# max_horizon is hardcoded into the prediction scripts
+def get_slice_with_horizon(df, nbre_preds, target, horizon, max_horizon=5):
+    return df[[target]].tail(nbre_preds + max_horizon - 1 - horizon).head(nbre_preds).values
 
-def evaluate_prediction(original_data, predictions, horizon):
+def evaluate_prediction(original_data, target, predictions, horizon):
     """Evaluate prediction results
 
     :real_values: a transformed data frame with real values
@@ -66,9 +60,10 @@ def evaluate_prediction(original_data, predictions, horizon):
     """
 
     results = collections.defaultdict(dict)
+    l = len(predictions)
     for m in global_measures:
         for i in range(horizon):
-            results[i][m] = global_measures[m](original_data.values[:,i],predictions.values[:,i])
+            results[i][m] = global_measures[m](get_slice_with_horizon(original_data, l, target, i) ,predictions.values[:,i])
 
     return results
 
@@ -92,19 +87,13 @@ if __name__ == "__main__":
     try:
         original_data = tools.read_csv_and_metadata(sys.argv[1])
     except Exception as e:
-        print ("Error: Could not read the file %s, exiting." %(f))
+        print ("Error: Could not read the file %s, exiting." %(sys.argv[1]))
         exit(0)
 
-    # Cache for orginal data representation suitable for prediction comparison
-    folded_orginal_data_dict = collections.defaultdict(lambda : collections.defaultdict(dict))
     prediction_method_horizon = {}
 
-    # Results
     results_collection = collections.defaultdict(lambda : collections.defaultdict(lambda : collections.defaultdict(dict)))
-
     error_list = []
-
-    required_meta_header_fields_checkers = {}
 
     for f in glob.glob(sys.argv[2]):
         ## Read the predictions
@@ -140,18 +129,7 @@ if __name__ == "__main__":
         ## The number of predicted vectors (vector may be one dimensional or may include some additional time horizon prediction)
         nbre_preds = len(predictions.index)
 
-        #TODO: add the horizon guessing here
-        if nbre_preds in folded_orginal_data_dict[predict_model][target]:
-            real_data = folded_orginal_data_dict[predict_model][target][nbre_preds]
-        else:
-            folded_orginal_data_dict[predict_model][target][nbre_preds] = pd.DataFrame(transform_real_values(original_data, nbre_preds, target, horizon))
-            real_data = folded_orginal_data_dict[predict_model][target][nbre_preds]
-
-        # if len(folded_orginal_data_dict[target]) > 1:
-        #     # print("Error: more then different number of predictions detected in files. Moving to the next file.")
-        #     continue
-
-        ret = evaluate_prediction(real_data, predictions, horizon)
+        ret = evaluate_prediction(original_data, target, predictions, horizon)
 
         short_selection_method = tools.get_filename_from_method("", "", selection_method, "", "")
         for k,v in ret.items():
