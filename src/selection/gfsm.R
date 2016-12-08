@@ -59,7 +59,7 @@ for (i in 2:length(target_names)) {
     }
     ### G-feature selection method
    out_dir = paste0(output_dir,data_name,"_",target_name,"_","GFSM.csv")
-   gfsm = fgsm (data, matrix, target_index, clus = FALSE, nk= 2)
+   gfsm = fgsm (data, matrix, target_index, clus = TRUE, nk= 2)
    if (ncol(data.frame(gfsm)) > 0)
     gfsm = data.frame (data[,target_name],data.frame(gfsm))
    else
