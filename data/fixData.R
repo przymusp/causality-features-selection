@@ -1,18 +1,19 @@
-file = "/Users/youssef/documents/causality-features-selection/data/twitter.csv"
-data = read.csv (file, comment.char = "#", header=TRUE, dec = ".",sep=",")
+file = "/Users/youssef/documents/causality-features-selection/data/cina0.csv"
+out_file = "/Users/youssef/documents/causality-features-selection/data/cina.csv"
+data = read.csv (file, comment.char = "#", header=TRUE, dec = ".",sep=";")
 colnames = c()
 for(i in 1:ncol(data))
 {
-  data[,i] = as.numeric(data[,i])
+  #data[,i] = as.numeric(data[,i])
   if(i == ncol(data))
   {
   colnames[i] = "target"
   break;
   }
-  colnames[i] = paste("V",i)
+  colnames[i] = paste0("V",i)
 }
 colnames(data) = colnames
-write.table(data, file = file,row.names = FALSE, na = "",col.names = TRUE, sep = ";")
+write.table(data, file = out_file,row.names = FALSE, na = "",col.names = TRUE, sep = ";")
 
 # fixed_data = data.frame()
 # ind = 1
