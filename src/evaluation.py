@@ -63,8 +63,9 @@ def get_slice_with_horizon(df, nbre_preds, target, horizon, max_horizon=5):
     return df[[target]].tail(nbre_preds + max_horizon - 1 - horizon).head(nbre_preds).values
 
 def MASE(training_series, testing_series, prediction_series):
+    # TODO: be carefull with the training and testing dataset as, paper is not clear about that
     n = len(training_series)
-    d = np.abs(  np.diff( training_series.T) ).sum()
+    d = np.abs(  np.diff( training_series.T) ).sum() / (n-1)
     errors = np.abs(testing_series - prediction_series )
     return errors.mean()/d
 

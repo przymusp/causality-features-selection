@@ -12,7 +12,7 @@ if __name__ == "__main__":
     out_fname = output_directory + "/" + path.basename(fname).split(".")[0] + '_te_graph.csv'
 
     # TODO: now writen as awk script.  Consider if it is worth rewrite as Python ? (mawk implementation may be faster then pure python)
-    awk_cmd = "awk '!/^#/{gsub(/;/,\" \"); print}' %(fname)s | %(pairwise_transfer_entropy)s | awk '{gsub(/ +/,\" \"); gsub(/(^ +)|( +$)/,\"\"); print}' > %(out_fname)s "
+    awk_cmd = "awk '!/^#/{gsub(/;/,\" \"); gsub(/\s+/,\" \"); print}' %(fname)s | %(pairwise_transfer_entropy)s | awk '{gsub(/\s+/,\" \"); gsub(/(^\s+)|(\s+$)/,\"\"); print}' > %(out_fname)s "
     awk_cmd %= {'fname':fname, 'pairwise_transfer_entropy':pairwise_transfer_entropy, 'out_fname':out_fname}
 
     subprocess.call(awk_cmd, shell=True)
