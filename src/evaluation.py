@@ -21,6 +21,7 @@ global_measures = {
         # 'r2': r2_score,
         'medae': median_absolute_error,
         # 'R': lambda x,y: 1, # placeholder
+        'MASE': lambda x,y: 0 # place holder the MASE, requires extra data and will be set up later in the evaluation
         }
 
 def preaty_print(results_collection, methods_to_hotizon_dict):
@@ -29,6 +30,7 @@ def preaty_print(results_collection, methods_to_hotizon_dict):
     cmap = dict(zip(measures, colors))
 
     tables = collections.defaultdict(lambda : collections.defaultdict(dict))
+    tables_out = collections.defaultdict(dict)
 
     def underline_top_10(s):
         '''
@@ -40,10 +42,10 @@ def preaty_print(results_collection, methods_to_hotizon_dict):
         for target in results_collection[predict_model]:
             for h in range(methods_to_hotizon_dict[predict_model]): # diffrent timehorizons
                 df = pd.DataFrame.from_dict(results_collection[predict_model][target][h]).transpose()
-                df.index=predict_model+df.index
+                df.index= predict_model + df.index
                 tables[target][h][predict_model]=df
 
-    for target in results_collection[predict_model]:
+        for target in results_collection[predict_model]:
             for h in range(methods_to_hotizon_dict[predict_model]): # diffrent timehorizons
                 df = pd.concat(tables[target][h].values())
                 df.index.name = 'Method'
@@ -53,12 +55,18 @@ def preaty_print(results_collection, methods_to_hotizon_dict):
                 for m in measures:
                    s.bar(subset=[m,], color=cmap[m])
                    s.apply(underline_top_10)
-                tables[target][h]=s.render()
-    return tables
+                tables_out[target][h]=s.render()
+    return tables_out
 
 # max_horizon is hardcoded into the prediction scripts
 def get_slice_with_horizon(df, nbre_preds, target, horizon, max_horizon=5):
     return df[[target]].tail(nbre_preds + max_horizon - 1 - horizon).head(nbre_preds).values
+
+def MASE(training_series, testing_series, prediction_series):
+    n = len(training_series)
+    d = np.abs(  np.diff( training_series.T) ).sum()
+    errors = np.abs(testing_series - prediction_series )
+    return errors.mean()/d
 
 def evaluate_prediction(original_data, target, predictions, horizon):
     """Evaluate prediction results
@@ -71,6 +79,11 @@ def evaluate_prediction(original_data, target, predictions, horizon):
 
     results = collections.defaultdict(dict)
     l = len(predictions)
+    l_all = len(original_data)
+
+
+    global_measures['MASE'] = lambda x,y: MASE(original_data[[target]].head(l_all - l - horizon).values,x,y)
+
     for m in global_measures:
         for i in range(horizon):
             results[i][m] = global_measures[m](get_slice_with_horizon(original_data, l, target, i) ,predictions.values[:,i])
