@@ -62,7 +62,7 @@ for (i in 2:length(target_names)) {
     ### G-feature selection method
     out_dir = paste0(output_dir,data_name,"_",target_name,"_","G_PCA_FSM.csv")
     gfsm = data.frame()
-    try({gfsm = gsmPCA (data, matrix, target_index, clus = TRUE,nk =2)})
+    try({gfsm = gsmPCA (data, matrix, target_index, clus = FALSE,nk =1)})
     #print(gfsm[1:10,])
     if(nrow(data.frame(gfsm)) != nrow(data))
    # if(nrow(data.frame(gfsm)) == 0 && ncol(data.frame(gfsm)) == 0)

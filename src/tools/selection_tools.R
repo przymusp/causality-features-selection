@@ -11,7 +11,7 @@ fgsm <- function (F,gmat, targetIndex, clus, nk)
     if (i == targetIndex)
       target = m
     if (i != targetIndex)
-      if (gmat[i,targetIndex] < 0.01)
+      if (gmat[i,targetIndex] < 0.00)
       {
         delet[n] = i
         n = n + 1
@@ -112,7 +112,7 @@ gsmPCA <- function (F,gmat, targetIndex, clus, nk)
     if (i == targetIndex)
       target = m
     if (i != targetIndex)
-      if (gmat[i,targetIndex] < 0.01)
+      if (gmat[i,targetIndex] < 0.00)
       {
         delet[n] = i
         n = n + 1
@@ -144,6 +144,7 @@ gsmPCA <- function (F,gmat, targetIndex, clus, nk)
     
     a=fviz_nbclust(as.dist(x), pam, method = "silhouette",k.max = kmax)
     k = which.max(a$data[,2])
+    print (k)
   }
   else
     k = nk

@@ -1,16 +1,18 @@
 file = "/Users/youssef/documents/causality-features-selection/data/cina0.csv"
+file = "/Users/youssef/documents/causality-features-selection/data/TSLF.csv"
 out_file = "/Users/youssef/documents/causality-features-selection/data/cina.csv"
 data = read.csv (file, comment.char = "#", header=TRUE, dec = ".",sep=";")
 colnames = c()
 for(i in 1:ncol(data))
 {
   #data[,i] = as.numeric(data[,i])
-  if(i == ncol(data))
-  {
-  colnames[i] = "target"
-  break;
-  }
-  colnames[i] = paste0("V",i)
+  # if(i == ncol(data))
+  # {
+  # colnames[i] = "target"
+  # break;
+  # }
+  # colnames[i] = paste0("V",i)
+  print(paste(i,mean(data[,i])))
 }
 colnames(data) = colnames
 write.table(data, file = out_file,row.names = FALSE, na = "",col.names = TRUE, sep = ";")
