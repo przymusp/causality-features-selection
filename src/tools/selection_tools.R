@@ -144,6 +144,7 @@ gsmPCA <- function (F,gmat, targetIndex, clus, nk)
     
     a=fviz_nbclust(as.dist(x), pam, method = "silhouette",k.max = kmax)
     k = which.max(a$data[,2])
+    print (k)
   }
   else
     k = nk
