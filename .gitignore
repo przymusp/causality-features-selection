@@ -129,22 +129,3 @@ vignettes/*.pdf
 *.utf8.md
 *.knit.md
 
-src/selection/#Predict;PATEPAP# name_prefix;ebob-l# description; Sample data from ebob project filemethod; Univariate selection method
-
-src/selection/fselection.R
-
-src/selection/fselection.R
-
-src/selection/fselection.R
-
-src/selection/fselection.R
-
-src/selection/fselection.R
-
-src/selection/gfsm_pca.R
-
-src/prediction/prediction_rolling.R
-
-src/prediction/prediction_rolling.R
-
-src/tools/csv_helper.py
