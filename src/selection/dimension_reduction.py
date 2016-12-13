@@ -48,19 +48,23 @@ if __name__ == "__main__":
             #     continue
 
             # Fit and transform using method
-            t = method.fit_transform(d)
-            t = pd.DataFrame(t)
+            try:
+                t = method.fit_transform(d)
+                t = pd.DataFrame(t)
 
-            t.meta_header = df.meta_header.copy()
-            t.meta_header['method'] = [mname,]
-            t.meta_header['predict'] = [c,]
+                t.meta_header = df.meta_header.copy()
+                t.meta_header['method'] = [mname,]
+                t.meta_header['predict'] = [c,]
 
-            # Output columns in corrrect order
-            cols=[c,]
-            cols.extend(t.columns.values)
+                # Output columns in corrrect order
+                cols=[c,]
+                cols.extend(t.columns.values)
 
-            # Add predicted column to output
-            t[c] = df[c]
+                # Add predicted column to output
+                t[c] = df[c]
 
-            # Write t with cols in correct order (t[cols]) to filename generated from the method name with params
-            write_csv_with_metadata(t[cols], out_fname)
+                # Write t with cols in correct order (t[cols]) to filename generated from the method name with params
+                write_csv_with_metadata(t[cols], out_fname)
+            except Exception as e:
+                print ("Error with method %s"%(method))
+                continue
