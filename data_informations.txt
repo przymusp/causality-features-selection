@@ -2,3 +2,6 @@ UCI Website:
 ============
 	- dow_jones: not enough observations.
 	- instanbul_stock_exchange: 8 variables, not enough for feature selection.
+
+cina.csv: http://www.causality.inf.ethz.ch/data/CINA.html — Not adequate for prediction
+TSLF.csv: http://new.censusatschool.org.nz/resource/time-series-data-sets-2012/
