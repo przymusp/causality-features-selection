@@ -1,4 +1,4 @@
-fgsm <- function (F,gmat, targetIndex, clus, nk)
+fgsm <- function (F,gmat, targetIndex,threshold, clus, nk)
 {
   gsmCluster = c()
   mincaus = 0
@@ -11,7 +11,7 @@ fgsm <- function (F,gmat, targetIndex, clus, nk)
     if (i == targetIndex)
       target = m
     if (i != targetIndex)
-      if (gmat[i,targetIndex] < 0.00)
+      if (gmat[i,targetIndex] < threshold)
       {
         delet[n] = i
         n = n + 1
@@ -99,7 +99,7 @@ fgsm <- function (F,gmat, targetIndex, clus, nk)
 }
 
 ##### gsm with PCA method
-gsmPCA <- function (F,gmat, targetIndex, clus, nk)
+gsmPCA <- function (F,gmat, targetIndex,threshold, clus, nk)
 {
   gsmCluster = data.frame()
   mincaus = 0
@@ -112,7 +112,7 @@ gsmPCA <- function (F,gmat, targetIndex, clus, nk)
     if (i == targetIndex)
       target = m
     if (i != targetIndex)
-      if (gmat[i,targetIndex] < 0.00)
+      if (gmat[i,targetIndex] < threshold)
       {
         delet[n] = i
         n = n + 1
@@ -134,7 +134,7 @@ gsmPCA <- function (F,gmat, targetIndex, clus, nk)
     F = F[,-delet]
   } 
   x = gmat[-target, -target]
-
+ print (x)
   ## determine the optimal number of cluster
   if(clus == TRUE)
   {
@@ -144,7 +144,7 @@ gsmPCA <- function (F,gmat, targetIndex, clus, nk)
     
     a=fviz_nbclust(as.dist(x), pam, method = "silhouette",k.max = kmax)
     k = which.max(a$data[,2])
-    print (k)
+    print (paste("k=",k))
   }
   else
     k = nk
