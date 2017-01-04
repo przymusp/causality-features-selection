@@ -122,8 +122,6 @@ gsmPCA <- function (F,gmat, targetIndex,threshold, clus, nk)
     }
   }
   ###########
-  print(targetIndex)
-  print(delet)
   ### Applying the PAM methode
   if ((length(delet) + 1) == ncol(F))
     return (data.frame())
@@ -134,7 +132,6 @@ gsmPCA <- function (F,gmat, targetIndex,threshold, clus, nk)
     F = F[,-delet]
   } 
   x = gmat[-target, -target]
- print (x)
   ## determine the optimal number of cluster
   if(clus == TRUE)
   {
@@ -144,7 +141,6 @@ gsmPCA <- function (F,gmat, targetIndex,threshold, clus, nk)
     
     a=fviz_nbclust(as.dist(x), pam, method = "silhouette",k.max = kmax)
     k = which.max(a$data[,2])
-    print (paste("k=",k))
   }
   else
     k = nk

@@ -140,7 +140,6 @@ if __name__ == "__main__":
         selection_method = predictions.meta_header['method'][0]
         ## The target variable from metadata
         target = predictions.meta_header['predict'][0]
-
         # The size of predicted horizon
         horizon = len(predictions.columns)
         # For each prediction method only one prediction horizon is available

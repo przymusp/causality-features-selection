@@ -45,41 +45,52 @@ target_names = c(dat[[3]])
 ## read the dataset
 data = read.csv(data_dir, header = TRUE, dec = '.',sep=";", comment.char = "#")
 colnames = colnames(data)
-graph_dir = paste0("../../results/pre_selection/",data_name,"/",data_name,"_te_graph.csv")
-#getSrcDirectory()
-#graph_dir
-matrix = read.table(graph_dir, header = TRUE,row.names = 1, dec = '.',sep=";", comment.char = "#")
-############# Execute the method  for each target
-for (i in 2:length(target_names)) {
-    target_name = target_names[i]
-    target_name
-    for(j in 1:length(colnames)) {
-      if (colnames[j] == target_name) {
-        target_index = j
-      break;
-      }
-    }
-    ### G-feature selection method
-    out_dir = paste0(output_dir,data_name,"_",target_name,"_","G_PCA_FSM.csv")
-    gfsm = data.frame()
-    try({gfsm = gsmPCA (data, matrix, target_index,0, clus = FALSE,nk =2)})
-    #print(gfsm[1:10,])
-    if(nrow(data.frame(gfsm)) != nrow(data))
-   # if(nrow(data.frame(gfsm)) == 0 && ncol(data.frame(gfsm)) == 0)
-      gfsm = data.frame (data[,target_name])
-    else
-      gfsm = data.frame (data[,target_name],data.frame(gfsm))
-    print("#######")
-    colnames(gfsm)[1] = target_name
-    # Bref description of the file
-    command = paste0 ('awk \'/^#/ && !/^# *predict/\' ',data_dir)
-    system(paste0(command,' > ', out_dir))
-    cat ("# predict;", file=out_dir,append=TRUE)
-    cat (target_name, file=out_dir,append=TRUE, sep='\n')
-    cat ("# method; Granger_cluster_PCA(Granger_PCA feature selection method)",file=out_dir,append=TRUE, sep='\n')
 
-    ## Store the selected variables
-    write.table(gfsm, out_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
+# Graphs directory
+graph_dir = paste0("../../results/pre_selection/",data_name)
+graphs = list.files(path = graph_dir, all.files = FALSE)
+
+for (k in 1:length(graphs))
+{
+    threshold = 0
+    
+    graph_dir = paste0("../../results/pre_selection/",data_name,"/",graphs[k])
+    matrix = read.table(graph_dir, header = TRUE,row.names = 1, dec = '.',sep=";", comment.char = "#")
+    ############# Execute the method  for each target
+    for (i in 2:length(target_names)) {
+        target_name = target_names[i]
+        target_name
+        for(j in 1:length(colnames)) {
+            if (colnames[j] == target_name) {
+                target_index = j
+            break;
+            }
+        }
+        ### G-feature selection method
+        graph_name = substr(graphs[[k]], 1, (nchar(graphs[[k]])-4) )
+        if (graph_name == "granger_graph")
+        threshold = 0.8
+        
+        out_dir = paste0(output_dir,target_name,"_",graph_name,"_GFSM_PCA_.csv")
+        gfsm = data.frame()
+        try({gfsm = gsmPCA (data, matrix, target_index,0, clus = FALSE,nk =2)})
+        #print(gfsm[1:10,])
+        if(nrow(data.frame(gfsm)) != nrow(data))
+        # if(nrow(data.frame(gfsm)) == 0 && ncol(data.frame(gfsm)) == 0)
+        gfsm = data.frame (data[,target_name])
+        else
+            gfsm = data.frame (data[,target_name],data.frame(gfsm))
+        colnames(gfsm)[1] = target_name
+        # Bref description of the file
+        command = paste0 ('awk \'/^#/ && !/^# *predict/\' ',data_dir)
+        system(paste0(command,' > ', out_dir))
+        cat ("# predict;", file=out_dir,append=TRUE)
+        cat (target_name, file=out_dir,append=TRUE, sep='\n')
+        cat ("# method; Granger_cluster_PCA(Granger_PCA feature selection method)",file=out_dir,append=TRUE, sep='\n')
+
+        ## Store the selected variables
+        write.table(gfsm, out_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
+    }
 }
 
 

@@ -7,7 +7,6 @@ library(factoextra) # for the number of clusters
 library(NbClust) # for the number of clusters
 library (kernlab)
 
-
 #getwd()
 source("../tools/selection_tools.R")
 args = commandArgs(trailingOnly=TRUE)
@@ -83,7 +82,7 @@ for (k in 1:length(graphs))
         system(paste0(command,' > ', out_dir))
         cat ("# predict;", file=out_dir,append=TRUE)
         cat (target_name, file=out_dir,append=TRUE, sep='\n')
-        cat ("# method; Granger feature selection method",file=out_dir,append=TRUE, sep='\n')
+        cat (paste("# method; Granger feature selection method with", graph_name),file=out_dir,append=TRUE, sep='\n')
 
         ## Store the selected variables
         write.table(gfsm, out_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
