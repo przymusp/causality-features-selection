@@ -7,6 +7,11 @@ library(factoextra) # for the number of clusters
 library(NbClust) # for the number of clusters
 library (kernlab)
 
+<<<<<<< HEAD
+=======
+#TODO: Support both Granger causality and Transfer entropy. Use all available  pre_selection files.
+
+>>>>>>> origin/master
 #getwd()
 source("../tools/selection_tools.R")
 args = commandArgs(trailingOnly=TRUE)

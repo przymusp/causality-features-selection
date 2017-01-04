@@ -2,6 +2,8 @@
 require(compiler)
 enableJIT(3)
 
+# TODO: change input arguments from (files are passed as argv) to (glob pattern is passed by argument). This is important as for large number of selection files we exceed the permissible argv size.
+
 ## Prediction using the VECM model
 ## For each horizon forecats, 5 predictions can be made
 ## The model is built on normalized data
