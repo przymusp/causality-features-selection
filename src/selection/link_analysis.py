@@ -12,18 +12,12 @@ from sklearn import preprocessing
 
 from tools.csv_helper import *
 
-# TODO: think about using HITS algorithm instead of pagerank, as hits naturally distinguishes between hubs and authorithies (this MAYBE may be used for indicating which nodes are the cause *authorithy* and which depend on others *hubs*). Just an idea to check.
-
-# TODO: Idea: using pagerank, applly spam link analysis approach to select the optimal number of selected variables. (pagerank without personalization and pagerank with personalization (as trusted version))
-
-# TODO: Idea: take only nodes with negative spam mass, or take all top values until last top value with negative spam mass.  
-
 def link_analysis(fname_graph, graph_type):
     # Complain if the file does not exists
     if not path.isfile(fname_graph):
         print(fname_graph)
-        print ("Error: the %s graph file does not exist. Please run the pre-selection Transfer Entropy generation step" % (graph_type,))
-        return
+        print ("Error: the Transfer entropy graph file does not exist. Please run the pre-selection Transfer Entropy generation step")
+        exit()
 
     df = read_csv_and_metadata(fname_graph, index_col=0)
 
@@ -51,22 +45,12 @@ def link_analysis(fname_graph, graph_type):
     # pr = nx.pagerank(G, alpha=0.85)
     # pr1 = {inv_nodes_map[k]:pr[k] for k in pr}
     # result1 = pd.DataFrame.from_dict(pr1, orient='index')
-    # result1 = result1.sort_values(0, ascending = False)
-    # result1.to_csv("ebob-l_LA_PageRank_ALL_rev_%s.csv"%(False))
-    # print (graph_type, False, nx.hits(G))
+    # r = result1.sort_values(0, ascending = False)
     # print (graph_type)
     # print (r)
 
     G_normal = G
     G_reverse = G.reverse()
-
-    # pr = nx.pagerank(G_reverse, alpha=0.85)
-    # pr1 = {inv_nodes_map[k]:pr[k] for k in pr}
-    # result1 = pd.DataFrame.from_dict(pr1, orient='index')
-    # result1 = result1.sort_values(0, ascending = False)
-    # result1.to_csv("ebob-l_LA_PageRank_ALL_rev_%s.csv"%(True))
-
-    # print (graph_type, True, nx.hits(G_reverse))
 
     for reverse in [False, True]:
 
@@ -99,10 +83,6 @@ def link_analysis(fname_graph, graph_type):
             result = pd.DataFrame.from_dict(pr1, orient='index')
             # print (result.columns.values)
             r = result.sort_values(0, ascending = False)
-            # r1 = {inv_nodes_map[k]:r[k] for k in r}
-            # result2 = pd.DataFrame.from_dict(pr1, orient='index')
-            # result2 = result.sort_values(0, ascending = False)
-            # result2.to_csv("Target_%s_LA_%s_rev_%s.csv"%(c,graph_type, reverse))
 
             for i in range(2,len(r)):
                 # TODO: Add automatic selection of the number of the columns
@@ -134,3 +114,5 @@ if __name__ == '__main__':
     for graph_type in ['te_graph', 'granger_graph']:
         fname_graph = output_directory_pre_selection + "/" + fname_base + "_" + graph_type + ".csv"
         link_analysis(fname_graph, graph_type)
+
+
