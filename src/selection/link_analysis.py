@@ -84,6 +84,7 @@ def link_analysis(fname_graph, graph_type):
             # print (result.columns.values)
             r = result.sort_values(0, ascending = False)
 
+            max_number_of_features = min (len(r), 30)
             for i in range(2,len(r)):
                 # TODO: Add automatic selection of the number of the columns
                 output_dimensions = r[:i].transpose()
