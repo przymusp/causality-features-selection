@@ -72,7 +72,7 @@ for (k in 1:length(graphs))
         
         if (graph_name == "granger_graph")
             threshold = 0.8
-        gfsm = fgsm (data, matrix, target_index,threshold, clus = FALSE, nk= 1)
+        gfsm = fgsm (data, matrix, target_index,threshold, clus = TRUE, nk= 1)
         if (ncol(data.frame(gfsm)) > 0)
             gfsm = data.frame (data[,target_name],data.frame(gfsm))
         else
@@ -84,7 +84,7 @@ for (k in 1:length(graphs))
         system(paste0(command,' > ', out_dir))
         cat ("# predict;", file=out_dir,append=TRUE)
         cat (target_name, file=out_dir,append=TRUE, sep='\n')
-        cat (paste("# method; Granger feature selection method with", graph_name),file=out_dir,append=TRUE, sep='\n')
+        cat (paste("# method; Granger_FE_", graph_name, "()"),file=out_dir,append=TRUE, sep='\n')
 
         ## Store the selected variables
         write.table(gfsm, out_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
