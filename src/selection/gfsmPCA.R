@@ -74,7 +74,7 @@ for (k in 1:length(graphs))
         
         out_dir = paste0(output_dir,target_name,"_",graph_name,"_GFSM_PCA_.csv")
         gfsm = data.frame()
-        try({gfsm = gsmPCA (data, matrix, target_index,0, clus = FALSE,nk =2)})
+        try({gfsm = gsmPCA (data, matrix, target_index,0, clus = TRUE,nk =2)})
         #print(gfsm[1:10,])
         if(nrow(data.frame(gfsm)) != nrow(data))
         # if(nrow(data.frame(gfsm)) == 0 && ncol(data.frame(gfsm)) == 0)
@@ -87,7 +87,7 @@ for (k in 1:length(graphs))
         system(paste0(command,' > ', out_dir))
         cat ("# predict;", file=out_dir,append=TRUE)
         cat (target_name, file=out_dir,append=TRUE, sep='\n')
-        cat ("# method; Granger_cluster_PCA(Granger_PCA feature selection method)",file=out_dir,append=TRUE, sep='\n')
+        cat (paste("# method; Granger_FE_PCA", graph_name,"(Granger_PCA feature selection method)"),file=out_dir,append=TRUE, sep='\n')
 
         ## Store the selected variables
         write.table(gfsm, out_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
