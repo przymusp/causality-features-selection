@@ -17,12 +17,10 @@ startJVM(getDefaultJVMPath(), "-ea", "-Djava.class.path=" + jarLocation)
 # Function that generates a transfer entropy matrix using the JDIT library
 # The input data is the file name
 def jdit_transfer_entropy_matrix (fname):
-    dataRaw = pd.read_csv(fname, sep=';',header=0, comment ='#')
+    dataRaw = read_csv_and_metadata(fname)
     data = dataRaw.values
     n_Features = len(data[0,:])
     te_matrix = np.ndarray(shape=(n_Features,n_Features))
-    
-    
     
     # 1. Construct the calculator:
     calcClass = JPackage("infodynamics.measures.continuous.kraskov").TransferEntropyCalculatorKraskov
@@ -43,8 +41,11 @@ def jdit_transfer_entropy_matrix (fname):
             calc.setObservations(source, dest)
             # 5. Compute the estimate:
             result = calc.computeAverageLocalOfObservations()
-            te_matrix[i,j] =result
-    return te_matrix
+            te_matrix[i,j] = result
+
+    out = pd.DataFrame(te_matrix)
+    out.meta_header = dataRaw.meta_header
+    return out
 
 if __name__ == "__main__":
     fname, output_directory = parse_selection_arguments(sys.argv)
