@@ -5,6 +5,7 @@ library(vars)
 library(stats) ##hclus
 library(factoextra) # for the number of clusters
 library(NbClust) # for the number of clusters
+library(psych)  # for factor analysis method
 library (kernlab)
 
 #TODO: Support both Granger causality and Transfer entropy. Use all available  pre_selection files.
@@ -51,47 +52,53 @@ colnames = colnames(data)
 graph_dir = paste0("../../results/pre_selection/",data_name)
 graphs = list.files(path = graph_dir, all.files = FALSE)
 
-for (k in 1:length(graphs))
-{
-    threshold = 0
-    
-    graph_dir = paste0("../../results/pre_selection/",data_name,"/",graphs[k])
-    matrix = read.table(graph_dir, header = TRUE,row.names = 1, dec = '.',sep=";", comment.char = "#")
-    ############# Execute the method  for each target
-    for (i in 2:length(target_names)) {
-        target_name = target_names[i]
-        target_name
-        for(j in 1:length(colnames)) {
-            if (colnames[j] == target_name) {
-                target_index = j
-            break;
-            }
-        }
-        ### G-feature selection method
-        graph_name = substr(graphs[[k]], 1, (nchar(graphs[[k]])-4) )
-        if (graph_name == "granger_graph")
-        threshold = 0.8
-        
-        out_dir = paste0(output_dir,target_name,"_",graph_name,"_GFSM_PCA_.csv")
-        gfsm = data.frame()
-        try({gfsm = gsmPCA (data, matrix, target_index,0, clus = TRUE,nk =2)})
-        #print(gfsm[1:10,])
-        if(nrow(data.frame(gfsm)) != nrow(data))
-        # if(nrow(data.frame(gfsm)) == 0 && ncol(data.frame(gfsm)) == 0)
-        gfsm = data.frame (data[,target_name])
-        else
-            gfsm = data.frame (data[,target_name],data.frame(gfsm))
-        colnames(gfsm)[1] = target_name
-        # Bref description of the file
-        command = paste0 ('awk \'/^#/ && !/^# *predict/\' ',data_dir)
-        system(paste0(command,' > ', out_dir))
-        cat ("# predict;", file=out_dir,append=TRUE)
-        cat (target_name, file=out_dir,append=TRUE, sep='\n')
-        cat (paste("# method; Granger_FE_PCA", graph_name,"(Granger_PCA feature selection method)"),file=out_dir,append=TRUE, sep='\n')
+# Dimension reduction methods
+dmr_methods = c("KPCA","PCA","FACT")
 
-        ## Store the selected variables
-        write.table(gfsm, out_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
+for (dmr_method in dmr_methods)
+{
+    for (k in 1:length(graphs))
+    {
+        threshold = 0
+    
+        graph_dir = paste0("../../results/pre_selection/",data_name,"/",graphs[k])
+        matrix = read.table(graph_dir, header = TRUE,row.names = 1, dec = '.',sep=";", comment.char = "#")
+        ############# Execute the method  for each target
+        for (i in 2:length(target_names)) {
+            target_name = target_names[i]
+            target_name
+            for(j in 1:length(colnames)) {
+                if (colnames[j] == target_name) {
+                    target_index = j
+                    break;
+                }
+            }
+            ### G-feature selection method
+            graph_name = substr(graphs[[k]], 1, (nchar(graphs[[k]])-4) )
+            if (graph_name == "granger_graph")
+                threshold = 0.8
+        
+            out_dir = paste0(output_dir,target_name,"_",graph_name,"_GFSM_",dmr_method,"_.csv")
+            gfsm = data.frame()
+            try({gfsm = gfsm_dms_reduction (data, matrix, target_index,0, clus = FALSE,nk =8, methode_name=dmr_method)})
+            #print(gfsm[1:10,])
+            if(nrow(data.frame(gfsm)) != nrow(data))
+            # if(nrow(data.frame(gfsm)) == 0 && ncol(data.frame(gfsm)) == 0)
+            gfsm = data.frame (data[,target_name])
+            else
+                gfsm = data.frame (data[,target_name],data.frame(gfsm))
+            colnames(gfsm)[1] = target_name
+            # Bref description of the file
+            command = paste0 ('awk \'/^#/ && !/^# *predict/\' ',data_dir)
+            system(paste0(command,' > ', out_dir))
+            cat ("# predict;", file=out_dir,append=TRUE)
+            cat (target_name, file=out_dir,append=TRUE, sep='\n')
+            cat (paste0("# method; GFSM_",dmr_method,"_", graph_name,"(Granger_PCA feature selection method)"),file=out_dir,append=TRUE, sep='\n')
+
+            ## Store the selected variables
+            write.table(gfsm, out_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
     }
+}
 }
 
 
