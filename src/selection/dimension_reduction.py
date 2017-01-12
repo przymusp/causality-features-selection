@@ -8,17 +8,20 @@ import re
 import sys
 from os import sys, path
 from tools.csv_helper import *
+from functools import partial
 
-methods = [
-  decomp.FactorAnalysis(n_components=4),
-  decomp.NMF(n_components=4, init='nndsvda'),
-  decomp.NMF(n_components=4, init='nndsvdar'),
-  #decomp.LatentDirichletAllocation(n_topics=4),
-  decomp.KernelPCA(n_components=4, kernel="rbf", fit_inverse_transform=True),
-  decomp.FastICA(n_components=4),
-  decomp.IncrementalPCA(n_components=4),
-  decomp.PCA(n_components=4),
+methods_manual = [
+  decomp.FactorAnalysis,
+  decomp.FastICA,
+  decomp.IncrementalPCA,
+  decomp.PCA,
 
+  partial(decomp.NMF, init='nndsvda'),
+  partial(decomp.NMF,  init='nndsvdar'),
+  partial(decomp.KernelPCA, kernel="rbf", fit_inverse_transform=True),
+]
+
+methods_automatic = [
   # Auto guessing the number of dimensions for method
   decomp.PCA(n_components='mle', svd_solver='full'), # Uses The method from "Probabilistic Principal Component Analysis"
   # TODO: we cannot use automatic selection for kernel PCA as it may generate excessive number of dimensions
@@ -35,10 +38,16 @@ if __name__ == "__main__":
     fname, output_directory = parse_selection_arguments(sys.argv)
     df = read_csv_and_metadata(fname)
 
+    f_max = min(min(df.shape), 20)
+
+    methods = []
+    methods.extend(methods_automatic)
+    methods.extend([m(n_components = f_num) for m in methods_manual for f_num in range(2,f_max) ])
+
     for c,d in exclude_column_generator(df):
         for method in methods:
             # output for method name
-            mname = pretty_print_method_name(method)
+            mname = "dm_" + pretty_print_method_name(method)
             out_fname = get_filename_from_method(fname, c, mname, prefix=output_directory)
 
             # TODO: only update the files ?
