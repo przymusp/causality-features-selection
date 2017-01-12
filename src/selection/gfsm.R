@@ -84,10 +84,34 @@ for (k in 1:length(graphs))
         system(paste0(command,' > ', out_dir))
         cat ("# predict;", file=out_dir,append=TRUE)
         cat (target_name, file=out_dir,append=TRUE, sep='\n')
-        cat (paste("# method; Granger_FE_", graph_name, "()"),file=out_dir,append=TRUE, sep='\n')
+        cat (paste("# method; Granger_FE_Automatic_K", graph_name, "()"),file=out_dir,append=TRUE, sep='\n')
 
         ## Store the selected variables
         write.table(gfsm, out_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
+        
+        for (nk in 1:20)
+        {
+            out_dir = paste0(output_dir,target_name,"_",graph_name,"_GFSM_K=",nk,".csv")
+            if (graph_name == "granger_graph")
+            threshold = 0.8
+            gfsm = fgsm (data, matrix, target_index,threshold, clus = FALSE, nk= nk)
+            if (ncol(data.frame(gfsm)) > 0)
+            gfsm = data.frame (data[,target_name],data.frame(gfsm))
+            else
+            gfsm = data.frame (data[,target_name])
+            colnames(gfsm)[1] = target_name
+            
+            # Set metadata
+            command = paste0 ('awk \'/^#/ && !/^# *predict/\' ',data_dir)
+            system(paste0(command,' > ', out_dir))
+            cat ("# predict;", file=out_dir,append=TRUE)
+            cat (target_name, file=out_dir,append=TRUE, sep='\n')
+            cat (paste0("# method; Granger_FE_K=",nk,"_", graph_name, "()"),file=out_dir,append=TRUE, sep='\n')
+            
+            ## Store the selected variables
+            write.table(gfsm, out_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
+            
+        }
     }
 }
 
