@@ -46,19 +46,18 @@ predictbase <- function (method_name, prefix_out){
     lagMax = as.integer ((nrow(fs_method)  - 1)  / (2*(ncol(fs_method) + 1)))
     var = VARselect(fs_method,lag.max=lagMax)
     p = var$selection[1] ## AIC criteria
-    #p = 10
-    print(p)
+ 
 
     ###  Prediction
-    #nbrePreds = as.integer(nrow(fs_method) * 10 / 100) # 10% predictions of the size of the data
-   # preds = vec_prediction(fs_method, p, nbrePreds)
+    nbrePreds = as.integer(nrow(fs_method) * 10 / 100) # 10% predictions of the size of the data
+    preds = vec_prediction(fs_method, p, nbrePreds)
 
 
-    #names(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")
-    #colnames(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")
-    #preds = denormalize(preds,max,min)
+    names(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")
+    colnames(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")
+    preds = denormalize(preds,max,min)
 
-    #write.table(preds, file = output_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";",append = TRUE)
+    write.table(preds, file = output_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";",append = TRUE)
 }
 
 args = commandArgs(trailingOnly=TRUE)
