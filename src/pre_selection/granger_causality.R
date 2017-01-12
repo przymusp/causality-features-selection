@@ -41,7 +41,8 @@ for (i in 1:ncol(data))
 {
   for (j in 1:ncol(data))
   {
-    var = VARselect(data.frame(data[,j], data [,i]),lag.max= 5*nrow(data)/100)
+    lagMax = as.integer ((nrow(data)  - 1)  / (2*(ncol(data) + 1)))
+    var = VARselect(data.frame(data[,j], data [,i]),lag.max= lagMax)
     lag = var$selection[1]
     if (j != i) {
       tryCatch({
