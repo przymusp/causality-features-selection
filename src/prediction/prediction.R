@@ -14,6 +14,7 @@ library(tsDyn)
 library(lmtest)
 library(vars)
 library(parallel)
+library (crayon) #print with colors
 
 source("../tools/prediction_tools.R")
 
@@ -42,11 +43,10 @@ predictbase <- function (method_name, prefix_out){
     fs_method = normalize(fs_method)
 
     # determine the lag parameter
-    lagMax = 100
-    #var = VARselect(fs_method[,1],fs_method[,-1],lag.max=lagMax)
+    lagMax = as.integer ((nrow(fs_method)  - 1)  / (2*(ncol(fs_method) + 1)))
     var = VARselect(fs_method,lag.max=lagMax)
     p = var$selection[1] ## AIC criteria
-    # print(p)
+ 
 
     ###  Prediction
     nbrePreds = as.integer(nrow(fs_method) * 10 / 100) # 10% predictions of the size of the data

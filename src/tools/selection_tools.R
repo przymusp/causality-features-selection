@@ -196,6 +196,122 @@ gsmPCA <- function (F,gmat, targetIndex,threshold, clus, nk)
     return (F[,-target])
 }
 
+#### GFSM + dimension reduction methods
+gfsm_dms_reduction <- function (F,gmat, targetIndex,threshold, clus, nk, methode_name)
+{
+  gsmCluster = data.frame()
+  mincaus = 0
+  #### eliminate variables that not cause the target
+  delet = c()
+  n = 1
+  m = 1
+  for (i in 1:ncol(gmat))
+  {
+    if (i == targetIndex)
+      target = m
+    if (i != targetIndex)
+      if (gmat[i,targetIndex] < threshold)
+      {
+        delet[n] = i
+        n = n + 1
+      }
+    else {
+      m = m + 1
+    }
+  }
+  ###########
+  ### Applying the PAM methode
+  if ((length(delet) + 1) == ncol(F))
+    return (data.frame())
+  
+  if (length(delet) > 0)
+  {
+    gmat = gmat[-delet, -delet]
+    F = F[,-delet]
+  } 
+  x = gmat[-target, -target]
+
+  # Symmetrize x
+  for (l in 2:ncol(x))
+    for(m in 1: (l-1))
+        x[l,m] = x[m,l] = 1 - max(x[l,m], x[m,l])
+  ## determine the optimal number of cluster
+  if(clus == TRUE)
+  {
+    kmax = nrow(x)-1
+    if (kmax < 2)
+      return (F[,-target])
+
+     asw = c()
+     #silouhette methode
+    for (km in 1:kmax)
+  		asw[k] <- (pam(as.dist(x),diss=TRUE,km)$silinfo)$avg.width
+	k <- which.max(asw)
+	print (k)
+    
+    #gap_stat <- clusGap(x, FUN = pam, K.max = kmax)
+    #a = fviz_gap_stat (gap_stat)
+    #a=fviz_nbclust(as.dist(x), diss = as.dist(x),FUNcluster = pam, method = "silhouette",k.max = kmax)
+    #k = which.max(a$data[,2])
+  }
+  else
+    k = nk
+  ######
+  if (k < ncol(x))
+  {   
+      clusters = pam (as.dist(x),diss=TRUE, k)
+      clusteringVector = clusters$cluster
+
+      classes = data.frame()
+      for (j in 1:k)
+      {
+        l = 1
+        for ( i in 1:ncol(x))
+          if (clusteringVector[i] == j)
+          {
+            classes[l,j] = i
+            if (classes[l,j] >= target)
+            {
+              classes[l,j] = classes[l,j] + 1
+            }
+            l = l + 1
+          }
+      }
+
+      ### buildind the gsm cluster from the PAM clusters
+      for (j in 1:k)
+      {
+          vect = classes[,j]
+          vect <- vect[!is.na(vect)]
+          if (length(vect) > 1) {
+          	if (methode_name == "KPCA") {
+          		print ("KPCA method")
+              prinComp = kpca(~.,data=F[,vect], kernel="rbfdot",sigma=0.2,features=1)
+              variables = pcv(prinComp)
+          	}
+          	if (methode_name == "FACT"){
+          		print ("Factor analysis method")
+              fit = factanal(F[,vect], factors=1)
+              model = factor.scores(F[,vect],fit)
+              variables = model$scores
+          	}
+          	if (methode_name == "PCA"){
+          		print ("PCA method")
+          		fit = principal(F[,vect], 1)
+              	variables = fit$scores
+          	}
+            for (l in 1:nrow(variables))
+                gsmCluster[l,j] = variables[l,1]
+          }
+          if (length(vect) == 1)
+            for(h in 1:nrow(F))
+              gsmCluster[h,j] = F[h,vect[1]]
+      }
+      return (gsmCluster)
+  }
+  else
+    return (F[,-target])
+}
 
 #### SELECTKBEST based on causality
 naiveSelection <- function (gmat, targetIndex, threshold)
