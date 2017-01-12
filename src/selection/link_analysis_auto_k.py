@@ -23,15 +23,22 @@ def link_analysis(fname_graph, graph_type):
 
     # TODO: future work, clean the graph, some ideas
     # for a,b in itertools.product(df.columns.values, repeat=2):
-    #     if abs(df[a][b] - df[b][a]) < 0.05:
-    #         df[a][b]=0
-    #         df[b][a]=0
+        # if abs(df[a][b] < df[b][a]) <0.005:
+            # df[a][b]=0
+            # df[b][a]=0
 
 
-    # Columns should sum to 1. sum and divide by column by column
     # Fix the pandas metadata handling problem
     meta_header = df.meta_header
-    df /= df.sum(1)
+
+    # Columns should sum to 1. sum and divide by column by column
+    # TODO: just standarize the data
+    # df /= df.sum(1)
+    # print(df.min().min(), df.max().max())
+    # df = (df - df.min()) / (df.max() - df.min())
+    # df = df[df>=0.6*df.max().max()].fillna(0)
+    # print (df)
+    # exit()
     df.meta_header = meta_header
 
 
@@ -44,10 +51,10 @@ def link_analysis(fname_graph, graph_type):
 
 
     G= G.reverse()
-    pr = nx.pagerank(G, alpha=0.85)
+    pr = nx.pagerank(G, alpha=1)
     pr1 = {inv_nodes_map[k]:pr[k] for k in pr}
     page_rank_no_personalization = pd.DataFrame.from_dict(pr1, orient='index')
-    page_rank_no_personalization.sort_index()
+    page_rank_no_personalization =  page_rank_no_personalization.sort_index()
 
     # G_reverse = G.reverse()
 
@@ -68,32 +75,43 @@ def link_analysis(fname_graph, graph_type):
         p = dict.fromkeys(G, 0)
         p[nodes_map[c]]=1
 
-        G1 = G.copy()
-        print(G1.in_edges([nodes_map[c]]))
-        G1.remove_edges_from(G1.in_edges([nodes_map[c]]))
-        print(G1.in_edges([nodes_map[c]]))
-        G = G1
+        # G1 = G.copy()
+        # # print(G1.in_edges([nodes_map[c]]))
+        # G1.remove_nodes_from([nodes_map[c]])
+        # pr = nx.pagerank(G1, alpha=0.85)
+        # pr1 = {inv_nodes_map[k]:pr[k] for k in pr}
+        # page_rank_no_personalization = pd.DataFrame.from_dict(pr1, orient='index')
+        # page_rank_no_personalization.sort_index()
+        # # print(G1.in_edges([nodes_map[c]]))
+        # # G = G1
 
         # Page rank with personalization
         pr = nx.pagerank(G, alpha=0.85, personalization = p)
 
         page_rank_personalization = {inv_nodes_map[k]:pr[k] for k in pr}
         page_rank_personalization = pd.DataFrame.from_dict(page_rank_personalization, orient='index')
-        page_rank_personalization.sort_index()
+        page_rank_personalization = page_rank_personalization.sort_index()
 
         # Spam mass analysis
         diff = (page_rank_no_personalization - page_rank_personalization)/page_rank_no_personalization
-        print(diff)
+        diff = diff.sort(columns=0)
+        i = ['IPS10', 'HSWST', 'PMNV','PMNO','HSNE','HSMW','PMCP','HSSOU']
+        
+        for k in i:
+            print(diff.T[[k]])
+        # print(diff[diff<0])
         # a = pd.concat([diff, page_rank_no_personalization, page_rank_personalization], axis=1, names=['diff', 'no_pers', 'pers'])
         # print (c, diff.sort_values(0,ascending=True), page_rank_personalization.sort_values(0,ascending=False))
         # continue
 
         output_dimensions = diff[ diff <= 0 ].dropna().T
+        print (output_dimensions)
         # print (diff)
 
         # If predicted column is in the set - remove it
         # Normally the predicted column should be the first column in this set, so this is just a precaution. As we will add this column back in next step.
-        output_dimensions = list(output_dimensions.drop([c,], axis=1).columns.values)
+        # output_dimensions = list(output_dimensions.drop([c,], axis=1).columns.values)
+        output_dimensions = list(output_dimensions.columns.values)
         output_dimensions.insert(0,c)
         # print ("======",c)
         # print (output_dimensions)
