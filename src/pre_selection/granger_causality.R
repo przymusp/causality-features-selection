@@ -57,5 +57,6 @@ for (i in 1:ncol(data))
       gMat[i,j] = 1
   }
 }
-colnames(gMat) <- rownames(gMat) <- colnames(data)
+colnames(gMat) <- c( ".",colnames(data))
+rownames(gMat) <- colnames(data)
 write.table(gMat, output_dir,row.names = TRUE, na = "",col.names = TRUE, sep = ";", append = TRUE)
