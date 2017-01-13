@@ -23,27 +23,33 @@ def jdit_transfer_entropy_matrix (fname):
     te_matrix = np.ndarray(shape=(n_Features,n_Features))
     
     # 1. Construct the calculator:
-    calcClass = JPackage("infodynamics.measures.continuous.kraskov").TransferEntropyCalculatorKraskov
+    calcClass = JPackage("infodynamics.measures.continuous.kernel").TransferEntropyCalculatorKernel
     calc = calcClass()
     
     for i in range (0,n_Features):
         for j in range (0,n_Features):
+            if (i == j):
+                te_matrix[i,j] = 0
+                break;
             source = data[:,i]
             dest = data[:,j]
             
-            
             # 2. Set any properties to non-default values:
-            calc.setProperty("k_HISTORY", "20")
-            calc.setProperty("l_HISTORY", "20")
+            #calc.setProperty("k_HISTORY", "1")
+            #calc.setProperty("l_HISTORY", "1")
             # 3. Initialise the calculator for (re-)use:
             calc.initialise()
             # 4. Supply the sample data:
             calc.setObservations(source, dest)
             # 5. Compute the estimate:
             result = calc.computeAverageLocalOfObservations()
+            if result <= 0:
+                te_matrix[i,j] = 0
+                break
             te_matrix[i,j] = result
 
     out = pd.DataFrame(te_matrix)
+    out.columns = dataRaw.columns
     out.meta_header = dataRaw.meta_header
     return out
 
