@@ -36,27 +36,30 @@ system(paste0(command,' > ', output_dir))
 # data = normalize(data)
 
 #### calculate the matrix
-gMat = matrix(nrow=ncol(data), ncol=ncol(data))
+gMat = data.frame(nrow=ncol(data), ncol=ncol(data))
+#gMat = data.frame()
 for (i in 1:ncol(data))
 {
-  for (j in 1:ncol(data))
-  {
-    lagMax = as.integer ((nrow(data)  - 1)  / (2*(ncol(data) + 1)))
-    var = VARselect(data.frame(data[,j], data [,i]),lag.max= lagMax)
-    lag = var$selection[1]
-    if (j != i) {
-      tryCatch({
-        test =   try (grangertest (data[,j] ~ data [,i], order = lag))
-        if(test[1] == "Error in vc[ovar, ovar] : indice hors limites\n")
-        {
-          gMat[i,j] = 0
-        }
-        else gMat[i,j] = 1 - test$`Pr(>F)`[2]}, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
+    for (j in 1:ncol(data))
+     {
+         lagMax = as.integer ((nrow(data)  - 1)  / (2*(ncol(data) + 1)))
+         var = VARselect(data.frame(data[,j], data [,i]),lag.max= lagMax)
+         lag = var$selection[1]
+         if (j != i) {
+             tryCatch({
+                 test =   try (grangertest (data[,j] ~ data [,i], order = lag))
+                 if(test[1] == "Error in vc[ovar, ovar] : indice hors limites\n")
+                 {
+                     gMat[i,j] = 0
+                 }
+                 else gMat[i,j] = 1 - test$`Pr(>F)`[2]}, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
     }
-    else
-      gMat[i,j] = 1
+        else
+            gMat[i,j] = 0
   }
 }
-colnames(gMat) <- c( ".",colnames(data))
-rownames(gMat) <- colnames(data)
-write.table(gMat, output_dir,row.names = TRUE, na = "",col.names = TRUE, sep = ";", append = TRUE)
+gMat = data.frame(c(colnames(data)),gMat)
+#rownames(gMat) <- c(colnames(data))
+colnames(gMat) <- c(' ', colnames(data))
+write.table(gMat, output_dir, sep = ";",row.names =FALSE, append = TRUE)
+#write.table(gMat, output_dir,row.names = colnames(data), na = "",col.names = colnames(data), sep = ";", append = TRUE)
