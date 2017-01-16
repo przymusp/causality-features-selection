@@ -30,7 +30,8 @@ def preaty_print(results_collection, methods_to_hotizon_dict):
     cmap = dict(zip(measures, colors))
 
     tables = collections.defaultdict(lambda : collections.defaultdict(dict))
-    tables_out = collections.defaultdict(dict)
+    tables_str = collections.defaultdict(dict)
+    tables_real = collections.defaultdict(dict)
 
     def underline_top_10(s):
         '''
@@ -55,8 +56,9 @@ def preaty_print(results_collection, methods_to_hotizon_dict):
                 for m in measures:
                    s.bar(subset=[m,], color=cmap[m])
                    s.apply(underline_top_10)
-                tables_out[target][h]=s.render()
-    return tables_out
+                tables_str[target][h]=s.render()
+                tables_real[target][h] = df
+    return tables_str, tables_real
 
 # max_horizon is hardcoded into the prediction scripts
 def get_slice_with_horizon(df, nbre_preds, target, horizon, max_horizon=5):
@@ -158,10 +160,17 @@ if __name__ == "__main__":
         for k,v in ret.items():
             results_collection[predict_model][target][k][short_selection_method] = ret[k]
 
-    tables = preaty_print(results_collection, prediction_method_horizon)
-    script = template.render(tables=tables, error_list=error_list)
+
+    tables_str, tables_real = preaty_print(results_collection, prediction_method_horizon)
+    script = template.render(tables=tables_str, error_list=error_list)
 
     timeseries_prefix = sys.argv[1].split("/")[-1].split(".")[0]
+
+    writer = pd.ExcelWriter("results/evaluation/%s.xls"%(timeseries_prefix,))
+    for target_name, target_val in tables_real.items():
+        for horizon_name, horizon_val in tables_real[target_name].items():
+            horizon_val.to_excel(writer, sheet_name="%s_%s"%(target_name, horizon_name))
+    writer.close()
 
     with open("results/evaluation/%s.html"%(timeseries_prefix,),"w") as f:
         f.write(script)
