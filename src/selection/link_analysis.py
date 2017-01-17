@@ -85,7 +85,7 @@ def link_analysis(fname_graph, graph_type):
             r = result.sort_values(0, ascending = False)
 
             max_number_of_features = min (len(r), 30)
-            for i in range(2,len(max_number_of_features)):
+            for i in range(2,max_number_of_features):
                 # TODO: Add automatic selection of the number of the columns
                 output_dimensions = r[:i].transpose()
 
@@ -94,11 +94,11 @@ def link_analysis(fname_graph, graph_type):
                 output_dimensions = list(output_dimensions.drop([c,], axis=1).columns.values)
                 output_dimensions.insert(0,c)
 
-                mname = "LinkAnalysis_%s_%d_%d(select_top_percent=%d, reverse = %s)"%(graph_type,i,reverse, i,reverse)
+                mname = "LinkAnalysis_%s_reverse_%d(n_components=%d)"%(graph_type, reverse, i)
                 out_fname = get_filename_from_method(fname, c, mname, prefix=output_directory)
 
                 df_out.meta_header['predict']=[c,]
-                df_out.meta_header['method']=["LinkAnalysis_%s_%d_%d(select_top_percent=%d, reverse = %s)"%(graph_type,i,reverse,i,reverse)]
+                df_out.meta_header['method']=[mname,]
                 write_csv_with_metadata(df_out[output_dimensions], out_fname)
 
 
