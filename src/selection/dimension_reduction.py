@@ -42,7 +42,13 @@ if __name__ == "__main__":
 
     methods = []
     methods.extend(methods_automatic)
-    methods.extend([m(n_components = f_num) for m in methods_manual for f_num in range(2,f_max) ])
+
+    for m in methods_manual:
+        for f_num in range(2,f_max):
+            m_ins = m(n_components = f_num)
+            if isinstance(m, partial):
+                m_ins.__pretty_print_extra_str = "_".join([ str(k)+"_"+str(v) for k,v in m.keywords.items()])
+            methods.append(m_ins)
 
     for c,d in exclude_column_generator(df):
         for method in methods:

@@ -35,6 +35,8 @@ def get_filename_from_method(fname, predicted_column, method_name, prefix = "", 
 
 def pretty_print_method_name(method):
     mname = str(method).replace("\n", " ")
+    if hasattr(method,"__pretty_print_extra_str"):
+        mname = mname.replace("(", "_" + method.__pretty_print_extra_str + "(")
     return ' '.join(mname.split())
 
 def read_metadata_from_csv_file(filename):
