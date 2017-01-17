@@ -24,20 +24,36 @@ global_measures = {
         'MASE': lambda x,y: 0 # place holder the MASE, requires extra data and will be set up later in the evaluation
         }
 
-def preaty_print(results_collection, methods_to_hotizon_dict):
-    colors = itertools.cycle(["#9b59b6", "#3498db", "#95a5a6", "#e74c3c", "#34495e", "#2ecc71"])
-    measures = global_measures.keys()
-    cmap = dict(zip(measures, colors))
+def transform_into_html_setup():
+        colors = itertools.cycle(["#9b59b6", "#3498db", "#95a5a6", "#e74c3c", "#34495e", "#2ecc71"])
+        measures = global_measures.keys()
+        cmap = dict(zip(measures, colors))
+
+        def underline_top_10(s):
+            '''
+            highlight the maximum in a Series yellow.
+            '''
+            return ['text-decoration: underline;' if v < 10 else '' for v in s.rank(method='max')]
+
+        def transform_into_html_inner(df):
+            s = df.style
+            # s.set_table_attributes('class="table table-striped table-sm')
+            # s.set_properties(**{'font-size':'10pt'})
+            for m in measures:
+               s.bar(subset=[m,], color=cmap[m])
+               s.apply(underline_top_10)
+
+            return s.render()
+        return transform_into_html_inner
+
+# TODO: Just a dirty metaprograming hack, rewrite later for readability
+transform_into_html = transform_into_html_setup()
+
+def transform_into_output_tables(results_collection, methods_to_hotizon_dict):
 
     tables = collections.defaultdict(lambda : collections.defaultdict(dict))
     tables_str = collections.defaultdict(dict)
     tables_real = collections.defaultdict(dict)
-
-    def underline_top_10(s):
-        '''
-        highlight the maximum in a Series yellow.
-        '''
-        return ['text-decoration: underline;' if v < 10 else '' for v in s.rank(method='max')]
 
     for predict_model in results_collection:
         for target in results_collection[predict_model]:
@@ -50,13 +66,7 @@ def preaty_print(results_collection, methods_to_hotizon_dict):
             for h in range(methods_to_hotizon_dict[predict_model]): # diffrent timehorizons
                 df = pd.concat(tables[target][h].values())
                 df.index.name = 'Method'
-                s = df.style
-                # s.set_table_attributes('class="table table-striped table-sm')
-                # s.set_properties(**{'font-size':'10pt'})
-                for m in measures:
-                   s.bar(subset=[m,], color=cmap[m])
-                   s.apply(underline_top_10)
-                tables_str[target][h]=s.render()
+                tables_str[target][h] = transform_into_html(df)
                 tables_real[target][h] = df
     return tables_str, tables_real
 
@@ -93,13 +103,14 @@ def evaluate_prediction(original_data, target, predictions, horizon):
 
     return results
 
-def check_field_in_header(dict_to_check, field, fname, error_list):
-    if field not in predictions.meta_header:
-        error_list.append("Error: File %s, field %s\n not found in meta header." %(fname, field))
-        return False
-    if len(predictions.meta_header[field])  != 1:
-        error_list.append("Error: File %s, field %s\n has more then one value in  meta_header." %(fname, field))
-        return False
+def check_fields_in_metaheader(dict_to_check, fields, fname, error_list):
+    for field in fields:
+        if field not in predictions.meta_header:
+            error_list.append("Error: File %s, field %s\n not found in meta header." %(fname, field))
+            return False
+        if len(predictions.meta_header[field])  != 1:
+            error_list.append("Error: File %s, field %s\n has more then one value in  meta_header." %(fname, field))
+            return False
     return True
 
 
@@ -131,24 +142,24 @@ if __name__ == "__main__":
 
         meta_header = predictions.meta_header
         # Complain and continue if fields are messed up in input file meta_header
-        if not check_field_in_header(meta_header, 'predict', f, error_list)\
-                or not check_field_in_header(meta_header, 'predict_model', f, error_list)\
-                or not check_field_in_header(meta_header, 'method', f, error_list):
+        if not check_fields_in_metaheader(meta_header, ['predict', 'predict_model', 'method'], f, error_list):
             continue
 
         # Prediction model used
         predict_model = predictions.meta_header['predict_model'][0]
         # Selection method used
         selection_method = predictions.meta_header['method'][0]
-        ## The target variable from metadata
+        # The target variable from metadata
         target = predictions.meta_header['predict'][0]
         # The size of predicted horizon
         horizon = len(predictions.columns)
+
         # For each prediction method only one prediction horizon is available
         if predict_model in prediction_method_horizon and prediction_method_horizon[predict_model] != horizon:
             error_list.append("Error: more then one horizon detected for method %s skipping file %s"  %(predict_model,f))
             continue
         else:
+            # If the prediction horizon match the previously set one or when this the first time we see horizon
             prediction_method_horizon[predict_model] = horizon
 
         ## The number of predicted vectors (vector may be one dimensional or may include some additional time horizon prediction)
@@ -161,16 +172,20 @@ if __name__ == "__main__":
             results_collection[predict_model][target][k][short_selection_method] = ret[k]
 
 
-    tables_str, tables_real = preaty_print(results_collection, prediction_method_horizon)
-    script = template.render(tables=tables_str, error_list=error_list)
+    # Get the output touple
+    tables_str, tables_real = transform_into_output_tables(results_collection, prediction_method_horizon)
 
+    # Set the output prefix
     timeseries_prefix = sys.argv[1].split("/")[-1].split(".")[0]
 
+    # Write excel
     writer = pd.ExcelWriter("results/evaluation/%s.xls"%(timeseries_prefix,))
     for target_name, target_val in tables_real.items():
         for horizon_name, horizon_val in tables_real[target_name].items():
             horizon_val.to_excel(writer, sheet_name="%s_%s"%(target_name, horizon_name))
     writer.close()
 
+    # Write HTML
+    script = template.render(tables=tables_str, error_list=error_list)
     with open("results/evaluation/%s.html"%(timeseries_prefix,),"w") as f:
         f.write(script)
