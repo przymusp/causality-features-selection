@@ -59,15 +59,17 @@ def transform_into_output_tables(results_collection, methods_to_hotizon_dict):
         for target in results_collection[predict_model]:
             for h in range(methods_to_hotizon_dict[predict_model]): # diffrent timehorizons
                 df = pd.DataFrame.from_dict(results_collection[predict_model][target][h]).transpose()
-                df.index= predict_model + df.index
+                df.index = predict_model + df.index
                 tables[target][h][predict_model]=df
 
         for target in results_collection[predict_model]:
             for h in range(methods_to_hotizon_dict[predict_model]): # diffrent timehorizons
                 df = pd.concat(tables[target][h].values())
                 df.index.name = 'Method'
+
                 tables_str[target][h] = transform_into_html(df)
                 tables_real[target][h] = df
+
     return tables_str, tables_real
 
 # max_horizon is hardcoded into the prediction scripts
@@ -168,8 +170,9 @@ if __name__ == "__main__":
         ret = evaluate_prediction(original_data, target, predictions, horizon)
 
         short_selection_method = tools.get_filename_from_method("", "", selection_method, "", "")
+        print (selection_method)
         for k,v in ret.items():
-            results_collection[predict_model][target][k][short_selection_method] = ret[k]
+            results_collection[predict_model][target][k][short_selection_method] = v
 
 
     # Get the output touple
