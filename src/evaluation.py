@@ -72,8 +72,8 @@ def transform_into_output_tables(results_collection, methods_to_hotizon_dict):
 
     return tables_str, tables_real
 
-# max_horizon is hardcoded into the prediction scripts
 def get_slice_with_horizon(df, nbre_preds, target, horizon, max_horizon=5):
+    # max_horizon is hardcoded into the prediction scripts
     return df[[target]].tail(nbre_preds + max_horizon - 1 - horizon).head(nbre_preds).values
 
 def MASE(training_series, testing_series, prediction_series):
