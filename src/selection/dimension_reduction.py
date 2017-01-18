@@ -8,7 +8,7 @@ import re
 import sys
 from os import sys, path
 from tools.csv_helper import *
-from functools import partial
+# from functools import partial
 
 methods_manual = [
   decomp.FactorAnalysis,
@@ -16,14 +16,15 @@ methods_manual = [
   decomp.IncrementalPCA,
   decomp.PCA,
 
-  partial(decomp.NMF, init='nndsvda'),
-  partial(decomp.NMF,  init='nndsvdar'),
-  partial(decomp.KernelPCA, kernel="rbf", fit_inverse_transform=True),
+  partial_with_pretty_method_name(decomp.NMF, init='nndsvda'),
+  partial_with_pretty_method_name(decomp.NMF,  init='nndsvdar'),
+  partial_with_pretty_method_name(decomp.KernelPCA, kernel="rbf", fit_inverse_transform=True),
 ]
 
 methods_automatic = [
   # Auto guessing the number of dimensions for method
-  decomp.PCA(n_components='mle', svd_solver='full'), # Uses The method from "Probabilistic Principal Component Analysis"
+  # Uses The method from "Probabilistic Principal Component Analysis"
+  partial_with_pretty_method_name( decomp.PCA, n_components='mle', svd_solver='full'),
   # TODO: we cannot use automatic selection for kernel PCA as it may generate excessive number of dimensions
   # decomp.KernelPCA(kernel="rbf", fit_inverse_transform=True), # Removes zero components
   # TODO: NMF from sklearn documentation n_components may be None (use all components) or set to specyfic value. Saddly no mention of auto guessing.
@@ -41,14 +42,8 @@ if __name__ == "__main__":
     f_max = min(min(df.shape), 20)
 
     methods = []
-    methods.extend(methods_automatic)
-
-    for m in methods_manual:
-        for f_num in range(2,f_max):
-            m_ins = m(n_components = f_num)
-            if isinstance(m, partial):
-                m_ins.__pretty_print_extra_str = "_".join([ str(k)+"_"+str(v) for k,v in m.keywords.items()])
-            methods.append(m_ins)
+    methods.extend([m() for m in methods_automatic])
+    methods.extend([m(n_components = f_num) for m in methods_manual for f_num in range(2,f_max)])
 
     for c,d in exclude_column_generator(df):
         for method in methods:

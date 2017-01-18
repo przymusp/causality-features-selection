@@ -2,6 +2,7 @@ import pandas as pd
 import base64
 import hashlib
 from os import path
+from functools import partial
 
 def parse_selection_arguments(argv):
     """Parse cmdline arguments for selection method script
@@ -38,6 +39,15 @@ def pretty_print_method_name(method):
     if hasattr(method,"__pretty_print_extra_str"):
         mname = mname.replace("(", "_" + method.__pretty_print_extra_str + "(")
     return ' '.join(mname.split())
+
+def partial_with_pretty_method_name(fun, **kwargs):
+    p = partial(fun, **kwargs)
+    p.__pretty_print_extra_str = "_".join([ str(k)+"_"+str(v) for k,v in p.keywords.items()])
+    def __iner(*args, **kwargs):
+        out = p(*args, **kwargs)
+        out.__pretty_print_extra_str = p.__pretty_print_extra_str
+        return out
+    return __iner
 
 def read_metadata_from_csv_file(filename):
     def __parse_metadata(line):
