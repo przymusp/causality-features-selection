@@ -297,8 +297,11 @@ gfsm_dms_reduction <- function (F,gmat, targetIndex,threshold, clus, nk, methode
           	}
           	if (methode_name == "PCA"){
           		print ("PCA method")
-          		fit = principal(F[,vect], 1)
-              	variables = fit$scores
+          		#the functions prcomp() use the singular value decomposition (SVD).
+          		fit = princomp (~.,data=F[,vect],rank = 1)
+                variables = fit$scores[,1]
+          		#fit = principal(F[,vect], 1)
+              	#variables = fit$scores
           	}
             for (l in 1:nrow(variables))
                 gsmCluster[l,j] = variables[l,1]
