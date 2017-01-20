@@ -106,7 +106,7 @@ for (k in 1:length(graphs))
             system(paste0(command,' > ', out_dir))
             cat ("# predict;", file=out_dir,append=TRUE)
             cat (target_name, file=out_dir,append=TRUE, sep='\n')
-            cat (paste0("# method; Granger_FE_", graph_name, "(K=",nk,")"),file=out_dir,append=TRUE, sep='\n')
+            cat (paste0("# method; Granger_FE_", graph_name, "(n_components=",nk,")"),file=out_dir,append=TRUE, sep='\n')
 
             ## Store the selected variables
             write.table(gfsm, out_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
