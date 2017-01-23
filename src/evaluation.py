@@ -6,6 +6,8 @@ from functools import partial
 from collections import defaultdict, OrderedDict
 import itertools
 import re
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 from sklearn.metrics import mean_squared_error, mean_absolute_error, explained_variance_score, median_absolute_error, r2_score
 import pandas as pd
@@ -40,7 +42,7 @@ class transform_into_html(object):
 
         self.tables = tables
         self.error_list = error_list
-        self.tables_html = defaultdict(dict)
+        self.tables_html = defaultdict(lambda: defaultdict(dict))
 
     def _to_html(self, df):
 
@@ -49,14 +51,15 @@ class transform_into_html(object):
         # style.set_properties(**{'font-size':'10pt'})
         for measure in self.measures:
             style.bar(subset=[measure,], color=self.cmap[measure])
-            style.apply(self.underline_top_10)
+            style.apply(self.underline_top_10, subset=[measure,] )
 
         return style.render()
 
     def transform(self):
         for target in self.tables:
             for horizon in self.tables[target]:
-                self.tables_html[target][horizon] = self._to_html(self.tables[target][horizon])
+                for predict_model in self.tables[target][horizon]:
+                    self.tables_html[target][horizon][predict_model] = self._to_html(self.tables[target][horizon][predict_model])
 
     def write(self, timeseries_prefix):
         self.transform()
@@ -69,31 +72,63 @@ class transform_into_html(object):
 
 def transform_into_output_tables(results_collection, methods_to_hotizon_dict):
 
+    # Add univariate model to other prediction models
+    u_model = None
+    if "Univariate_model" in results_collection:
+        u_model = results_collection['Univariate_model']
+        # print u_model['IPS10'][0]['Univariate_model'][0].keys()
+        # exit()
+
     tables = defaultdict(lambda: defaultdict(dict))
-    tables_real = defaultdict(dict)
 
     for predict_model in results_collection:
+
+        if predict_model == "Univariate_model":
+            continue
+
         for target in results_collection[predict_model]:
             for horizon in range(methods_to_hotizon_dict[predict_model]): # diffrent timehorizons
                 x = [\
-                        OrderedDict({'group':group, 'method':mtype}.items() + measures.items())\
+                        OrderedDict(
+                            {'predict':predict_model, 'group':group, 'method':mtype}.items()\
+                                    + measures.items())\
                         for group in results_collection[predict_model][target][horizon]\
                         for mtype, measures in results_collection[predict_model][target][horizon][group].items()\
                         ]
+                if u_model is not None:
+                    x.append( OrderedDict(
+                            {'predict': 'Univariate_model', 'group': 'Univariate_model', 'method': 0}.items()\
+                                    + u_model[target][horizon]['Univariate_model'][0].items()\
+                    ))
+                # print x[-1]
+                # exit(0)
 
                 df = pd.DataFrame.from_dict(x)
-                df.set_index(["group","method"])
-
+                df.set_index(["predict", "group","method"])
                 tables[target][horizon][predict_model] = df
 
-        for target in tables:
-            for horizon in range(methods_to_hotizon_dict[predict_model]): # diffrent timehorizons
-                df = pd.concat(tables[target][horizon].values(), ignore_index=True)
-                df.set_index(["group","method"])
+        # for target in tables:
+        #     for horizon in range(methods_to_hotizon_dict[predict_model]): # diffrent timehorizons
+        #         df = pd.concat(tables[target][horizon].values(), ignore_index=True)
+        #         df.set_index(["predict", "group","method"])
+        #         tables_real[target][horizon] = df
 
-                tables_real[target][horizon] = df
+        #         for p,data in df.groupby(['group','predict']):
+        #             d = data.sort_values('method')
+        #             hatch = '-'
+        #             if re.match("Link", p[0]):
+        #                 hatch = '*-'
+        #             if re.match("dm_.*", p[0]):
+        #                 hatch = 'd-'
 
-    return tables_real
+        #             plt.plot(d[['method']], d[['mse']], hatch, label=p)
+        #         plt.legend()
+        #         plt.savefig("test_%s_%s_%d.png"%(predict_model, target))
+        #         exit()
+
+    return tables
+
+
 
 def get_slice_with_horizon(df, nbre_preds, target, horizon, max_horizon=5):
     # max_horizon is hardcoded into the prediction scripts
@@ -202,14 +237,13 @@ def read_and_evaluate_results():
             error_list.append("Error: Evaluation of predictions failed, skipping file %s"%(fname))
             continue
 
-        #TODO: this will faile if name does not match, but then the prediction/selection methods must be fixed
+        #TODO: this will fail if name does not match, but then the prediction/selection methods must be fixed
         selection_method_group_name, id_name = predictions.meta_header['method'][0].split('(')[:2]
         r_match = n_components_match.search(id_name)
 
+        id_name=0
         if r_match is not None:
-            id_name = r_match.group(1)
-        else:
-            id_name="0"
+            id_name = int(r_match.group(1))
 
         for k, evaluation_result in ret.items():
             results_collection[predict_model][target][k][selection_method_group_name][id_name] = evaluation_result
@@ -221,10 +255,40 @@ def write_results_to_excel(timeseries_prefix, tables, error_list):
     # TODO: write error list to separate spreadsheet
     writer = pd.ExcelWriter("results/evaluation/%s.xls"%(timeseries_prefix,))
     for target_name in tables:
-        for horizon_name, horizon_val in tables[target_name].items():
-            horizon_val.to_excel(writer, sheet_name="%s_%s"%(target_name, horizon_name))
+        for horizon in tables[target_name]:
+            for predict_model, val in tables[target_name][horizon].items():
+                val.to_excel(writer, sheet_name="%s_%s_%s"%(target_name, horizon, predict_model))
     writer.close()
 
+def write_results_to_png(timeseries_prefix, tables, error_list):
+    for target in tables:
+        for horizon in tables[target]:
+            for predict_model, val in tables[target][horizon].items():
+                for p,data in val.groupby(['group','predict']):
+                    d = data.sort_values('method')
+                    line_style = '-'
+                    marker = ''
+                    if re.match("Link", p[0]):
+                        line_style = '-'
+                        marker = '*'
+                    if re.match("Granger_.*", p[0]):
+                        line_style = '-'
+                        marker = 'o'
+                    if re.match("dm.*", p[0]):
+                        line_style = '-'
+                        marker = 'd'
+
+                    # print len(d)
+                    if len(d) > 1:
+                        p = plt.plot(d[['method']], d[['mse']], ls=line_style, marker=marker, label=p)
+                    else:
+                        p = plt.axhline(y=d[['mse']].values[0][0], ls=line_style, marker=marker, label=p)
+                ax = plt.gca()
+                ax.set_yscale('log')
+
+                plt.legend()
+                plt.savefig("results/evaluation/%s_%s_%s_%s.png"%(timeseries_prefix, target, str(horizon), predict_model))
+                plt.clf()
 
 def main():
     results_collection, prediction_method_horizon, error_list = read_and_evaluate_results()
@@ -236,6 +300,7 @@ def main():
     timeseries_prefix = sys.argv[1].split("/")[-1].split(".")[0]
 
     write_results_to_excel(timeseries_prefix, tables_real, error_list)
+    write_results_to_png(timeseries_prefix, tables_real, error_list)
     transform_into_html(tables_real, error_list).write(timeseries_prefix)
 
 if __name__ == "__main__":
