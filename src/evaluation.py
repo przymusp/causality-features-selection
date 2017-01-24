@@ -306,11 +306,12 @@ class transform_into_figure(object):
         # Callculate number of rows (ceiling(rows/cols)) + 1 row for legend
         rows = (len(self.measures) + cols - 1) / cols #+ 1
 
-        plt.figure(figsize=(16.5, 11.7), dpi=100)
+        f = plt.figure(figsize=(16.5, 11.7), dpi=100)
         measure_to_grid = {}
         for i, measure in enumerate(self.measures):
-            measure_to_grid[measure] = plt.subplot2grid((rows, cols),(i/cols, i%cols))
-            measure_to_grid[measure].set_title(measure)
+            splot = plt.subplot2grid((rows, cols),(i/cols, i%cols))
+            splot.set_title(measure)
+            measure_to_grid[measure] = splot
 
         for group, data in data_slice.groupby(['group','predict']):
             for measure in self.measures:
@@ -318,9 +319,8 @@ class transform_into_figure(object):
 
         # plot legend in separare plot
         ax_legend = measure_to_grid[self.measures[0]]
-        # ax = plt.subplot2grid((rows, cols),(rows-1, cols-1), colspan=cols)
-        # plt.axes(ax)
-        plt.figlegend(*ax_legend.get_legend_handles_labels(), loc = 'lower left', ncol=5, fontsize = 'small')
+        plt.figlegend(*ax_legend.get_legend_handles_labels(), loc = 'lower center', ncol=7, fontsize = 'xx-small', bbox_to_anchor = (0.5,0), bbox_transform = plt.gcf().transFigure)
+        plt.tight_layout()
 
         plt.savefig("results/evaluation/%s_%s_%s_%s.png"%(self.timeseries_prefix, target, str(horizon), predict_model))
         plt.clf()
