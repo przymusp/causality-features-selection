@@ -71,8 +71,9 @@ def read_csv_and_metadata(filename, **kwargs):
     # if not set in kwargs, use defaults for this project
     if 'comment' not in kwargs: kwargs['comment'] = '#'
     if 'delimiter' not in kwargs or 'sep' not in kwargs: kwargs['delimiter'] = ';'
+    if 'engine' not in kwargs: kwargs['engine'] = 'c'
 
-    matrix = pd.read_csv(filename, engine='c', dtype=np.float64, **kwargs)
+    matrix = pd.read_csv(filename, **kwargs)
     matrix._metadata=["meta_header"]
     matrix.meta_header = read_metadata_from_csv_file(filename)
     return matrix

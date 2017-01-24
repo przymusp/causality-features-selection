@@ -33,22 +33,24 @@
                     <div aria-labelledby="heading{{ target }}" class="panel-collapse collapse " id="collapse{{ target }}" role="tabpanel">
                         <div class="panel-body">
                 {% for horizon in tables[target] %}
+                    {% for predict_model in tables[target][horizon] %}
 
                             <div class="panel panel-default">
                                 <div class="panel-heading" id="heading{{ predict_model }}{{ target }}{{ horizon }}" role="tab">
                                     <h4 class="panel-title">
                                         <a aria-controls="collapse{{ predict_model }}{{ target }}{{ horizon }}" aria-expanded="true" data-toggle="collapse" href="#collapse{{ predict_model }}{{ target }}{{ horizon }}">
-                                            Target {{ target }} in horizon {{ horizon + 1 }}
+                                            {{ predict_model }}: {{ target }} in horizon {{ horizon + 1 }}
                                         </a>
                                     </h4>
                                 </div>
                                 <div aria-labelledby="heading{{ predict_model }}{{ target }}{{ horizon }}" class="panel-collapse collapse " id="collapse{{ predict_model }}{{ target }}{{ horizon }}" role="tabpanel">
                                     <div class="panel-body">
-                                        {{ tables[target][horizon]}}
+                                        {{ tables[target][horizon][predict_model]}}
                                     </div>
                                 </div>
                             </div>
 
+                    {% endfor %}
                 {% endfor %}
                         </div>
                     </div>

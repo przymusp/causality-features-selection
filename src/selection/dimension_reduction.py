@@ -36,7 +36,7 @@ if __name__ == "__main__":
     fname, output_directory = parse_selection_arguments(sys.argv)
     df = read_csv_and_metadata(fname)
 
-    f_max = min(min(df.shape), 20)
+    f_max = min(min(df.shape), 30)
 
     methods = []
     methods.extend([m() for m in methods_automatic])

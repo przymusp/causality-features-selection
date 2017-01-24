@@ -89,7 +89,7 @@ for (k in 1:length(graphs))
         ## Store the selected variables
         write.table(gfsm, out_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
 
-        for (nk in 1:20)
+        for (nk in 1:30)
         {
             out_dir = paste0(output_dir,target_name,"_",graph_name,"_GFSM_K=",nk,".csv")
             if (graph_name == "granger_graph")
