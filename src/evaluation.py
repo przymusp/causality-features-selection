@@ -260,35 +260,76 @@ def write_results_to_excel(timeseries_prefix, tables, error_list):
                 val.to_excel(writer, sheet_name="%s_%s_%s"%(target_name, horizon, predict_model))
     writer.close()
 
-def write_results_to_png(timeseries_prefix, tables, error_list):
-    for target in tables:
-        for horizon in tables[target]:
-            for predict_model, val in tables[target][horizon].items():
-                for p,data in val.groupby(['group','predict']):
-                    d = data.sort_values('method')
-                    line_style = '-'
-                    marker = ''
-                    if re.match("Link", p[0]):
-                        line_style = '-'
-                        marker = '*'
-                    if re.match("Granger_.*", p[0]):
-                        line_style = '-'
-                        marker = 'o'
-                    if re.match("dm.*", p[0]):
-                        line_style = '-'
-                        marker = 'd'
+class transform_into_figure(object):
+    """Generates figures with diffrent mesures grouped by method type"""
+    def __init__(self, timeseries_prefix, tables, error_list):
+        super(transform_into_figure, self).__init__()
+        self.timeseries_prefix = timeseries_prefix
+        self.tables = tables
+        self.error_list = error_list
 
-                    # print len(d)
-                    if len(d) > 1:
-                        p = plt.plot(d[['method']], d[['mse']], ls=line_style, marker=marker, label=p)
-                    else:
-                        p = plt.axhline(y=d[['mse']].values[0][0], ls=line_style, marker=marker, label=p)
-                ax = plt.gca()
-                ax.set_yscale('log')
+        self.default_plot_styles = {
+                "LinkAna.*": { 'ls':'-', 'marker':'*'},
+                "Granger_.*": { 'ls':'-', 'marker':'o'},
+                "dm_.*": { 'ls':'-', 'marker':'d'},
+                "UFSM": { 'ls':'-', 'marker':'D'},
+                "default" : {'ls':'-'},
+                }
+        # colors = sns.color_palette("cubehelix", len(self.default_plot_styles.keys()))
+        # for i, style in enumerate(self.default_plot_styles):
+        #     self.default_plot_styles[style]['color'] = colors[i]
 
-                plt.legend()
-                plt.savefig("results/evaluation/%s_%s_%s_%s.png"%(timeseries_prefix, target, str(horizon), predict_model))
-                plt.clf()
+        self.measures = GLOBAL_MEASURES.keys()
+
+    def _get_plot_style(self, name):
+        for pstyle in self.default_plot_styles:
+            if re.match(pstyle, name):
+                return self.default_plot_styles[pstyle]
+        return self.default_plot_styles['default']
+
+    def _plot_group_measure(self, ax, data_sorted, group, measure):
+        plot_style = self._get_plot_style(group[0])
+
+        if len(data_sorted) > 1:
+            ax.plot(data_sorted[['method']], data_sorted[[measure]], label=group[0], **plot_style)
+        else:
+            ax.axhline(y=data_sorted[[measure]].values[0][0], label=group[0], **plot_style)
+
+        ax.set_yscale('log')
+
+    def _plot_to_file(self, target, horizon, predict_model):
+        data_slice = self.tables[target][horizon][predict_model]
+        data_slice = data_slice.sort_values('method')
+
+        # Set up plot grid
+        cols = 2
+        # Callculate number of rows (ceiling(rows/cols)) + 1 row for legend
+        rows = (len(self.measures) + cols - 1) / cols #+ 1
+
+        plt.figure(figsize=(16.5, 11.7), dpi=100)
+        measure_to_grid = {}
+        for i, measure in enumerate(self.measures):
+            measure_to_grid[measure] = plt.subplot2grid((rows, cols),(i/cols, i%cols))
+            measure_to_grid[measure].set_title(measure)
+
+        for group, data in data_slice.groupby(['group','predict']):
+            for measure in self.measures:
+                self._plot_group_measure(measure_to_grid[measure], data, group, measure)
+
+        # plot legend in separare plot
+        ax_legend = measure_to_grid[self.measures[0]]
+        # ax = plt.subplot2grid((rows, cols),(rows-1, cols-1), colspan=cols)
+        # plt.axes(ax)
+        plt.figlegend(*ax_legend.get_legend_handles_labels(), loc = 'lower left', ncol=5, fontsize = 'small')
+
+        plt.savefig("results/evaluation/%s_%s_%s_%s.png"%(self.timeseries_prefix, target, str(horizon), predict_model))
+        plt.clf()
+
+    def transform(self):
+        for target in self.tables:
+            for horizon in self.tables[target]:
+                for predict_model in self.tables[target][horizon]:
+                    self._plot_to_file(target, horizon, predict_model)
 
 def main():
     results_collection, prediction_method_horizon, error_list = read_and_evaluate_results()
@@ -300,7 +341,7 @@ def main():
     timeseries_prefix = sys.argv[1].split("/")[-1].split(".")[0]
 
     write_results_to_excel(timeseries_prefix, tables_real, error_list)
-    write_results_to_png(timeseries_prefix, tables_real, error_list)
+    transform_into_figure(timeseries_prefix, tables_real, error_list).transform()
     transform_into_html(tables_real, error_list).write(timeseries_prefix)
 
 if __name__ == "__main__":
