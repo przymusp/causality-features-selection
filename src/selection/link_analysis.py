@@ -1,119 +1,113 @@
 from __future__ import print_function
 import sys
-import collections as col
-import itertools
+# import itertools
 from os import path
 
 import networkx as nx
-import numpy as np
-import matplotlib.pylab as plt
 import pandas as pd
-from sklearn import preprocessing
 
-from tools.csv_helper import *
+import tools.csv_helper as csvh
 
-def link_analysis(fname_graph, graph_type):
+def trim_graph_matrix(graph_matrix):
+    # TODO: future work, clean the graph, some ideas
+    # for a,b in itertools.product(graph_matrix.columns.values, repeat=2):
+    #     if abs(graph_matrix[a][b] - graph_matrix[b][a]) < 0.05:
+    #         graph_matrix[a][b]=0
+    #         graph_matrix[b][a]=0
+    return graph_matrix
+
+def adjust_graph_matrix(graph_matrix):
+    # TODO: without adjusting method yields better results
+    # Columns should sum to 1. sum and divide by column by column
+    # Fix the pandas metadata handling problem
+    # meta_header = graph_matrix.meta_header
+    # graph_matrix /= graph_matrix.sum(1)
+    # graph_matrix.meta_header = meta_header
+    return graph_matrix
+
+def write_selection_file(result_sorted, pred_column, n_components, org_data, out_fname, mname):
+    output_dimensions = result_sorted[:n_components].transpose()
+
+    # If predicted column is in the set - remove it
+    # Normally the predicted column should be the first column in this set,
+    # so this is just a precaution. As we will add this column back in next step.
+    output_dimensions = list(output_dimensions.drop([pred_column,], axis=1).columns.values)
+    output_dimensions.insert(0, pred_column)
+
+    # Set metadata and write output selection file
+    org_data.meta_header['predict'] = [pred_column,]
+    org_data.meta_header['method'] = [mname,]
+
+    csvh.write_csv_with_metadata(org_data[output_dimensions], out_fname)
+
+def link_analysis(fname, output_directory, fname_graph, graph_type):
+    print(graph_type)
     # Complain if the file does not exists
     if not path.isfile(fname_graph):
         print(fname_graph)
-        print ("Error: the Transfer entropy graph file does not exist. Please run the pre-selection Transfer Entropy generation step")
+        print("Error: the Transfer entropy graph file does not exist. Please run the pre-selection Transfer Entropy generation step")
         exit()
 
-    df = read_csv_and_metadata(fname_graph, index_col=0)
+    graph_matrix = csvh.read_csv_and_metadata(fname_graph, index_col=0)
 
-    # TODO: future work, clean the graph, some ideas
-    # for a,b in itertools.product(df.columns.values, repeat=2):
-    #     if abs(df[a][b] - df[b][a]) < 0.05:
-    #         df[a][b]=0
-    #         df[b][a]=0
+    # Trim the input graph
+    graph_matrix = trim_graph_matrix(graph_matrix)
 
+    # adjust the input graph
+    graph_matrix = adjust_graph_matrix(graph_matrix)
 
-    # Columns should sum to 1. sum and divide by column by column
-    # Fix the pandas metadata handling problem
-    meta_header = df.meta_header
-    df /= df.sum(1)
-    df.meta_header = meta_header
-
-
-    # The algorithm
-    G = nx.DiGraph(df.as_matrix())
+    # Prepare graph and inverse of graph
+    g_normal = nx.DiGraph(graph_matrix.as_matrix())
+    g_reverse = g_normal.reverse()
 
     # Nodes to variable names map and inverted map
-    nodes_map = dict(zip(df.columns.values, range(len(df.columns.values))))
+    nodes_map = dict(zip(graph_matrix.columns.values, range(len(graph_matrix.columns.values))))
     inv_nodes_map = {v: k for k, v in nodes_map.items()}
 
-    # pr = nx.pagerank(G, alpha=0.85)
-    # pr1 = {inv_nodes_map[k]:pr[k] for k in pr}
-    # result1 = pd.DataFrame.from_dict(pr1, orient='index')
-    # r = result1.sort_values(0, ascending = False)
-    # print (graph_type)
-    # print (r)
-
-    G_normal = G
-    G_reverse = G.reverse()
+    # Read unmodified input data set, this will be used to output columns in selection file.
+    org_input_file = csvh.read_csv_and_metadata(fname)
 
     for reverse in [False, True]:
 
-        if reverse:
-            G = G_reverse
-        else:
-            G = G_normal
+        graph = g_reverse if reverse else g_normal
 
-    # pr = nx.pagerank(G, alpha=0.85)
-    # pr1 = {inv_nodes_map[k]:pr[k] for k in pr}
-    # result2 = pd.DataFrame.from_dict(pr1, orient='index')
-    # r = result2.sort_values(0, ascending = False)
-    # print (graph_type)
-    # print (r)
+        for predicted_column in graph_matrix.meta_header['predict']:
+            p_vector = dict.fromkeys(graph, 0)
+            p_vector[nodes_map[predicted_column]] = 1
 
-    # print(result1 - result2)
+            try:
+                rank_vector = nx.pagerank(\
+                        graph, alpha=0.85, personalization=p_vector, max_iter=200)
+            except Exception as exception:
+                print("Error: Could not callculate pagerank:", exception)
+                continue
+            # print(rank_vector)
 
-        df_out = read_csv_and_metadata(fname)
+            rank_vector_maped = {inv_nodes_map[k]:rank_vector[k] for k in rank_vector}
+            result_sorted = pd.DataFrame.from_dict(rank_vector_maped, orient='index')
+            result_sorted.sort_values(0, inplace=True, ascending=False)
 
-        for c in df.meta_header['predict']:
-            # print (G.edges(nodes_map[c],data=True))
-            p = dict.fromkeys(G, 0)
-            p[nodes_map[c]]=1
-            # print (nodes_map[c], p)
+            max_number_of_features = min(len(result_sorted), 30)
 
-            pr = nx.pagerank(G, alpha=0.85, personalization = p)
-            # print (pr)
+            for n_components in range(2, max_number_of_features):
 
-            pr1 = {inv_nodes_map[k]:pr[k] for k in pr}
-            result = pd.DataFrame.from_dict(pr1, orient='index')
-            # print (result.columns.values)
-            r = result.sort_values(0, ascending = False)
+                method_name = "LinkAnalysis_%s_reverse_%d(n_components=%d)"\
+                        % (graph_type, reverse, n_components)
+                out_fname = csvh.get_filename_from_method(fname, predicted_column, method_name, prefix=output_directory)
+                write_selection_file(result_sorted, predicted_column, n_components, org_input_file, out_fname, method_name)
 
-            max_number_of_features = min (len(r), 30)
-            for i in range(2,max_number_of_features):
-                # TODO: Add automatic selection of the number of the columns
-                output_dimensions = r[:i].transpose()
-
-                # If predicted column is in the set - remove it
-                # Normally the predicted column should be the first column in this set, so this is just a precaution. As we will add this column back in next step.
-                output_dimensions = list(output_dimensions.drop([c,], axis=1).columns.values)
-                output_dimensions.insert(0,c)
-
-                mname = "LinkAnalysis_%s_reverse_%d(n_components=%d)"%(graph_type, reverse, i)
-                out_fname = get_filename_from_method(fname, c, mname, prefix=output_directory)
-
-                df_out.meta_header['predict']=[c,]
-                df_out.meta_header['method']=[mname,]
-                write_csv_with_metadata(df_out[output_dimensions], out_fname)
-
-
-if __name__ == '__main__':
-
-    fname, output_directory = parse_selection_arguments(sys.argv)
+def main():
+    fname, output_directory = csvh.parse_selection_arguments(sys.argv)
 
     # Search for Adj-matrix for TS file in data folder
     fname_base = path.basename(fname).split(".")[0]
-    fname_dir = path.dirname(fname)
+    # fname_dir = path.dirname(fname)
 
     output_directory_pre_selection = output_directory.replace("selection", "pre_selection")
 
-    for graph_type in ['te_graph', 'granger_graph']:
+    for graph_type in ['te_graph', 'granger_graph', 'te_graph_new']:
         fname_graph = output_directory_pre_selection + "/" + fname_base + "_" + graph_type + ".csv"
-        link_analysis(fname_graph, graph_type)
+        link_analysis(fname, output_directory, fname_graph, graph_type)
 
-
+if __name__ == '__main__':
+    main()
