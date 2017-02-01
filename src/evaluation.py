@@ -237,8 +237,11 @@ def read_and_evaluate_results():
             error_list.append("Error: Evaluation of predictions failed, skipping file %s"%(fname))
             continue
 
-        #TODO: this will fail if name does not match, but then the prediction/selection methods must be fixed
-        selection_method_group_name, id_name = predictions.meta_header['method'][0].split('(')[:2]
+        #This will fail if name does not match, but then the prediction/selection methods must be fixed
+        try:
+            selection_method_group_name, id_name = predictions.meta_header['method'][0].split('(')[:2]
+        except Exception as exception:
+            print("Error: could parse the selection method name, please use 'method_group_name(other_params, n_components=k, other_params)'. If no n_components param is found group is treated as one element group.")
         r_match = n_components_match.search(id_name)
 
         id_name=0
