@@ -1,3 +1,4 @@
+from __future__ import division
 from fabric.api import *
 import glob
 import os
@@ -119,8 +120,6 @@ def prediction(timeseries, methods = None, selected_files=None, filter_by_mdate=
     #     files = [f for f in files if os.path.getmtime(f) > min_mdate_pfiles ]
     #     print (files)
 
-    f_in = " ".join(files)
-
     methods_prefix='prediction'
 
     if methods is None:
@@ -133,7 +132,20 @@ def prediction(timeseries, methods = None, selected_files=None, filter_by_mdate=
         if 'src/prediction/univariate_model.R' in method:
             __run_method(method, timeseries, '%s/'%(methods_prefix,), timeseries_prefix)
         else:
-            __run_method(method, f_in, '%s/'%(methods_prefix,), timeseries_prefix)
+            # if the resulting argv is > 50 kb, split it (until a fix is done in *.R prediction)
+            f_in = " ".join(files)
+            f_in_batches = []
+            max_argv_size = 50000
+
+            # this is supposed to be temporary fix, so we do just a rough estimate over the number of splits
+            if len(f_in) == 0:
+                print("Error: No input files")
+                continue
+            parts = len(files) // ((len(f_in) + max_argv_size - 1)  // max_argv_size)
+            chunks = [files[i:i + parts] for i in range(0, len(files), parts)]
+            for chunk in chunks:
+                f_in = " ".join(chunk)
+                __run_method(method, f_in, '%s/'%(methods_prefix,), timeseries_prefix)
 
 def evaluation(timeseries, f_out=None, selected_files=None):
     timeseries_prefix = timeseries.split("/")[-1].split(".")[0]
