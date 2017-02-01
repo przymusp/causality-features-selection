@@ -94,6 +94,7 @@ def link_analysis(fname, output_directory, fname_graph, graph_type):
                 method_name = "LinkAnalysis_%s_reverse_%d(n_components=%d)"\
                         % (graph_type, reverse, n_components)
                 out_fname = csvh.get_filename_from_method(fname, predicted_column, method_name, prefix=output_directory)
+
                 write_selection_file(result_sorted, predicted_column, n_components, org_input_file, out_fname, method_name)
 
 def main():
@@ -105,9 +106,12 @@ def main():
 
     output_directory_pre_selection = output_directory.replace("selection", "pre_selection")
 
-    for graph_type in ['te_graph', 'granger_graph', 'te_graph_new']:
+    for graph_type in ['te_graph', 'granger_graph', 'te_graph_jdit']:
         fname_graph = output_directory_pre_selection + "/" + fname_base + "_" + graph_type + ".csv"
-        link_analysis(fname, output_directory, fname_graph, graph_type)
+        try:
+            link_analysis(fname, output_directory, fname_graph, graph_type)
+        except Exception as exception:
+            print("Could not callculate link analysis", exception)
 
 if __name__ == '__main__':
     main()
