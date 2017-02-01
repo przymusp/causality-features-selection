@@ -49,9 +49,6 @@ def jdit_transfer_entropy_matrix (fname):
             te_matrix[i,j] = result
 
     out = pd.DataFrame(te_matrix, index=dataRaw.columns, columns=dataRaw.columns)
-    # out.columns = dataRaw.columns
-    # out['index'] = out.columns
-    # out.set_index(['index'])
     out.meta_header = dataRaw.meta_header
     return out
 
