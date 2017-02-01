@@ -46,7 +46,7 @@ predictbase <- function (method_name, prefix_out){
     lagMax = as.integer ((nrow(fs_method)  - 1)  / (2*(ncol(fs_method) + 1)))
     var = VARselect(fs_method,lag.max=lagMax)
     p = var$selection[1] ## AIC criteria
- 
+
 
     ###  Prediction
     nbrePreds = as.integer(nrow(fs_method) * 10 / 100) # 10% predictions of the size of the data
