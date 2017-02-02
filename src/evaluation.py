@@ -9,7 +9,8 @@ import re
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from sklearn.metrics import mean_squared_error, mean_absolute_error, explained_variance_score, median_absolute_error, r2_score
+from sklearn.metrics import\
+        mean_squared_error, mean_absolute_error, explained_variance_score, median_absolute_error, r2_score
 import pandas as pd
 import numpy as np
 import tools.csv_helper as tools
@@ -45,22 +46,18 @@ def transform_into_output_tables(results_collection, methods_to_hotizon_dict):
         for target in results_collection[predict_model]:
             # diffrent timehorizons
             for horizon in range(methods_to_hotizon_dict[predict_model]):
-                x = [
-                    OrderedDict(
-                        {'predict': predict_model, 'group': group,
-                            'method': mtype}.items()
-                        + measures.items())
+                new_row = [
+                    OrderedDict({'predict': predict_model, 'group': group, 'method': mtype}.items() + measures.items())
                     for group in results_collection[predict_model][target][horizon]
                     for mtype, measures in results_collection[predict_model][target][horizon][group].items()
                 ]
                 if u_model is not None:
-                    x.append(OrderedDict(
-                        {'predict': 'Univariate_model',
-                            'group': 'Univariate_model', 'method': 0}.items()
-                        + u_model[target][horizon]['Univariate_model'][0].items()
+                    prefix_cols = {'predict': 'Univariate_model', 'group': 'Univariate_model', 'method': 0}
+                    new_row.append(OrderedDict(
+                        prefix_cols.items() + u_model[target][horizon]['Univariate_model'][0].items()
                     ))
 
-                df = pd.DataFrame.from_dict(x)
+                df = pd.DataFrame.from_dict(new_row)
                 df.set_index(["predict", "group", "method"])
                 tables[target][horizon][predict_model] = df
 
@@ -266,11 +263,11 @@ class transform_into_figure(object):
         plot_style = self._get_plot_style(group[0])
 
         if len(data_sorted) > 1:
-            ax.plot(data_sorted[['method']], data_sorted[
-                    [measure]], label=group[0], **plot_style)
+            ax.plot(data_sorted[['method']],
+                    data_sorted[[measure]], label=group[0], **plot_style)
         else:
-            ax.axhline(y=data_sorted[[measure]].values[0][
-                       0], label=group[0], **plot_style)
+            ax.axhline(y=data_sorted[[measure]].values[0][0],
+                    label=group[0], **plot_style)
 
         ax.set_yscale('log')
 
@@ -314,6 +311,7 @@ class transform_into_figure(object):
             for horizon in self.tables[target]:
                 for predict_model in self.tables[target][horizon]:
                     self._plot_to_file(target, horizon, predict_model)
+
 
 class transform_into_html(object):
 
