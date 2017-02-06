@@ -39,7 +39,6 @@ def transform_into_output_tables(results_collection, methods_to_hotizon_dict):
     tables = defaultdict(lambda: defaultdict(dict))
 
     for predict_model in results_collection:
-
         if predict_model == "Univariate_model":
             continue
 
@@ -287,7 +286,11 @@ class transform_into_figure(object):
             splot.set_title(measure)
             measure_to_grid[measure] = splot
 
-        for group, data in data_slice.groupby(['group', 'predict']):
+        data_slice_group = data_slice.groupby(['group', 'predict'])
+        sns.husl_palette(n_colors=len(data_slice_group))
+        # print(len(data_slice_group))
+
+        for group, data in data_slice_group:
             for measure in self.measures:
                 self._plot_group_measure(
                     measure_to_grid[measure], data, group, measure)
