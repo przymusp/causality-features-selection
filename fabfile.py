@@ -77,6 +77,11 @@ def __run_methods(methods, timeseries, methods_prefix, timeseries_prefix=None):
     else:
         scripts = glob.glob(methods)
 
+        # if this is not extended path, try glob in methods_directory
+        if len(scripts) == 0:
+            scripts = glob.glob("src/%s/%s"%(methods_prefix, methods))
+
+
     for method in scripts:
         __run_method(method, timeseries, '%s/'%(methods_prefix,), timeseries_prefix)
 
@@ -112,6 +117,10 @@ def prediction(timeseries, methods = None, selected_files=None, filter_by_mdate=
     else:
         files = glob.glob(selected_files)
 
+        # if this is not extended path, try glob in files_directory
+        if len(files) == 0:
+            files = glob.glob("%s/%s"%(selection_step_directory, selected_files))
+
     files = [os.path.abspath(f) for f in files]
 
     # if filter_by_mdate:
@@ -127,6 +136,10 @@ def prediction(timeseries, methods = None, selected_files=None, filter_by_mdate=
         scripts.extend(glob.glob("src/%s/*.R"%(methods_prefix,)))
     else:
         scripts = glob.glob(methods)
+
+        # if this is not extended path, try glob in methods_directory
+        if len(scripts) == 0:
+            scripts = glob.glob("src/%s/%s"%(methods_prefix, methods))
 
     for method in scripts:
         if 'src/prediction/univariate_model.R' in method:
