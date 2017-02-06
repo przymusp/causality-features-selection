@@ -57,6 +57,8 @@ def pre_selection(timeseries, methods=None):
 
     """
     __run_methods(methods, timeseries, 'pre_selection')
+    # run all step2 methods
+    __run_methods(None, timeseries, 'pre_selection_step2')
 
 def selection(timeseries, methods=None):
 
