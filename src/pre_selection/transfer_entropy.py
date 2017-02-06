@@ -21,7 +21,8 @@ if __name__ == "__main__":
 
     # shallow copy is Ok here
     df_out.meta_header = df_in.meta_header
-    df_out.meta_header['pre_selection']= ["Transfer Entropy Pairwise",]
+    df_out.meta_header['pre_selection']= ["te",]
 
     write_csv_with_metadata(df_out, out_fname, index=True)
+
 
