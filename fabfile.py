@@ -205,6 +205,13 @@ def evaluation(timeseries, f_out=None, selected_files=None):
     f_in = "'%s'"%(selected_files,)
     run_Python_method(['src/evaluation.py', timeseries, f_in])
 
+def all_steps(timeseries):
+    pre_selection(timeseries)
+    pre_selection_step2(timeseries)
+    selection(timeseries)
+    prediction(timeseries)
+    evaluation(timeseries)
+
 def check_step_csv_files(step_directory):
     files = glob.glob(step_directory + "/*.csv")
     for f in files:
