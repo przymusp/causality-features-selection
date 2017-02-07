@@ -1,7 +1,8 @@
 from __future__ import print_function
 import sys
-# import itertools
+import glob
 from os import path
+import re
 
 import networkx as nx
 import pandas as pd
@@ -76,8 +77,12 @@ def link_analysis(fname, output_directory, fname_graph, graph_type):
             p_vector[nodes_map[predicted_column]] = 1
 
             try:
-                rank_vector = nx.pagerank(\
+                rank_vector = nx.pagerank(
                         graph, alpha=0.85, personalization=p_vector, max_iter=200)
+                # TODO: other methods to callculate principal eigenvector
+                # rank_vector1 = nx.pagerank_numpy(
+                #         graph, alpha=0.85, personalization=p_vector)
+                # print (pd.DataFrame(rank_vector, index=[0]) - pd.DataFrame(rank_vector1, index=[0]))
             except Exception as exception:
                 print("Error: Could not callculate pagerank:", exception)
                 continue
@@ -106,8 +111,14 @@ def main():
 
     output_directory_pre_selection = output_directory.replace("selection", "pre_selection")
 
-    for graph_type in ['te_graph', 'granger_graph', 'te_graph_jdit']:
-        fname_graph = output_directory_pre_selection + "/" + fname_base + "_" + graph_type + ".csv"
+    for fname_graph in glob.glob(output_directory_pre_selection + "/*.csv"):
+        m = re.match(".*_(te|granger)(.*).csv", fname_graph)
+        if m is None:
+            print("Error: could not match graph_type in filename", fname_graph)
+            continue
+        graph_type = m.group(1) + "_" + m.group(2)
+    # for graph_type in ['te_graph', 'te_ds_graph', 'granger_graph', 'te_graph_jdit']:
+    #     fname_graph = output_directory_pre_selection + "/" + fname_base + "_" + graph_type + ".csv"
         try:
             link_analysis(fname, output_directory, fname_graph, graph_type)
         except Exception as exception:
