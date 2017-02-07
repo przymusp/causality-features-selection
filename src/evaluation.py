@@ -239,9 +239,7 @@ class transform_into_figure(object):
         self.error_list = error_list
 
         self.default_plot_styles = {
-            "LinkAnalysis_te_graph.*": {'ls': '-', 'marker': '*'},
-            "LinkAnalysis_te_ds_graph.*": {'ls': '-', 'marker': '*'},
-            "LinkAnalysis_granger_graph.*": {'ls': '-', 'marker': '*'},
+            "LinkAnalysis.*": {'ls': '-', 'marker': '*'},
             "Granger_.*": {'ls': '-', 'marker': 'o'},
             "dm_.*": {'ls': '-', 'marker': 'd'},
             "UFSM": {'ls': '-', 'marker': 'D'},
