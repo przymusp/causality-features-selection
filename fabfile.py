@@ -57,8 +57,36 @@ def pre_selection(timeseries, methods=None):
 
     """
     __run_methods(methods, timeseries, 'pre_selection')
-    # run all step2 methods
-    __run_methods(None, timeseries, 'pre_selection_step2')
+
+def pre_selection_step2(timeseries, methods=None, selected_files = None):
+
+    """Runs pre_selection methods found in src/pre_selection_step2 on a timeseries file
+    It will write files to pre_selection folder (to simplify selection step)
+
+    :timeseries: path to timeseries file
+    :methods: globing expresion in quotes for methods selection
+    :returns: None
+
+    """
+    # TODO: quick fix for pre_selection step
+    timeseries_prefix = timeseries.split("/")[-1].split(".")[0]
+    pre_selection_setp_directory = __RESULTS_DIRECTORY_PREFIX + 'pre_selection/' + timeseries_prefix
+
+    methods = 'src/pre_selection_step2/*'
+
+    if selected_files is None:
+        files = glob.glob(pre_selection_setp_directory + "/*_graph.csv")
+    else:
+        files = glob.glob(selected_files)
+
+        # if this is not extended path, try glob in files_directory
+        if len(files) == 0:
+            files = glob.glob("%s/%s"%(pre_selection_setp_directory, selected_files))
+
+    files = [os.path.abspath(f) for f in files]
+
+    for fname in files:
+        __run_methods(methods, fname, 'pre_selection', timeseries_prefix)
 
 def selection(timeseries, methods=None):
 

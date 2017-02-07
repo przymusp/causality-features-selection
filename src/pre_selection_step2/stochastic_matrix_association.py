@@ -28,6 +28,7 @@ def generate_double_stohastic(df_in, fname_prefix):
 
     # write to file
     out_fname = fname_prefix + '_dstoch.csv'
+    print(out_fname)
     save_with_metadata_copy(double_stohastic_df_out, df_in, out_fname)
 
 
@@ -54,8 +55,24 @@ def generate_right_stohastic(df_in, fname_prefix):
 def main():
     fname, output_directory = parse_selection_arguments(sys.argv)
     out_fname = output_directory + "/" + path.basename(fname).split(".")[0]
+    print(fname, out_fname)
 
-    df_in = read_csv_and_metadata(fname)
+    try:
+        df_in = read_csv_and_metadata(fname)
+    except Exception as e:
+        print("Error processing file", fname, ":", e)
+        return
+
+    if len(df_in) == 0:
+        print("Error: empty input matrix")
+        return
+
+    df_in.set_index(".", inplace=True)
+
+    if df_in.shape[0] != df_in.shape[1]:
+        print("Error: Non quadratic matrix")
+        return
+
 
     generate_double_stohastic(df_in, out_fname)
     generate_left_stohastic(df_in, out_fname)
