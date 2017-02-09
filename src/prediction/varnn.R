@@ -13,9 +13,9 @@ source("../tools/prediction_tools.R")
 varnn <- function (F,p, dec, cible)
 {
     G = F[1:(nrow(F) - (dec)),]
-    nb_layers = as.ineger(((ncol(G)+1) * p* (1 / 3)))
-    hiddenLayers = c(nb_layers)
-    module = vnnet(G, p, 1, hiddenLayers, 1000)
+    nb_layers = as.integer(((ncol(G)+1) * p* (2 / 3)))
+    hiddenLayers = c(nb_layers,nb_layers,nb_layers,nb_layers)
+    module = vnnet(G, p, 1, hiddenLayers, 10000)
     result = data.frame()
     ts = data.frame()
     #inv_dec = nrow(F)-dec
