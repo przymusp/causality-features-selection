@@ -58,6 +58,36 @@ def pre_selection(timeseries, methods=None):
     """
     __run_methods(methods, timeseries, 'pre_selection')
 
+def pre_selection_step2(timeseries, methods=None, selected_files = None):
+
+    """Runs pre_selection methods found in src/pre_selection_step2 on a timeseries file
+    It will write files to pre_selection folder (to simplify selection step)
+
+    :timeseries: path to timeseries file
+    :methods: globing expresion in quotes for methods selection
+    :returns: None
+
+    """
+    # TODO: quick fix for pre_selection step
+    timeseries_prefix = timeseries.split("/")[-1].split(".")[0]
+    pre_selection_setp_directory = __RESULTS_DIRECTORY_PREFIX + 'pre_selection/' + timeseries_prefix
+
+    methods = 'src/pre_selection_step2/*'
+
+    if selected_files is None:
+        files = glob.glob(pre_selection_setp_directory + "/*_graph.csv")
+    else:
+        files = glob.glob(selected_files)
+
+        # if this is not extended path, try glob in files_directory
+        if len(files) == 0:
+            files = glob.glob("%s/%s"%(pre_selection_setp_directory, selected_files))
+
+    files = [os.path.abspath(f) for f in files]
+
+    for fname in files:
+        __run_methods(methods, fname, 'pre_selection', timeseries_prefix)
+
 def selection(timeseries, methods=None):
 
     """Runs selection methods found in src/selection on a timeseries file
@@ -76,6 +106,11 @@ def __run_methods(methods, timeseries, methods_prefix, timeseries_prefix=None):
         scripts.extend(glob.glob("src/%s/*.R"%(methods_prefix,)))
     else:
         scripts = glob.glob(methods)
+
+        # if this is not extended path, try glob in methods_directory
+        if len(scripts) == 0:
+            scripts = glob.glob("src/%s/%s"%(methods_prefix, methods))
+
 
     for method in scripts:
         __run_method(method, timeseries, '%s/'%(methods_prefix,), timeseries_prefix)
@@ -112,6 +147,10 @@ def prediction(timeseries, methods = None, selected_files=None, filter_by_mdate=
     else:
         files = glob.glob(selected_files)
 
+        # if this is not extended path, try glob in files_directory
+        if len(files) == 0:
+            files = glob.glob("%s/%s"%(selection_step_directory, selected_files))
+
     files = [os.path.abspath(f) for f in files]
 
     # if filter_by_mdate:
@@ -127,6 +166,10 @@ def prediction(timeseries, methods = None, selected_files=None, filter_by_mdate=
         scripts.extend(glob.glob("src/%s/*.R"%(methods_prefix,)))
     else:
         scripts = glob.glob(methods)
+
+        # if this is not extended path, try glob in methods_directory
+        if len(scripts) == 0:
+            scripts = glob.glob("src/%s/%s"%(methods_prefix, methods))
 
     for method in scripts:
         if 'src/prediction/univariate_model.R' in method:
@@ -161,6 +204,13 @@ def evaluation(timeseries, f_out=None, selected_files=None):
 
     f_in = "'%s'"%(selected_files,)
     run_Python_method(['src/evaluation.py', timeseries, f_in])
+
+def all_steps(timeseries):
+    pre_selection(timeseries)
+    pre_selection_step2(timeseries)
+    selection(timeseries)
+    prediction(timeseries)
+    evaluation(timeseries)
 
 def check_step_csv_files(step_directory):
     files = glob.glob(step_directory + "/*.csv")
