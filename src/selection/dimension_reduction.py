@@ -31,8 +31,41 @@ methods_automatic = [
 ]
 
 
-if __name__ == "__main__":
+def dimension_reduction(df, fname, data_matrix, column, methods, output_directory):
+    for method in methods:
+        # output for method name
+        mname = "dm_" + pretty_print_method_name(method)
+        out_fname = get_filename_from_method(fname, column, mname, prefix=output_directory)
 
+        # TODO: only update the files ?
+        # if file exists skip selection for this method
+        # if path.isfile(out_fname):
+        #     print ("File for method %s exists - skipping.\n  * Remove %s file to recompute it."%(mname,out_fname))
+        #     continue
+
+        # Fit and transform using method
+        try:
+            reduced_ts = method.fit_transform(data_matrix)
+            reduced_ts = pd.DataFrame(reduced_ts)
+
+            reduced_ts.meta_header = df.meta_header.copy()
+            reduced_ts.meta_header['method'] = [mname,]
+            reduced_ts.meta_header['predict'] = [column,]
+
+            # Output columns in corrrect order
+            cols=[column,]
+            cols.extend(reduced_ts.columns.values)
+
+            # Add predicted column to output
+            reduced_ts[column] = df[column]
+
+            # Write reduced_ts with cols in correct order (reduced_ts[cols]) to filename generated from the method name with params
+            write_csv_with_metadata(reduced_ts[cols], out_fname)
+        except Exception as e:
+            print ("Error with method %s"%(method))
+            continue
+
+def main():
     fname, output_directory = parse_selection_arguments(sys.argv)
     df = read_csv_and_metadata(fname)
 
@@ -40,38 +73,11 @@ if __name__ == "__main__":
 
     methods = []
     methods.extend([m() for m in methods_automatic])
-    methods.extend([m(n_components = f_num) for m in methods_manual for f_num in range(2,f_max)])
+    methods.extend([m(n_components=f_num) for m in methods_manual for f_num in range(2,f_max)])
 
-    for c,d in exclude_column_generator(df):
-        for method in methods:
-            # output for method name
-            mname = "dm_" + pretty_print_method_name(method)
-            out_fname = get_filename_from_method(fname, c, mname, prefix=output_directory)
+    for column, data in exclude_column_generator(df):
+        dimension_reduction(df, fname, data, column, methods, output_directory)
 
-            # TODO: only update the files ?
-            # if file exists skip selection for this method
-            # if path.isfile(out_fname):
-            #     print ("File for method %s exists - skipping.\n  * Remove %s file to recompute it."%(mname,out_fname))
-            #     continue
+if __name__ == "__main__":
+    main()
 
-            # Fit and transform using method
-            try:
-                t = method.fit_transform(d)
-                t = pd.DataFrame(t)
-
-                t.meta_header = df.meta_header.copy()
-                t.meta_header['method'] = [mname,]
-                t.meta_header['predict'] = [c,]
-
-                # Output columns in corrrect order
-                cols=[c,]
-                cols.extend(t.columns.values)
-
-                # Add predicted column to output
-                t[c] = df[c]
-
-                # Write t with cols in correct order (t[cols]) to filename generated from the method name with params
-                write_csv_with_metadata(t[cols], out_fname)
-            except Exception as e:
-                print ("Error with method %s"%(method))
-                continue
