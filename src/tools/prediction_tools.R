@@ -53,7 +53,7 @@ arima_prediction <- function (target, p, ns, nb_preds)
     #print((length(target)- (nb_preds-ind)))
     ####### Apply the VECM model
     tryCatch({
-      model = arima (cutTarget,  order = c(p, ns, 0))
+      model = arima (cutTarget,  order = c(p, ns, 1))
     }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
     y = predict(model, n.ahead = 5)$pred
     #print (real)
@@ -64,6 +64,36 @@ arima_prediction <- function (target, p, ns, nb_preds)
   }
   return (results)
 }
+## evaluation using auto.arima model
+auto_arima_prediction <- function (target, max_p, nb_preds)
+{
+    # ts: multivariate time series to predict the first attribut
+    # p: the lag parameter
+    # nb_preds: percentage of the data to predict
+    
+    results = data.frame()
+    for (ind in 1:nb_preds)
+    {
+        cutTarget = target[1:(length(target) - (nb_preds-ind)  - 5)]
+        real = target[(length(target)- (nb_preds-ind) -4):(length(target) - (nb_preds-ind))]
+        
+        #print("######## begin #####")
+        #print((length(target)- (nb_preds-ind) -4))
+        #print((length(target)- (nb_preds-ind)))
+        ####### Apply the VECM model
+        tryCatch({
+            model = auto.arima (cutTarget,  max.p=max_p, max.q=5)
+        }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
+        y = predict(model, n.ahead = 5)$pred
+        #print (real)
+        #print(y)
+        #print("######## end #####")
+        for (j in 1:5)
+        results[ind,j] = y[j]
+    }
+    return (results)
+}
+
 ### Normalize a dataframe
 normalize <- function (F)
 {
