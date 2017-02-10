@@ -7,31 +7,45 @@ import sklearn.decomposition as decomp
 import pandas as pd
 from tools.csv_helper import *
 
-methods_manual = [
-    decomp.FactorAnalysis,
-    decomp.FastICA,
-    decomp.IncrementalPCA,
-    decomp.PCA,
-
-    partial_with_pretty_method_name(decomp.NMF, init='nndsvda'),
-    partial_with_pretty_method_name(decomp.NMF,  init='nndsvdar'),
-    partial_with_pretty_method_name(decomp.KernelPCA, kernel="rbf", fit_inverse_transform=True),
-]
-
-methods_automatic = [
-    # Auto guessing the number of dimensions for method
-    # Uses The method from "Probabilistic Principal Component Analysis"
-    partial_with_pretty_method_name( decomp.PCA, n_components='mle', svd_solver='full'),
-    # TODO: we cannot use automatic selection for kernel PCA as it may generate excessive number of dimensions
-    # decomp.KernelPCA(kernel="rbf", fit_inverse_transform=True), # Removes zero components
-    # TODO: NMF from sklearn documentation n_components may be None (use all components) or set to specyfic value. Saddly no mention of auto guessing.
-    # TODO: FactorAnalysis from sklearn documentation n_components may be None (use all components) or set to specyfic value. Saddly no mention of auto guessing.
-    # TODO: FastICA from sklearn documentation n_components may be None (use all components) or set to specyfic value. Saddly no mention of auto guessing.
-    # TODO: IncrementalPCA from sklearn documentation n_components may be None (use min(n_samples, n_features)) or set to specyfic value. Saddly no mention of auto guessing.
-]
+from joblib import Parallel, delayed
+from joblib import load, dump
 
 
-def dimension_reduction(df, fname, data_matrix, column, methods, output_directory):
+def dimension_reduction(fname, column, output_directory):
+
+    df = read_csv_and_metadata(fname)
+
+    data_matrix = df[df.columns.difference([column,])]
+
+    methods_manual = [
+        decomp.FactorAnalysis,
+        decomp.FastICA,
+        decomp.IncrementalPCA,
+        decomp.PCA,
+
+        partial_with_pretty_method_name(decomp.NMF, init='nndsvda'),
+        partial_with_pretty_method_name(decomp.NMF,  init='nndsvdar'),
+        partial_with_pretty_method_name(decomp.KernelPCA, kernel="rbf", fit_inverse_transform=True),
+    ]
+
+    methods_automatic = [
+        # Auto guessing the number of dimensions for method
+        # Uses The method from "Probabilistic Principal Component Analysis"
+        partial_with_pretty_method_name( decomp.PCA, n_components='mle', svd_solver='full'),
+        # TODO: we cannot use automatic selection for kernel PCA as it may generate excessive number of dimensions
+        # decomp.KernelPCA(kernel="rbf", fit_inverse_transform=True), # Removes zero components
+        # TODO: NMF from sklearn documentation n_components may be None (use all components) or set to specyfic value. Saddly no mention of auto guessing.
+        # TODO: FactorAnalysis from sklearn documentation n_components may be None (use all components) or set to specyfic value. Saddly no mention of auto guessing.
+        # TODO: FastICA from sklearn documentation n_components may be None (use all components) or set to specyfic value. Saddly no mention of auto guessing.
+        # TODO: IncrementalPCA from sklearn documentation n_components may be None (use min(n_samples, n_features)) or set to specyfic value. Saddly no mention of auto guessing.
+    ]
+
+    f_max = min(min(df.shape), 30)
+
+    methods = []
+    methods.extend([m() for m in methods_automatic])
+    methods.extend([m(n_components=f_num) for m in methods_manual for f_num in range(2,f_max)])
+
     for method in methods:
         # output for method name
         mname = "dm_" + pretty_print_method_name(method)
@@ -67,16 +81,12 @@ def dimension_reduction(df, fname, data_matrix, column, methods, output_director
 
 def main():
     fname, output_directory = parse_selection_arguments(sys.argv)
+
     df = read_csv_and_metadata(fname)
 
-    f_max = min(min(df.shape), 30)
-
-    methods = []
-    methods.extend([m() for m in methods_automatic])
-    methods.extend([m(n_components=f_num) for m in methods_manual for f_num in range(2,f_max)])
-
-    for column, data in exclude_column_generator(df):
-        dimension_reduction(df, fname, data, column, methods, output_directory)
+    Parallel(-1)(delayed(dimension_reduction)(fname, column, output_directory) for column in df.meta_header['predict'])
+    # for column, data in exclude_column_generator(df):
+    #     dimension_reduction(df, fname, data, column, output_directory)
 
 if __name__ == "__main__":
     main()
