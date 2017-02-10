@@ -2,6 +2,7 @@ from __future__ import division
 from fabric.api import *
 import glob
 import os
+import re
 
 # TODO: use compressed csv format for all of the intermediate files
 # TODO: pandas should be ok with compressed filenames
@@ -171,8 +172,9 @@ def prediction(timeseries, methods = None, selected_files=None, filter_by_mdate=
         if len(scripts) == 0:
             scripts = glob.glob("src/%s/%s"%(methods_prefix, methods))
 
+    univariate_model_regex = re.compile(".*arima.*")
     for method in scripts:
-        if 'src/prediction/univariate_model.R' in method:
+        if univariate_model_regex.match(method):
             __run_method(method, timeseries, '%s/'%(methods_prefix,), timeseries_prefix)
         else:
             # if the resulting argv is > 50 kb, split it (until a fix is done in *.R prediction)
