@@ -48,19 +48,13 @@ arima_prediction <- function (target, p, ns, nb_preds)
     cutTarget = target[1:(length(target) - (nb_preds-ind)  - 5)]
     real = target[(length(target)- (nb_preds-ind) -4):(length(target) - (nb_preds-ind))]
     
-    #print("######## begin #####")
-    #print((length(target)- (nb_preds-ind) -4))
-    #print((length(target)- (nb_preds-ind)))
-    ####### Apply the VECM model
     tryCatch({
       model = arima (cutTarget,  order = c(p, ns, 1))
     }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
     y = predict(model, n.ahead = 5)$pred
-    #print (real)
-    #print(y)
-    #print("######## end #####")
+
     for (j in 1:5)
-      results[ind,j] = y[j]
+        results[ind,j] = y[j]
   }
   return (results)
 }
@@ -68,7 +62,7 @@ arima_prediction <- function (target, p, ns, nb_preds)
 auto_arima_prediction <- function (target, max_p, nb_preds)
 {
     # ts: multivariate time series to predict the first attribut
-    # p: the lag parameter
+    # max_p: max lag parameter
     # nb_preds: percentage of the data to predict
     
     results = data.frame()
@@ -77,19 +71,15 @@ auto_arima_prediction <- function (target, max_p, nb_preds)
         cutTarget = target[1:(length(target) - (nb_preds-ind)  - 5)]
         real = target[(length(target)- (nb_preds-ind) -4):(length(target) - (nb_preds-ind))]
         
-        #print("######## begin #####")
-        #print((length(target)- (nb_preds-ind) -4))
-        #print((length(target)- (nb_preds-ind)))
-        ####### Apply the VECM model
         tryCatch({
             model = auto.arima (cutTarget,  max.p=max_p, max.q=5)
         }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
-        y = predict(model, n.ahead = 5)$pred
-        #print (real)
-        #print(y)
-        #print("######## end #####")
+        y = forecast(model, h = 5)[[4]]
+        print(y)
+        #print(y[[4]])
+
         for (j in 1:5)
-        results[ind,j] = y[j]
+            results[ind,j] = y[j]
     }
     return (results)
 }

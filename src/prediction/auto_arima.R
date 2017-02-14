@@ -26,6 +26,7 @@ predictbase <- function (method_name, prefix_out){
 
     data      = read.csv (method_name, comment.char = "#", header=TRUE, sep=";")
     colnames = colnames(data)
+    normalized_data = normalize(data)
 
     for (i in 2:length(target_names)) {
         target_name = target_names[i]
@@ -48,18 +49,18 @@ predictbase <- function (method_name, prefix_out){
         ### normalisation
         max = max(data[,target_index])
         min = min(data[,target_index])
-        fs_method = normalize(data)
+        
 
         #determine the lag parameter
-        lagMax = as.integer ((nrow(fs_method)  - 1)  / 4)
+        lagMax = as.integer ((nrow(normalized_data)  - 1)  / 4)
 
         ## determmine the number of predictions
-        nbrePreds = as.integer(nrow(fs_method) * 10 / 100) # 10% predictions of the size of the data
+        nbrePreds = as.integer(nrow(normalized_data) * 10 / 100) # 10% predictions of the size of the data
 
-        ## detect the order of stationarity
-        #x = fs_method[,target_index]
-        #nd = ndiffs(x,alpha=0.05,test="adf");
-        preds = auto_arima_prediction (fs_method[,target_index],lagMax, nbrePreds)
+        ## compute predictions
+        tryCatch({
+        preds = auto_arima_prediction (normalized_data[,target_index],lagMax, nbrePreds)
+        }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
         ####
 
         names(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")

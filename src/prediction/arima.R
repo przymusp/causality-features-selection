@@ -60,7 +60,10 @@ predictbase <- function (method_name, prefix_out){
         ## detect the order of stationarity
         x = fs_method[,target_index]
         nd = ndiffs(x,alpha=0.05,test="adf");
+        
+        tryCatch({
         preds = arima_prediction (fs_method[,target_index], p, nd, nbrePreds)
+        }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
         ####
 
         names(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")
