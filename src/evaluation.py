@@ -26,7 +26,7 @@ GLOBAL_MEASURES = {
     # 'R': lambda x,y: 1, # placeholder
     # place holder the MASE, requires extra data and will be set up later in
     # the evaluation
-    'MASE': lambda x, y: 0,
+    'MASE': MASE,
 }
 
 def transform_into_output_tables(results_collection, methods_to_hotizon_dict):
@@ -68,11 +68,9 @@ def get_slice_with_horizon(df, nbre_preds, target, horizon, max_horizon=5):
     return df[[target]].tail(nbre_preds + max_horizon - 1 - horizon).head(nbre_preds).values
 
 
-def MASE(training_series, testing_series, prediction_series):
-    # TODO: be carefull with the training and testing dataset as, paper is not
-    # clear about that
-    training_len = len(training_series)
-    differences = np.abs(np.diff(training_series.T)).sum() / (training_len - 1)
+def MASE(testing_series, prediction_series):
+    training_len = len(testing_series)
+    differences = np.abs(np.diff(testing_series.T)).sum() / (training_len - 1)
     errors = np.abs(testing_series - prediction_series)
     return errors.mean() / differences
 
@@ -89,7 +87,6 @@ def evaluate_prediction(original_data, target, predictions, horizon_range):
     results = defaultdict(dict)
     testing_data_index = len(original_data) - len(predictions) - horizon_range
     testing_data = original_data[[target]].head(testing_data_index).values
-    GLOBAL_MEASURES['MASE'] = partial(MASE, testing_data)
 
     for mkey, measure in GLOBAL_MEASURES.items():
         for horizon in range(horizon_range):
