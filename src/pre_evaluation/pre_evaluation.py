@@ -2,6 +2,7 @@
 
 import sys
 import glob
+import re
 from collections import defaultdict, OrderedDict
 
 import pandas as pd
@@ -49,11 +50,6 @@ def get_slice_with_horizon(df, nbre_preds, target, horizon, max_horizon=5):
     return df[[target]].tail(nbre_preds + max_horizon - 1 - horizon).head(nbre_preds).values
 
 
-def MASE(testing_series, prediction_series):
-    training_len = len(testing_series)
-    differences = np.abs(np.diff(testing_series.T)).sum() / (training_len - 1)
-    errors = np.abs(testing_series - prediction_series)
-    return errors.mean() / differences
 
 
 def evaluate_prediction(original_data, target, predictions, horizon_range):
@@ -194,9 +190,17 @@ def main():
     # Get the output touple
     tables_real = transform_into_output_tables(
         results_collection, prediction_method_horizon)
+    print(type(tables_real), type(error_list))
 
     # Set the output prefix
     timeseries_prefix = sys.argv[1].split("/")[-1].split(".")[0]
+
+    print(sys.argv)
+
+    # with open(filename,'wb') as fp:
+    #     pickle.dump(dict1,fp)
+    #     pickle.dump(dict2,fp)
+    #     pickle.dump(dict3,fp)
 
     # transform_into_excel(tables_real, error_list).write(timeseries_prefix)
     # transform_into_figure(tables_real, error_list).write(timeseries_prefix)

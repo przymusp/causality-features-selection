@@ -171,8 +171,8 @@ def prediction(timeseries, methods = None, selected_files=None, filter_by_mdate=
     #     print (min_mdate_pfiles, max_mdate_pfiles)
     #     files = [f for f in files if os.path.getmtime(f) > min_mdate_pfiles ]
     #     print (files)
-
-    scripts = __select_methods(methods, methods_prefix = 'prediction')
+    methods_prefix = 'prediction'
+    scripts = __select_methods(methods, methods_prefix)
 
     univariate_model_regex = re.compile(".*arima.*")
     for method in scripts:
