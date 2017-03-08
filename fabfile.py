@@ -10,19 +10,36 @@ import re
 
 __RESULTS_DIRECTORY_PREFIX='results/'
 
+def __run_R_method(args):
+    """Runs R script with args,
+
+    :args: list of args to run with R script
+
+    """
+    method = os.path.abspath(args[0])
+    ts = os.path.abspath(args[1])
+    outdir = os.path.abspath(args[2]) + '/'
+
+    with settings(warn_only=True), lcd(os.path.dirname(method)):#, shell_env(R_COMPILE_PKGS='TRUE', R_ENABLE_JIT='3'):
+        local("Rscript --vanilla " + " ".join([method, ts, outdir]))
+
+
+def __run_Python_method(args):
+    """Runs Python method with args
+
+    :args: list of args to run with Python script
+
+    """
+    with shell_env(PYTHONPATH="$PYTHONPATH:src/"), settings(warn_only=True):
+        local(' python ' + " ".join(args))
+
+
 def __get_min_max_dates_from_files(files):
     dates = []
     for f in files:
         dates.append(os.path.getmtime(f))
     return min(dates), max(dates)
 
-def update_requirements():
-    local('gawk \'/^library/{test = gensub(/library\((.*)\).*/,"\\\\1","g"); A[test]=0}; BEGIN{printf("chooseCRANmirror()\\n");}END{for (k in A) printf("install.packages(\\\"%s\\\")\\n",k);}\' `find . -name "*.R"` > requirements.R')
-    local('pipreqs --force .')
-
-def get_uci_dataset():
-    with lcd("src/tools/download_uci_ml/"):
-        local("scrapy crawl uci")
 
 def __run_method(method, timeseries, method_prefix, timeseries_prefix=None):
     """Runs any method on a timeseries file
@@ -43,10 +60,58 @@ def __run_method(method, timeseries, method_prefix, timeseries_prefix=None):
     methodtype = method.split("/")[-1].split(".")[1]
 
     # Select runner to run script (R or Python)
-    _run = run_Python_method
-    if methodtype == "R": _run = run_R_method
+    _run = __run_Python_method
+    if methodtype == "R": _run = __run_R_method
 
     _run([method, timeseries, outdir])
+
+
+def __run_methods(methods, timeseries, methods_prefix, timeseries_prefix=None):
+    scripts = __select_methods(methods, methods_prefix)
+
+    for method in scripts:
+        __run_method(method, timeseries, '%s/'%(methods_prefix,), timeseries_prefix)
+
+
+def __select_files(selected_files, directory, globing_expression):
+    files = []
+    if selected_files is None:
+        files = glob.glob(directory + "/" + globing_expression)
+    else:
+        files = glob.glob(selected_files)
+
+        # if this is not extended path, try glob in files_directory
+        if len(files) == 0:
+            files = glob.glob("%s/%s"%(directory, selected_files))
+
+    files = [os.path.abspath(f) for f in files]
+    return files
+
+
+def __select_methods(selected_methods, methods_prefix):
+    scripts = []
+    if selected_methods is None:
+        scripts = glob.glob("src/%s/*.py"%(methods_prefix,))
+        scripts.extend(glob.glob("src/%s/*.R"%(methods_prefix,)))
+    else:
+        scripts = glob.glob(selected_methods)
+
+        # if this is not extended path, try glob in methods_directory
+        if len(scripts) == 0:
+            scripts = glob.glob("src/%s/%s"%(methods_prefix, selected_methods))
+    return scripts
+
+
+# Targets
+def update_requirements():
+    local('gawk \'/^library/{test = gensub(/library\((.*)\).*/,"\\\\1","g"); A[test]=0}; BEGIN{printf("chooseCRANmirror()\\n");}END{for (k in A) printf("install.packages(\\\"%s\\\")\\n",k);}\' `find . -name "*.R"` > requirements.R')
+    local('pipreqs --force .')
+
+
+def get_uci_dataset():
+    with lcd("src/tools/download_uci_ml/"):
+        local("scrapy crawl uci")
+
 
 def pre_selection(timeseries, methods=None):
 
@@ -58,6 +123,7 @@ def pre_selection(timeseries, methods=None):
 
     """
     __run_methods(methods, timeseries, 'pre_selection')
+
 
 def pre_selection_step2(timeseries, methods=None, selected_files = None):
 
@@ -75,16 +141,7 @@ def pre_selection_step2(timeseries, methods=None, selected_files = None):
 
     methods = 'src/pre_selection_step2/*'
 
-    if selected_files is None:
-        files = glob.glob(pre_selection_setp_directory + "/*_graph.csv")
-    else:
-        files = glob.glob(selected_files)
-
-        # if this is not extended path, try glob in files_directory
-        if len(files) == 0:
-            files = glob.glob("%s/%s"%(pre_selection_setp_directory, selected_files))
-
-    files = [os.path.abspath(f) for f in files]
+    files = __select_files(selected_files, pre_selection_setp_directory, "*_graph.csv")
 
     for fname in files:
         __run_methods(methods, fname, 'pre_selection', timeseries_prefix)
@@ -100,59 +157,14 @@ def selection(timeseries, methods=None):
     """
     __run_methods(methods, timeseries, 'selection')
 
-def __run_methods(methods, timeseries, methods_prefix, timeseries_prefix=None):
 
-    if methods is None:
-        scripts = glob.glob("src/%s/*.py"%(methods_prefix,))
-        scripts.extend(glob.glob("src/%s/*.R"%(methods_prefix,)))
-    else:
-        scripts = glob.glob(methods)
-
-        # if this is not extended path, try glob in methods_directory
-        if len(scripts) == 0:
-            scripts = glob.glob("src/%s/%s"%(methods_prefix, methods))
-
-
-    for method in scripts:
-        __run_method(method, timeseries, '%s/'%(methods_prefix,), timeseries_prefix)
-
-def run_R_method(args):
-    """Runs R script with args,
-
-    :args: list of args to run with R script
-
-    """
-    method = os.path.abspath(args[0])
-    ts = os.path.abspath(args[1])
-    outdir = os.path.abspath(args[2]) + '/'
-
-    with settings(warn_only=True), lcd(os.path.dirname(method)):#, shell_env(R_COMPILE_PKGS='TRUE', R_ENABLE_JIT='3'):
-        local("Rscript --vanilla " + " ".join([method, ts, outdir]))
-
-def run_Python_method(args):
-    """Runs Python method with args
-
-    :args: list of args to run with Python script
-
-    """
-    with shell_env(PYTHONPATH="$PYTHONPATH:src/"), settings(warn_only=True):
-        local(' python ' + " ".join(args))
 
 def prediction(timeseries, methods = None, selected_files=None, filter_by_mdate=True):
     ## TODO : manage the univariate model separately
     timeseries_prefix = timeseries.split("/")[-1].split(".")[0]
     selection_step_directory = __RESULTS_DIRECTORY_PREFIX + 'selection/' + timeseries_prefix
 
-    if selected_files is None:
-        files = glob.glob(selection_step_directory + "/*.csv")
-    else:
-        files = glob.glob(selected_files)
-
-        # if this is not extended path, try glob in files_directory
-        if len(files) == 0:
-            files = glob.glob("%s/%s"%(selection_step_directory, selected_files))
-
-    files = [os.path.abspath(f) for f in files]
+    files = __select_files(selected_files, selection_step_directory, "*.csv")
 
     # if filter_by_mdate:
     #     min_mdate_pfiles, max_mdate_pfiles = __get_min_max_dates_from_files(glob.glob(__RESULTS_DIRECTORY_PREFIX + 'prediction/' + timeseries_prefix + "/*.csv"))
@@ -160,17 +172,7 @@ def prediction(timeseries, methods = None, selected_files=None, filter_by_mdate=
     #     files = [f for f in files if os.path.getmtime(f) > min_mdate_pfiles ]
     #     print (files)
 
-    methods_prefix='prediction'
-
-    if methods is None:
-        scripts = glob.glob("src/%s/*.py"%(methods_prefix,))
-        scripts.extend(glob.glob("src/%s/*.R"%(methods_prefix,)))
-    else:
-        scripts = glob.glob(methods)
-
-        # if this is not extended path, try glob in methods_directory
-        if len(scripts) == 0:
-            scripts = glob.glob("src/%s/%s"%(methods_prefix, methods))
+    scripts = __select_methods(methods, methods_prefix = 'prediction')
 
     univariate_model_regex = re.compile(".*arima.*")
     for method in scripts:
@@ -192,20 +194,11 @@ def prediction(timeseries, methods = None, selected_files=None, filter_by_mdate=
                 f_in = " ".join(chunk)
                 __run_method(method, f_in, '%s/'%(methods_prefix,), timeseries_prefix)
 
-def evaluation(timeseries, f_out=None, selected_files=None):
-    timeseries_prefix = timeseries.split("/")[-1].split(".")[0]
-    prediction_step_directory = __RESULTS_DIRECTORY_PREFIX + 'prediction/' + timeseries_prefix
-    out_directory = __RESULTS_DIRECTORY_PREFIX + 'evaluation/'
+def pre_evaluation(timeseries, methods=None):
+    __run_methods(methods, timeseries, 'pre_evaluation')
 
-    if selected_files is None:
-        selected_files = prediction_step_directory + "/*.csv"
-
-    if f_out is None:
-        local("mkdir -p %s"%(out_directory))
-        f_out = out_directory + "/" + timeseries_prefix + ".html"
-
-    f_in = "'%s'"%(selected_files,)
-    run_Python_method(['src/evaluation.py', timeseries, f_in])
+def evaluation(timeseries, methods=None):
+    __run_methods(methods, timeseries, 'evaluation')
 
 def all_steps(timeseries):
     pre_selection(timeseries)
@@ -217,4 +210,4 @@ def all_steps(timeseries):
 def check_step_csv_files(step_directory):
     files = glob.glob(step_directory + "/*.csv")
     for f in files:
-        run_Python_method(["src/tools/csv_helper.py", f])
+        __run_Python_method(["src/tools/csv_helper.py", f])
