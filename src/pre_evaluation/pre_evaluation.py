@@ -5,6 +5,7 @@ import glob
 import re
 from collections import defaultdict, OrderedDict
 
+import dill
 import pandas as pd
 import numpy as np
 import tools.csv_helper as tools
@@ -116,7 +117,10 @@ def read_and_evaluate_results():
 
     n_components_match = re.compile("n_components\s*=\s*([0-9]+)\s*[,)]")
 
-    for fname in glob.glob(sys.argv[2]):
+    out_dir = sys.argv[2]
+    in_dir = out_dir.replace("pre_evaluation","prediction")
+
+    for fname in glob.glob(in_dir + "/*.csv"):
         # Read the predictions
         try:
             predictions = tools.read_csv_and_metadata(fname)
@@ -186,16 +190,19 @@ def read_and_evaluate_results():
 
 def main():
     results_collection, prediction_method_horizon, error_list = read_and_evaluate_results()
+    # This was already checked in read_and_evaluate_results
+    out_dir = sys.argv[2]
 
     # Get the output touple
     tables_real = transform_into_output_tables(
         results_collection, prediction_method_horizon)
-    print(type(tables_real), type(error_list))
 
     # Set the output prefix
     timeseries_prefix = sys.argv[1].split("/")[-1].split(".")[0]
 
-    print(sys.argv)
+    with open("results/pre_evaluation/%s/%s.pickle"%(timeseries_prefix, timeseries_prefix),"wb") as out_file:
+        dill.dump(results_collection, out_file)
+        dill.dump(error_list, out_file)
 
     # with open(filename,'wb') as fp:
     #     pickle.dump(dict1,fp)

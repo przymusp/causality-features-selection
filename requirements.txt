@@ -6,3 +6,4 @@ numpy==1.11.2
 pandas==0.19.1
 Scrapy==1.2.1
 scikit_learn==0.18.1
+dill==0.2.6
