@@ -205,6 +205,7 @@ def all_steps(timeseries):
     pre_selection_step2(timeseries)
     selection(timeseries)
     prediction(timeseries)
+    pre_evaluation(timeseries)
     evaluation(timeseries)
 
 def check_step_csv_files(step_directory):
