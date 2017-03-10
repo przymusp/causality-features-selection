@@ -1,4 +1,6 @@
 import re
+import sys
+import pickle
 import seaborn as sns
 import matplotlib.pyplot as plt
 from tools.global_measures import GLOBAL_MEASURES
@@ -7,10 +9,11 @@ from tools.global_measures import GLOBAL_MEASURES
 class transform_into_figure(object):
     """Generates figures with diffrent mesures grouped by method type"""
 
-    def __init__(self, tables, error_list):
+    def __init__(self, out_dir, tables, error_list):
         super(transform_into_figure, self).__init__()
         self.tables = tables
         self.error_list = error_list
+        self.out_dir = out_dir
 
         self.default_plot_styles = {
             "LinkAnalysis.*": {'ls': '-', 'marker': '*'},
@@ -75,8 +78,8 @@ class transform_into_figure(object):
                       bbox_to_anchor=(0.5, 0), bbox_transform=plt.gcf().transFigure)
         plt.tight_layout()
 
-        plt.savefig("results/evaluation/%s_%s_%s_%s.png" %
-                    (self.timeseries_prefix, target, str(horizon), predict_model))
+        plt.savefig("%s/%s_%s_%s_%s.png" %
+                    (self.out_dir, self.timeseries_prefix, target, str(horizon), predict_model))
         plt.clf()
         plt.cla()
         plt.close()
@@ -87,3 +90,21 @@ class transform_into_figure(object):
             for horizon in self.tables[target]:
                 for predict_model in self.tables[target][horizon]:
                     self._plot_to_file(target, horizon, predict_model)
+
+
+def main():
+    # Set the output prefix
+    timeseries_prefix = sys.argv[1].split("/")[-1].split(".")[0]
+
+    out_dir = sys.argv[2]
+    in_dir = out_dir.replace("evaluation","pre_evaluation")
+
+    with open("%s/%s.pickle"%(in_dir, timeseries_prefix),"rb") as in_file:
+        tables_real = pickle.load(in_file)
+        error_list  = pickle.load(in_file)
+
+    transform_into_figure(out_dir, tables_real, error_list).write(timeseries_prefix)
+
+
+if __name__ == "__main__":
+    main()

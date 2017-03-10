@@ -1,5 +1,8 @@
+import sys
 from collections import defaultdict
 import itertools
+import pickle
+
 from jinja2 import Environment, FileSystemLoader
 from tools.global_measures import GLOBAL_MEASURES
 
@@ -8,7 +11,7 @@ class transform_into_html(object):
 
     """Generate HTML from tables"""
 
-    def __init__(self, tables, error_list):
+    def __init__(self, out_dir, tables, error_list):
         self.colors = itertools.cycle(
             ["#9b59b6", "#3498db", "#95a5a6", "#e74c3c", "#34495e", "#2ecc71"])
         self.measures = GLOBAL_MEASURES.keys()
@@ -20,6 +23,7 @@ class transform_into_html(object):
         self.tables = tables
         self.error_list = error_list
         self.tables_html = defaultdict(lambda: defaultdict(dict))
+        self.out_dir = out_dir
 
     def _to_html(self, df):
 
@@ -42,10 +46,27 @@ class transform_into_html(object):
     def write(self, timeseries_prefix):
         self.transform()
         # Write HTML
-        env = Environment(loader=FileSystemLoader('src'))
+        env = Environment(loader=FileSystemLoader('src/evaluation/'))
         template = env.get_template('evaluation.html')
         script = template.render(
             tables=self.tables_html, error_list=self.error_list)
-        fname = "results/evaluation/%s.html" % (timeseries_prefix)
+        fname = "%s/%s.html" % (self.out_dir, timeseries_prefix)
         with open(fname, "w") as f:
             f.write(script)
+
+def main():
+    # Set the output prefix
+    timeseries_prefix = sys.argv[1].split("/")[-1].split(".")[0]
+
+    out_dir = sys.argv[2]
+    in_dir = out_dir.replace("evaluation","pre_evaluation")
+
+    with open("%s/%s.pickle"%(in_dir, timeseries_prefix),"rb") as in_file:
+        tables_real = pickle.load(in_file)
+        error_list  = pickle.load(in_file)
+
+    transform_into_html(out_dir, tables_real, error_list).write(timeseries_prefix)
+
+
+if __name__ == "__main__":
+    main()

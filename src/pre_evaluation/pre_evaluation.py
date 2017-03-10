@@ -4,8 +4,8 @@ import sys
 import glob
 import re
 from collections import defaultdict, OrderedDict
+import pickle
 
-import dill
 import pandas as pd
 import numpy as np
 import tools.csv_helper as tools
@@ -187,6 +187,11 @@ def read_and_evaluate_results():
 
     return results_collection, prediction_method_horizon, error_list
 
+def default_to_regular(d):
+    if isinstance(d, defaultdict):
+        d = {k: default_to_regular(v) for k, v in d.iteritems()}
+    return d
+
 
 def main():
     results_collection, prediction_method_horizon, error_list = read_and_evaluate_results()
@@ -199,15 +204,11 @@ def main():
 
     # Set the output prefix
     timeseries_prefix = sys.argv[1].split("/")[-1].split(".")[0]
+    tables_real = default_to_regular(tables_real)
 
-    with open("results/pre_evaluation/%s/%s.pickle"%(timeseries_prefix, timeseries_prefix),"wb") as out_file:
-        dill.dump(results_collection, out_file)
-        dill.dump(error_list, out_file)
-
-    # with open(filename,'wb') as fp:
-    #     pickle.dump(dict1,fp)
-    #     pickle.dump(dict2,fp)
-    #     pickle.dump(dict3,fp)
+    with open("%s/%s.pickle"%(out_dir, timeseries_prefix),"wb") as out_file:
+        pickle.dump(tables_real, out_file)
+        pickle.dump(error_list, out_file)
 
     # transform_into_excel(tables_real, error_list).write(timeseries_prefix)
     # transform_into_figure(tables_real, error_list).write(timeseries_prefix)
