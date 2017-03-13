@@ -11,7 +11,7 @@ library (kernlab)
 
 #getwd()
 source("../tools/selection_tools.R")
-args = commandArgs(trailingOnly=TRUE)
+#args = commandArgs(trailingOnly=TRUE)
 
 ##### Read arguments
 args = commandArgs(trailingOnly=TRUE)
