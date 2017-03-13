@@ -7,7 +7,8 @@ library(factoextra) # for the number of clusters
 library(NbClust) # for the number of clusters
 library (kernlab)
 
-#TODO: Support both Granger causality and Transfer entropy. Use all available  pre_selection files.
+## elimination space funtion
+trim <- function (x) gsub("^\\s+|\\s+$", "", x)
 
 #getwd()
 source("../tools/selection_tools.R")
@@ -40,8 +41,7 @@ data_name = gsub(".csv", "",data_name, fixed=TRUE)
 dat[[3]] = gsub(" ", "", dat[[3]], fixed = TRUE)
 dat[[3]] = gsub("\r", "", dat[[3]], fixed = TRUE)
 
-target_names = c(dat[[3]])
-
+target_names = c(dat[[4]])
 ## read the dataset
 data = read.csv(data_dir, header = TRUE, dec = '.',sep=";", comment.char = "#")
 colnames = colnames(data)
@@ -58,7 +58,13 @@ for (k in 1:length(graphs))
     ############# Execute the method  for each target
     for (i in 2:length(target_names))
     {
-        target_name = target_names[i]
+        target_name = strsplit(target_names[i],"\r")[1]
+        target_name = trim(target_name)
+        target_name = toString(target_name)
+        print (is.list(target_name[1]))
+        # if (substr(target_name,1,1) == " ")
+        #   target_name = strsplit(target_name," ")[2]
+
         for(j in 1:length(colnames))
         {
             if (colnames[j] == target_name) {
@@ -66,24 +72,32 @@ for (k in 1:length(graphs))
                 break;
             }
         }
+
         ### G-feature selection method
         graph_name = substr(graphs[[k]], 1, (nchar(graphs[[k]])-4) )
+        
         out_dir = paste0(output_dir,target_name,"_",graph_name,"_GFSM.csv")
 
         if (graph_name == "granger_graph")
             threshold = 0.8
+            
         gfsm = fgsm (data, matrix, target_index,threshold, clus = TRUE, nk= 1)
+        
         if (ncol(data.frame(gfsm)) > 0)
-            gfsm = data.frame (data[,target_name],data.frame(gfsm))
+            gfsm = data.frame (data[,target_index],data.frame(gfsm))
         else
-            gfsm = data.frame (data[,target_name])
+            gfsm = data.frame (data[,target_index])
         colnames(gfsm)[1] = target_name
+        
 
         # Set metadata
         command = paste0 ('awk \'/^#/ && !/^# *predict/\' ',data_dir)
         system(paste0(command,' > ', out_dir))
+        
         cat ("# predict;", file=out_dir,append=TRUE)
+
         cat (target_name, file=out_dir,append=TRUE, sep='\n')
+
         cat (paste("# method; Granger_FE_Automatic_K", graph_name, "()"),file=out_dir,append=TRUE, sep='\n')
 
         ## Store the selected variables
@@ -92,22 +106,27 @@ for (k in 1:length(graphs))
         for (nk in 1:30)
         {
             out_dir = paste0(output_dir,target_name,"_",graph_name,"_GFSM_K=",nk,".csv")
+            
             if (graph_name == "granger_graph")
-            threshold = 0.8
+                threshold = 0.8
+            
             gfsm = fgsm (data, matrix, target_index,threshold, clus = FALSE, nk= nk)
+            
             if (ncol(data.frame(gfsm)) > 0)
-            gfsm = data.frame (data[,target_name],data.frame(gfsm))
+                gfsm = data.frame (data[,target_index],data.frame(gfsm))
+            
             else
-            gfsm = data.frame (data[,target_name])
+                gfsm = data.frame (data[,target_index])
+                
             colnames(gfsm)[1] = target_name
 
             # Set metadata
             command = paste0 ('awk \'/^#/ && !/^# *predict/\' ',data_dir)
             system(paste0(command,' > ', out_dir))
+            
             cat ("# predict;", file=out_dir,append=TRUE)
             cat (target_name, file=out_dir,append=TRUE, sep='\n')
             cat (paste0("# method; Granger_FE_", graph_name, "(n_components=",nk,")"),file=out_dir,append=TRUE, sep='\n')
-
             ## Store the selected variables
             write.table(gfsm, out_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
 
