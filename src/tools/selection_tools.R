@@ -39,6 +39,7 @@ fgsm <- function (F,gmat, targetIndex,threshold, clus, nk)
     return (F[,-target])
   
   a=fviz_nbclust(as.dist(x), pam, method = "silhouette",k.max = kmax)
+  #a=fviz_nbclust(x, pam, method = "silhouette",k.max = kmax)
   k = which.max(a$data[,2])
   }
   else

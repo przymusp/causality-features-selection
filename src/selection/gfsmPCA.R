@@ -8,7 +8,8 @@ library(NbClust) # for the number of clusters
 library(psych)  # for factor analysis method
 library (kernlab)
 
-#TODO: Support both Granger causality and Transfer entropy. Use all available  pre_selection files.
+## elimination space funtion
+trim <- function (x) gsub("^\\s+|\\s+$", "", x)
 
 #getwd()
 source("../tools/selection_tools.R")
@@ -42,7 +43,7 @@ data_name = gsub(".csv", "",data_name, fixed=TRUE)
 dat[[3]] = gsub(" ", "", dat[[3]], fixed = TRUE)
 dat[[3]] = gsub("\r", "", dat[[3]], fixed = TRUE)
 
-target_names = c(dat[[3]])
+target_names = c(dat[[4]])
 
 ## read the dataset
 data = read.csv(data_dir, header = TRUE, dec = '.',sep=";", comment.char = "#")
@@ -65,8 +66,11 @@ for (dmr_method in dmr_methods)
         matrix = read.table(graph_dir, header = TRUE,row.names = 1, dec = '.',sep=";", comment.char = "#")
         ############# Execute the method  for each target
         for (i in 2:length(target_names)) {
-            target_name = target_names[i]
-            target_name
+            
+            target_name = strsplit(target_names[i],"\r")[1]
+            target_name = trim(target_name)
+            target_name = toString(target_name)
+            
             for(j in 1:length(colnames)) {
                 if (colnames[j] == target_name) {
                     target_index = j
@@ -80,7 +84,9 @@ for (dmr_method in dmr_methods)
 
             out_dir = paste0(output_dir,target_name,"_",graph_name,"_GFSM_",dmr_method,"_.csv")
             gfsm = data.frame()
-            try({gfsm = gfsm_dms_reduction (data, matrix, target_index,threshold, clus = FALSE,nk =8, methode_name=dmr_method)})
+            try({
+                gfsm = gfsm_dms_reduction (data, matrix, target_index,threshold, clus = FALSE,nk =8, methode_name=dmr_method)
+            })
             #print(gfsm[1:10,])
             if(nrow(data.frame(gfsm)) != nrow(data))
             # if(nrow(data.frame(gfsm)) == 0 && ncol(data.frame(gfsm)) == 0)
@@ -104,7 +110,8 @@ for (dmr_method in dmr_methods)
                 if (graph_name == "granger_graph")
                 threshold = 0.8
                 try({ gfsm = gfsm_dms_reduction (data, matrix, target_index,threshold, clus = FALSE, nk= nk)
-                if (ncol(data.frame(gfsm)) > 0) })
+                    })
+                if (ncol(data.frame(gfsm)) > 0)
                     gfsm = data.frame (data[,target_name],data.frame(gfsm))
                 else
                     gfsm = data.frame (data[,target_name])
