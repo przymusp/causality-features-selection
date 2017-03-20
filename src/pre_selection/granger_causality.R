@@ -18,13 +18,12 @@ if( substr(output_dir, nchar(output_dir),nchar(output_dir)) != '/')
     output_dir = paste0(output_dir,'/')
 
 # read data
-data = read.csv(data_dir, header=TRUE, dec='.',sep=";",comment.char = "#")
+data = read.csv(data_dir, header=TRUE,check.names=FALSE,dec='.',sep=";",comment.char = "#")
 
 # read  metadata
 command = paste0 ('awk /^#/ ',data_dir)
 dat <- system(command,  intern = TRUE)
 description = dat[[2]]
-#dat <- strsplit(dat, ";")
 
 file_name_split = strsplit(data_dir, "/")[[1]]
 data_name = file_name_split[length(file_name_split)]
@@ -33,15 +32,14 @@ data_name = gsub(".csv", "",data_name, fixed=TRUE)
 lag_p = strsplit(dat[[3]], ";")[[1]][2]
 lag_p = strsplit(lag_p, '\r')[1]
 lag_p = strtoi(lag_p)
+
 if(is.na(lag_p))
     lag_p = 0
-print(lag_p)
 
 # construct the output directory+name
 output_dir = paste0(output_dir,data_name,"_","granger_graph.csv")
 system(paste0(command,' > ', output_dir))
 
-# data = normalize(data)
 
 #### calculate the matrix
 gMat = data.frame(nrow=ncol(data), ncol=ncol(data))
@@ -55,7 +53,7 @@ for (i in 1:ncol(data))
          var = VARselect(data.frame(data[,j], data [,i]),lag.max= lagMax)
          lag = var$selection[1]
          }
-         
+
          if (j != i) {
              tryCatch({
                  test =   try (grangertest (data[,j] ~ data [,i], order = lag))
@@ -70,7 +68,5 @@ for (i in 1:ncol(data))
   }
 }
 gMat = data.frame(c(colnames(data)),gMat)
-#rownames(gMat) <- c(colnames(data))
 colnames(gMat) <- c(' ', colnames(data))
 write.table(gMat, output_dir, sep = ";",row.names =FALSE, append = TRUE)
-#write.table(gMat, output_dir,row.names = colnames(data), na = "",col.names = colnames(data), sep = ";", append = TRUE)
