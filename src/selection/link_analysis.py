@@ -1,5 +1,6 @@
 from __future__ import print_function
 import sys
+import traceback
 import glob
 from os import path
 import re
@@ -32,7 +33,11 @@ def write_selection_file(result_sorted, pred_column, n_components, org_data, out
     # If predicted column is in the set - remove it
     # Normally the predicted column should be the first column in this set,
     # so this is just a precaution. As we will add this column back in next step.
-    output_dimensions = list(output_dimensions.drop([pred_column,], axis=1).columns.values)
+    output_dimensions = list(output_dimensions.columns.values)
+    try:
+        output_dimensions.remove(pred_column)
+    except Exception as e:
+        pass
     output_dimensions.insert(0, pred_column)
 
     # Set metadata and write output selection file
@@ -40,6 +45,32 @@ def write_selection_file(result_sorted, pred_column, n_components, org_data, out
     org_data.meta_header['method'] = [mname,]
 
     csvh.write_csv_with_metadata(org_data[output_dimensions], out_fname)
+
+def pagerank(graph, alpha, p_vector):
+    rank_vector = None
+
+    try:
+        rank_vector = nx.pagerank_numpy(
+                 graph, alpha=0.85, personalization=p_vector)
+    except Exception as exception_numpy:
+        print("Error: Could not callculate pagerank:", exception_numpy)
+
+    if rank_vector is None:
+        print("trying pagerank_scipy")
+        try:
+            rank_vector = nx.pagerank_scipy(
+                     graph, alpha=0.85, personalization=p_vector)
+        except Exception as exception_scipy:
+            print("Error: Could not callculate pagerank:", exception_scipy)
+
+    if rank_vector is None:
+        print("trying power iteration")
+        try:
+            rank_vector = nx.pagerank( graph, alpha=0.85, personalization=p_vector, max_iter=200)
+        except Exception as exception:
+            print("Error: Could not callculate pagerank:", exception)
+
+    return rank_vector
 
 def link_analysis(fname, output_directory, fname_graph, graph_type):
     print(graph_type)
@@ -76,16 +107,8 @@ def link_analysis(fname, output_directory, fname_graph, graph_type):
             p_vector = dict.fromkeys(graph, 0)
             p_vector[nodes_map[predicted_column]] = 1
 
-            try:
-                rank_vector = nx.pagerank(
-                        graph, alpha=0.85, personalization=p_vector, max_iter=200)
-                # TODO: other methods to callculate principal eigenvector
-                # rank_vector1 = nx.pagerank_numpy(
-                #         graph, alpha=0.85, personalization=p_vector)
-                # print (pd.DataFrame(rank_vector, index=[0]) - pd.DataFrame(rank_vector1, index=[0]))
-            except Exception as exception:
-                print("Error: Could not callculate pagerank:", exception)
-                continue
+            rank_vector = pagerank(graph, 0.85, p_vector)
+            if rank_vector is None: continue
             # print(rank_vector)
 
             rank_vector_maped = {inv_nodes_map[k]:rank_vector[k] for k in rank_vector}
@@ -123,6 +146,9 @@ def main():
             link_analysis(fname, output_directory, fname_graph, graph_type)
         except Exception as exception:
             print("Could not callculate link analysis", exception)
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            print("*** print_tb:")
+            traceback.print_tb(exc_traceback,file=sys.stdout)
 
 if __name__ == '__main__':
     main()
