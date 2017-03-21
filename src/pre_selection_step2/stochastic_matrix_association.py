@@ -58,7 +58,7 @@ def main():
     print(fname, out_fname)
 
     try:
-        df_in = read_csv_and_metadata(fname)
+        df_in = read_csv_and_metadata(fname, index_col=0)
     except Exception as e:
         print("Error processing file", fname, ":", e)
         return
@@ -67,7 +67,7 @@ def main():
         print("Error: empty input matrix")
         return
 
-    df_in.set_index(".", inplace=True)
+    # df_in.set_index(".", inplace=True)
 
     if df_in.shape[0] != df_in.shape[1]:
         print("Error: Non quadratic matrix")
