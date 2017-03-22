@@ -7,6 +7,9 @@ from tabulate import tabulate
 import pandas as pd
 from tools.global_measures import GLOBAL_MEASURES
 
+import seaborn as sns
+import matplotlib.pyplot as plt
+
 class transform_into_pivot_tables(object):
     """Generates pivot tables with diffrent mesures grouped by method type"""
 
@@ -17,7 +20,7 @@ class transform_into_pivot_tables(object):
         self.measures = GLOBAL_MEASURES.keys()
         self.out_dir = out_dir
 
-    def generate_table(self, target, horizon, predict_model):
+    def get_min_of_of_group(self, target, horizon, predict_model):
         """ Generate a pivot table of results
 
         :target: target variable
@@ -31,77 +34,74 @@ class transform_into_pivot_tables(object):
 
         data_slice_group = data_slice.groupby(['group', 'predict'], as_index=False)
 
-        ret_df = data_slice_group['group','predict', 'MASE'].min()
-        ret_df['horizon'] = horizon
-        ret_df['target'] = target
-        ret_df['rank']=ret_df['MASE'].rank(method="min")
-        # print ret_df.to_dict('index')
-        return ret_df
-        exit()
-        # cmp_cols = ret_df['group']
-        cmp_cols = []
-        cmp_cols.append(ret_df['group'])
-        for row in ret_df.itertuples():
-            # if pivot is None:
-            #     pivot = ret_df['MASE'] < row.MASE
-            # else:
-                # cmp_cols[row.group] = (ret_df['MASE'] < row.MASE).astype(int)
-                cmp_cols.append((ret_df['MASE'] > row.MASE).astype(int))
-                cmp_cols[-1].rename(row.group, inplace=True)
-            # print row.group,
-        # print cmp_cols
-        return pd.concat(cmp_cols, axis=1).set_index(['group'])
-        # print ret_df
-        # exit()
-        # # print ret_df.columns
-        # # print ret_df
-        # return ret_df
+        min_mase_group = data_slice_group['group','predict', 'MASE'].min()
+        min_mase_group['horizon'] = horizon
+        min_mase_group['target'] = target
 
-        # for group, data in data_slice_group:
-        #     # for measure in self.measures:
-        #     print data.min()
+        return min_mase_group
+
+
+    def get_rank_mase_matrix(self, min_mase_group):
+        rank_mase = min_mase_group.copy()
+        rank_mase['rank'] = min_mase_group['MASE'].rank(method="min")
+        return rank_mase
+
+    def get_comparison_mase_matrix(self, min_mase_group):
+        cmp_cols = []
+        cmp_cols.append(min_mase_group['group'])
+        for row in min_mase_group.itertuples():
+                cmp_cols.append((min_mase_group['MASE'] > row.MASE).astype(int))
+                cmp_cols[-1].rename(row.group, inplace=True)
+
+        return pd.concat(cmp_cols, axis=1).set_index(['group'])
+
+    def plot_comparison_summary(self, cmp_summary, out_fname):
+        plt.gcf().subplots_adjust(left=0.30, bottom=0.30)
+        self.__plot_heatmap(cmp_summary, out_fname)
+
+    def plot_rank_summary(self, rank_summary, out_fname):
+        heat_map = pd.DataFrame.from_dict(rank_summary).fillna(0).T
+
+        plt.gcf().subplots_adjust(left=0.30)
+        self.__plot_heatmap(heat_map, out_fname)
+
+    def __plot_heatmap(self, heat_map, out_fname):
+        plt.tick_params(axis='y', which='major', labelsize=5)
+        plt.tick_params(axis='y', which='minor', labelsize=5)
+        plt.tick_params(axis='x', which='major', labelsize=5)
+        plt.tick_params(axis='x', which='minor', labelsize=5)
+        sns.set()
+        sns.heatmap(heat_map, annot=True, linewidths=.5, cmap="YlGnBu", robust=True, annot_kws={'size':5})
+        plt.savefig(out_fname)
+        plt.clf()
 
     def write(self, timeseries_prefix):
         self.timeseries_prefix = timeseries_prefix
         factory = lambda: defaultdict(factory)
         # summary = factory()
 
-        summary = defaultdict(Counter)
+        rank_summary = defaultdict(Counter)
+        cmp_summary = None
 
         for target in self.tables:
             for horizon in self.tables[target]:
                 for predict_model in self.tables[target][horizon]:
                     if horizon != 0 or predict_model == 'VECM-rolling': continue
-                    ret_df = self.generate_table(target, horizon, predict_model)
-                    for row in ret_df.itertuples():
-                        summary[row.group][int(row.rank)] += 1
-                    # if summary is None:
-                    #     summary = self.generate_table(target, horizon, predict_model)
-                    # else:
-                    #     summary += self.generate_table(target, horizon, predict_model)
-                        # df = self.generate_table(target, horizon, predict_model)
-                        # summary = summary.append(df)
-        # print summary
-        rank = pd.DataFrame.from_dict(summary).fillna(0).T
-        import seaborn as sns
-        import matplotlib.pyplot as plt
-        # from matplotlib import rcParams
-        # rcParams.update({'figure.autolayout': True})
-        plt.tick_params(axis='y', which='major', labelsize=5)
-        plt.tick_params(axis='y', which='minor', labelsize=5)
-        sns.set()
-        plt.gcf().subplots_adjust(left=0.30)
-        sns.heatmap(rank, annot=True, linewidths=.5, cmap="YlGnBu", robust=True, annot_kws={'size':'small'})
-        # plt.tight_layout()
-        plt.savefig("test.pdf")
-        # stats = {
-        #         'MASE' : {
-        #             'sum':'sum',
-        #             'median':'median',
-        #             'mean' : 'mean',
-        #             }
-        #         }
-        # print summary.groupby(['group', 'predict', 'horizon']).agg(stats)
+
+                    min_mase_matrix = self.get_min_of_of_group(target, horizon, predict_model)
+
+                    rank_matrix = self.get_rank_mase_matrix(min_mase_matrix)
+                    for row in rank_matrix.itertuples():
+                        rank_summary[row.group][int(row.rank)] += 1
+
+                    temp_cmp_summary = self.get_comparison_mase_matrix(min_mase_matrix)
+                    if cmp_summary is None:
+                        cmp_summary = temp_cmp_summary
+                    else:
+                        cmp_summary += temp_cmp_summary
+
+        self.plot_rank_summary(rank_summary, "test_rank.pdf")
+        self.plot_comparison_summary(cmp_summary, "test_cmp.pdf")
 
 def main():
     # Set the output prefix
