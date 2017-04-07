@@ -38,6 +38,16 @@ class transform_into_pivot_tables(object):
         min_mase_group['horizon'] = horizon
         min_mase_group['target'] = target
 
+        # TODO: fix that
+        # groups_to_remove = [ 'jdit', '_graph_reverse', 'reverse_0', 'lstoch', 'rstoch']
+        groups_to_remove = ['_graph_reverse']
+        for grm in groups_to_remove:
+            min_mase_group = min_mase_group[~min_mase_group.group.str.contains(grm)]
+
+        groups_to_select = [] #[ 'Link' ]
+        for grm in groups_to_select:
+            min_mase_group = min_mase_group[min_mase_group.group.str.contains(grm)]
+
         return min_mase_group
 
 
@@ -62,16 +72,20 @@ class transform_into_pivot_tables(object):
     def plot_rank_summary(self, rank_summary, out_fname):
         heat_map = pd.DataFrame.from_dict(rank_summary).fillna(0).T
 
+        # TODO: to check
+        heat_map = heat_map.sort_values(range(1,len(heat_map)), ascending=False)
+
         plt.gcf().subplots_adjust(left=0.30)
         self.__plot_heatmap(heat_map, out_fname)
 
     def __plot_heatmap(self, heat_map, out_fname):
+        sns.set()
+        sns.heatmap(heat_map, annot=True, linewidths=.5, cmap="YlGnBu", robust=True, annot_kws={'size':5})
+        plt.setp( plt.gca().yaxis.get_majorticklabels(), rotation='horizontal' )
         plt.tick_params(axis='y', which='major', labelsize=5)
         plt.tick_params(axis='y', which='minor', labelsize=5)
         plt.tick_params(axis='x', which='major', labelsize=5)
         plt.tick_params(axis='x', which='minor', labelsize=5)
-        sns.set()
-        sns.heatmap(heat_map, annot=True, linewidths=.5, cmap="YlGnBu", robust=True, annot_kws={'size':5})
         plt.savefig(out_fname)
         plt.clf()
 
@@ -99,9 +113,9 @@ class transform_into_pivot_tables(object):
                         cmp_summary = temp_cmp_summary
                     else:
                         cmp_summary += temp_cmp_summary
-
-        self.plot_rank_summary(rank_summary, "test_rank.pdf")
-        self.plot_comparison_summary(cmp_summary, "test_cmp.pdf")
+        plot_fname_prefix = "%s/%s" %(self.out_dir, timeseries_prefix)
+        self.plot_rank_summary(rank_summary, plot_fname_prefix + "_rank.pdf")
+        self.plot_comparison_summary(cmp_summary, plot_fname_prefix + "_cmp.pdf")
 
 def main():
     # Set the output prefix

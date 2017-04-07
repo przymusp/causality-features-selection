@@ -34,10 +34,13 @@ def transform_into_output_tables(results_collection, methods_to_hotizon_dict):
                     for mtype, measures in results_collection[predict_model][target][horizon][group].items()
                 ]
                 if u_model is not None:
-                    prefix_cols = {'predict': 'Univariate_model', 'group': 'Univariate_model', 'method': 0}
-                    new_row.append(OrderedDict(
-                        prefix_cols.items() + u_model[target][horizon]['Univariate_model'][0].items()
-                    ))
+                    try:
+                        prefix_cols = {'predict': 'Univariate_model', 'group': 'Univariate_model', 'method': 0}
+                        new_row.append(OrderedDict(
+                            prefix_cols.items() + u_model[target][horizon]['Univariate_model'][0].items()
+                        ))
+                    except Exception as e:
+                        pass
 
                 df = pd.DataFrame.from_dict(new_row)
                 df.set_index(["predict", "group", "method"])
