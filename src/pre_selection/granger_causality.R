@@ -14,6 +14,8 @@ data_dir = args[1]
 
 # output directory
 output_dir = args[2]
+
+
 if( substr(output_dir, nchar(output_dir),nchar(output_dir)) != '/')
     output_dir = paste0(output_dir,'/')
 
@@ -33,13 +35,34 @@ lag_p = strsplit(dat[[3]], ";")[[1]][2]
 lag_p = strsplit(lag_p, '\r')[1]
 lag_p = strtoi(lag_p)
 
+# size of tested data
+nbre_forecasts = strsplit(dat[[5]], ";")[[1]][2]
+nbre_forecasts = strsplit(nbre_forecasts, '\r')[1]
+nbre_forecasts = strtoi(nbre_forecasts)
+
+# number or horizon forecasts
+horizon = strsplit(dat[[6]], ";")[[1]][2]
+horizon = strsplit(horizon, '\r')[1]
+horizon = strtoi(horizon)
+
+#print (nbre_forecasts)
+#print (horizon)
+
 if(is.na(lag_p))
     lag_p = 0
 
+if(is.na(horizon))
+    horizon = 1
+
+#print (lag_p)
 # construct the output directory+name
 output_dir = paste0(output_dir,data_name,"_","granger_graph.csv")
 system(paste0(command,' > ', output_dir))
 
+# Delete the last rows on which the forecast evaluations will be done
+#print (nrow(data))
+data = data[-c( (nrow(data)-(nbre_forecasts + horizon-1 -1)):nrow(data)),]
+print (nrow(data))
 
 #### calculate the matrix
 gMat = data.frame(nrow=ncol(data), ncol=ncol(data))
@@ -47,12 +70,13 @@ for (i in 1:ncol(data))
 {
     for (j in 1:ncol(data))
      {
-         lag = lag_p
-         if (lag == 0){
+         if (lag_p == 0){
          lagMax = as.integer ((nrow(data)  - 1)  / (2*(ncol(data) + 1)))
+         }
+         else lagMax = lag_p
          var = VARselect(data.frame(data[,j], data [,i]),lag.max= lagMax)
          lag = var$selection[1]
-         }
+         
 
          if (j != i) {
              tryCatch({
