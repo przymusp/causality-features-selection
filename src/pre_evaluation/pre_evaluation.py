@@ -40,6 +40,7 @@ def transform_into_output_tables(results_collection, methods_to_hotizon_dict):
                             prefix_cols.items() + u_model[target][horizon]['Univariate_model'][0].items()
                         ))
                     except Exception as e:
+                        print e
                         pass
 
                 df = pd.DataFrame.from_dict(new_row)
@@ -149,8 +150,10 @@ def read_and_evaluate_results():
         # For each prediction method only one prediction horizon is available
         if predict_model in prediction_method_horizon \
                 and prediction_method_horizon[predict_model] != horizon:
-            error_list.append("Error: more then one horizon detected for method %s skipping file %s" % (
-                predict_model, fname))
+                    # TODO: maybe just use the max ?
+            prediction_method_horizon[predict_model] = max(horizon, prediction_method_horizon[predict_model])
+            # error_list.append("Error: more then one horizon detected for method %s skipping file %s" % (
+            #     predict_model, fname))
             continue
 
         # If the prediction horizon match the previously set one or when this
