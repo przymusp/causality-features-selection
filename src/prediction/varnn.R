@@ -23,7 +23,7 @@ varnn <- function (F,p, dec, cible)
     #inv_dec = nrow(F)-dec
     for (ind in 1:dec)
     {
-        ts = F[1:(nrow(F) - dec + ind-1),]
+        ts = F[ind:(nrow(F) - dec + ind-1),]
         
         y = module$forecast(ts)
         
@@ -105,7 +105,7 @@ predictbase <- function (method_name, prefix_out){
     #preds = denormalize(preds,max,min)
 
 if (nrow (preds) > 0){
-    output_dir = paste0(prefix_out,"VARNN",data_name[[1]][length(data_name[[1]])])
+    output_dir = paste0(prefix_out,"VARNN_",data_name[[1]][length(data_name[[1]])])
     system(paste0(command,' > ', output_dir))
     write.table(preds, file = output_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";",append = TRUE)
 }
