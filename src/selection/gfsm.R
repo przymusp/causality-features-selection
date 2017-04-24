@@ -33,15 +33,18 @@ if( substr(output_dir, nchar(output_dir),nchar(output_dir)) != '/')
 command = paste0 ('awk /^#/ ',data_dir)
 dat <- system(command,  intern = TRUE)
 description = dat[[2]]
-dat <- strsplit(dat, ";")
+#dat <- strsplit(dat, ";")
 file_name_split = strsplit(data_dir, "/")[[1]]
 data_name = file_name_split[length(file_name_split)]
 data_name = gsub(".csv", "",data_name, fixed=TRUE)
 
-dat[[3]] = gsub(" ", "", dat[[3]], fixed = TRUE)
-dat[[3]] = gsub("\r", "", dat[[3]], fixed = TRUE)
+datNamed <- read.table(text=gsub("^# *", "",dat), row.names = 1, sep=";",header=FALSE)
+description = toString(datNamed["description","V2"])
+target_names = toString(datNamed["predict","V2"])
 
-target_names = c(dat[[4]])
+target_names = strsplit(target_names, ',')[[1]]
+
+print (target_names)
 ## read the dataset
 data = read.csv(data_dir, header = TRUE, dec = '.',sep=";", comment.char = "#")
 colnames = colnames(data)
@@ -56,7 +59,7 @@ for (k in 1:length(graphs))
 
     matrix = read.table(graph_dir, header = TRUE,row.names = 1, dec = '.',sep=";", comment.char = "#")
     ############# Execute the method  for each target
-    for (i in 2:length(target_names))
+    for (i in 1:length(target_names))
     {
         target_name = strsplit(target_names[i],"\r")[1]
         target_name = trim(target_name)

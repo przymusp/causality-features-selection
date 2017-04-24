@@ -11,23 +11,42 @@ library(forecast)
 
 source("../tools/prediction_tools.R")
 
+## elimination space funtion
+trim <- function (x) gsub("^\\s+|\\s+$", "", x)
+
 predictbase <- function (method_name, prefix_out){
-    command = paste0 ('awk \' /^# *predict/ \' ',method_name)
+    command = paste0 ('awk \'BEGIN{printf("# predict_model;ARIMA\\n");} /^#/\' ', method_name)
     dat <- system(command,  intern = TRUE)
-    dat <- strsplit(dat, ";")
     data_name = strsplit(method_name, "/")
 
-    dat[[1]] = gsub(" ", "", dat[[1]], fixed = TRUE)
-    dat[[1]] = gsub("\r", "", dat[[1]], fixed = TRUE)
-    dat[[1]] = gsub("\n", "", dat[[1]], fixed = TRUE)
+    datNamed <- read.table(text=gsub("^# *", "",dat), row.names = 1, sep=";",header=FALSE)
 
-    target_names = c(dat[[1]])
+    lag_p = strtoi(datNamed["lag_p","V2"])
+    horizon = strtoi(datNamed["horizon","V2"])
+    nbre_predictions = strtoi(datNamed["number_predictions","V2"])
 
+    dat <- strsplit(dat, ";")
+
+    target_names = toString(datNamed["predict","V2"])
+    
+    target_names = strsplit(target_names, ',')[[1]]
+    
+    if(is.na(horizon))
+    horizon = 1
+    
+    if(is.na(lag_p))
+    lag_p = 0
+    
+    if(is.na(nbre_predictions))
+    nbre_predictions = 0
+
+
+    # read data
     data      = read.csv (method_name, comment.char = "#", header=TRUE, sep=";")
     colnames = colnames(data)
 
-    for (i in 2:length(target_names)) {
-        target_name = target_names[i]
+    for (i in 1:length(target_names)) {
+        target_name = toString(target_names[i])
         for(j in 1:length(colnames)) {
             if (colnames[j] == target_name) {
                 target_index = j
@@ -40,35 +59,35 @@ predictbase <- function (method_name, prefix_out){
         command = paste0 ('awk \'/^#/ && !/^# *predict/\' ',method_name)
         system(paste0(command,' > ', output_dir))
         cat ("# predict;", file=output_dir,append=TRUE)
+        #print (target_name)
         cat (target_name, file=output_dir,append=TRUE, sep='\n')
         cat ("# method; Univariate_model()",file=output_dir,append=TRUE, sep='\n')
-        cat ("# predict_model; Univariate_model",file=output_dir,append=TRUE, sep='\n')
-
-        ### normalisation
-        max = max(data[,target_index])
-        min = min(data[,target_index])
-        fs_method = normalize(data)
+        cat ("# predict_model; Arima",file=output_dir,append=TRUE, sep='\n')
 
         #determine the lag parameter
-        lagMax = as.integer ((nrow(fs_method)  - 1)  / 4)
-        var = VARselect(data.frame(fs_method[,target_index]),lag.max=lagMax)
+        if (lag_p == 0){
+            lagMax = as.integer ((nrow(data)  - 1)  / 4)
+        }
+        else lagMax = lag_p
+
+        var = VARselect(data.frame(data[,target_index]),lag.max=lagMax)
         p = var$selection[1] ## AIC criteria
 
         ## determmine the number of predictions
-        nbrePreds = as.integer(nrow(fs_method) * 10 / 100) # 10% predictions of the size of the data
+        if (nbre_predictions == 0)
+            nbrePreds = as.integer(nrow(data) * 10 / 100) # 10% predictions of the size of the data
+        else nbrePreds = nbre_predictions
 
         ## detect the order of stationarity
-        x = fs_method[,target_index]
+        
+        x = data[,target_index]
         nd = ndiffs(x,alpha=0.05,test="adf");
         
         tryCatch({
-        preds = arima_prediction (fs_method[,target_index], p, nd, nbrePreds)
+        preds = arima_prediction (data[,target_index], p, nd, nbrePreds,horizon)
         }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
         ####
 
-        names(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")
-        colnames(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")
-        preds = denormalize(preds,max,min)
         write.table(preds, file = output_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";",append = TRUE)
     }
 }
