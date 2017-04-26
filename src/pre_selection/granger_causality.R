@@ -1,6 +1,8 @@
 #library(lmtest)
 library(vars)
 
+source("../tools/read_meta_data.R")
+
 ### arguments
 args = commandArgs(trailingOnly=TRUE)
 
@@ -9,12 +11,9 @@ if (length(args) > 2){
     quit()
 }
 
-# dataset directory
+# dataset directory and output directory
 data_dir = args[1]
-
-# output directory
 output_dir = args[2]
-
 
 if( substr(output_dir, nchar(output_dir),nchar(output_dir)) != '/')
     output_dir = paste0(output_dir,'/')
@@ -24,45 +23,23 @@ data = read.csv(data_dir, header=TRUE,check.names=FALSE,dec='.',sep=";",comment.
 
 # read  metadata
 command = paste0 ('awk /^#/ ',data_dir)
-dat <- system(command,  intern = TRUE)
-description = dat[[2]]
+meta_data = read_meta_data(data_dir)
 
-file_name_split = strsplit(data_dir, "/")[[1]]
-data_name = file_name_split[length(file_name_split)]
-data_name = gsub(".csv", "",data_name, fixed=TRUE)
+if(is.na(meta_data$lag_p))
+meta_data$lag_p = 0
 
-lag_p = strsplit(dat[[3]], ";")[[1]][2]
-lag_p = strsplit(lag_p, '\r')[1]
-lag_p = strtoi(lag_p)
+if(is.na(meta_data$horizon))
+meta_data$horizon = 1
 
-# size of tested data
-nbre_forecasts = strsplit(dat[[5]], ";")[[1]][2]
-nbre_forecasts = strsplit(nbre_forecasts, '\r')[1]
-nbre_forecasts = strtoi(nbre_forecasts)
+if (meta_data$nbre_predictions == 0)
+meta_data$nbre_predictions = as.integer(nrow(data) * 10 / 100)
 
-# number or horizon forecasts
-horizon = strsplit(dat[[6]], ";")[[1]][2]
-horizon = strsplit(horizon, '\r')[1]
-horizon = strtoi(horizon)
-
-#print (nbre_forecasts)
-#print (horizon)
-
-if(is.na(lag_p))
-    lag_p = 0
-
-if(is.na(horizon))
-    horizon = 1
-
-#print (lag_p)
-# construct the output directory+name
-output_dir = paste0(output_dir,data_name,"_","granger_graph.csv")
+# construct the output directory
+output_dir = paste0(output_dir,meta_data$data_name,"_","granger_graph.csv")
 system(paste0(command,' > ', output_dir))
 
 # Delete the last rows on which the forecast evaluations will be done
-#print (nrow(data))
-data = data[-c( (nrow(data)-(nbre_forecasts + horizon-1 -1)):nrow(data)),]
-print (nrow(data))
+data = data[1:(nrow(data)-meta_data$nbre_predictions),]
 
 #### calculate the matrix
 gMat = data.frame(nrow=ncol(data), ncol=ncol(data))
@@ -70,10 +47,10 @@ for (i in 1:ncol(data))
 {
     for (j in 1:ncol(data))
      {
-         if (lag_p == 0){
+         if (meta_data$lag_p == 0){
          lagMax = as.integer ((nrow(data)  - 1)  / (2*(ncol(data) + 1)))
          }
-         else lagMax = lag_p
+         else lagMax = meta_data$lag_p
          var = VARselect(data.frame(data[,j], data [,i]),lag.max= lagMax)
          lag = var$selection[1]
          
@@ -85,7 +62,9 @@ for (i in 1:ncol(data))
                  {
                      gMat[i,j] = 0
                  }
-                 else gMat[i,j] = 1 - test$`Pr(>F)`[2]}, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
+                 else
+                    gMat[i,j] = 1 - test$`Pr(>F)`[2]}, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
+             #gMat[i,j] = test$
     }
         else
             gMat[i,j] = 0
