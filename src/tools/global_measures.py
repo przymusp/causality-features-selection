@@ -10,11 +10,12 @@ def MASE(testing_series, prediction_series):
 
 # All used measures
 GLOBAL_MEASURES = {
-    'mse': mean_squared_error,
-    'mae': mean_absolute_error,
-    'medae': median_absolute_error,
-    'MASE': MASE,
-    # 'evc': explained_variance_score,
-    # 'r2': r2_score,
-    # 'R': lambda x,y: 1, # placeholder
-}
+        'rmse': lambda x,y: sqrt(mean_squared_error(x,y)),
+        'mse': mean_squared_error(x,y),
+        'mae': mean_absolute_error,
+        'medae': median_absolute_error,
+        'MASE': MASE,
+        # 'evc': explained_variance_score,
+        # 'r2': r2_score,
+        # 'R': lambda x,y: 1, # placeholder
+        }
