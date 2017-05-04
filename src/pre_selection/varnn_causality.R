@@ -7,7 +7,7 @@ source("../tools/read_meta_data.R")
 ### arguments
 args = commandArgs(trailingOnly=TRUE)
 
-if (length(args) > 2){
+if (length(args) < 2 || length(args) > 4){
     print ("Error: number of arguments incorrect.")
     quit()
 }
@@ -15,6 +15,10 @@ if (length(args) > 2){
 # dataset directory and output directory
 data_dir = args[1]
 output_dir = args[2]
+
+is_roling = FALSE
+if(length(args) == 3)
+    is_roling = TRUE
 
 if( substr(output_dir, nchar(output_dir),nchar(output_dir)) != '/')
     output_dir = paste0(output_dir,'/')
@@ -40,7 +44,8 @@ output_dir = paste0(output_dir,meta_data$data_name,"_","varnn_causality_graph.cs
 system(paste0(command,' > ', output_dir))
 
 # Delete the last rows on which the forecast evaluations will be done
-data = data[1:(nrow(data)-meta_data$nbre_predictions),]
+if(is_roling)
+    data = data[1:(nrow(data)-meta_data$nbre_predictions),]
 
 #### compute the causalities matrix
 gMat = data.frame(nrow=ncol(data), ncol=ncol(data))
