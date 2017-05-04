@@ -73,7 +73,7 @@ def evaluate_prediction(original_data, target, predictions, horizon_range):
     for mkey, measure in GLOBAL_MEASURES.items():
         for horizon in range(horizon_range):
             data_slice = get_slice_with_horizon(
-                original_data, len(predictions), target, horizon)
+                original_data, len(predictions), target, horizon, horizon_range)
             results[horizon][mkey] = measure(
                 data_slice, predictions.values[:, horizon])
 
