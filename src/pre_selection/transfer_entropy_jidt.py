@@ -54,6 +54,11 @@ def jdit_transfer_entropy_matrix (fname):
 
 if __name__ == "__main__":
     fname, output_directory = parse_selection_arguments(sys.argv)
+
+    is_rolling = False
+    if len(sys.argv) == 4:
+        is_rolling = True
+
     out_fname = output_directory + "/" + path.basename(fname).split(".")[0] + '_te_jdit_graph.csv'
     df_out = jdit_transfer_entropy_matrix (fname)
     df_in = read_csv_and_metadata(fname)
