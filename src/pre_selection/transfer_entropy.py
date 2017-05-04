@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
     # TODO: now writen as awk script.  Consider if it is worth rewrite as Python ? (mawk implementation may be faster then pure python)
     to_te_tool = "awk '!/^#/{gsub(/;/,\" \"); gsub(/ +/,\" \"); print}'"
-    te_tool = "~/src/libtransferentropy/bin/pairwise_transfer_entropy"
+    te_tool = "~/src/libtransferentropy/bin/pairwise_transfer_entropy -b 16 -w 1"
     from_te_tool = "awk '{gsub(/ +/,\" \"); gsub(/(^ +)|( +$)/,\"\"); print}'"
     awk_cmd = " %(to_te_tool)s %(fname)s | %(te_tool)s | %(from_te_tool)s > %(out_fname)s "
 
