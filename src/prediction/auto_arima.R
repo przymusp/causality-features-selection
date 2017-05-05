@@ -11,35 +11,33 @@ library(vars)
 library(forecast)
 
 source("../tools/prediction_tools.R")
+source("../tools/read_meta_data.R")
 
 predictbase <- function (method_name, prefix_out){
-    command = paste0 ('awk \'BEGIN{printf("# predict_model;ARIMA\\n");} /^#/\' ', method_name)
-    dat <- system(command,  intern = TRUE)
     data_name = strsplit(method_name, "/")
+    command = paste0 ('awk \'BEGIN{printf("# predict_model;ARIMA\\n");} /^#/\' ', method_name)
+    meta_data = read_meta_data(method_name)
     
-    datNamed <- read.table(text=gsub("^# *", "",dat), row.names = 1, sep=";",header=FALSE)
+    if(is.na(meta_data$horizon))
+    meta_data$horizon = 1
     
-    lag_p = strtoi(datNamed["lag_p","V2"])
-    horizon = strtoi(datNamed["horizon","V2"])
-    nbre_predictions = strtoi(datNamed["number_predictions","V2"])
+    if(is.na(meta_data$lag_p))
+    meta_data$lag_p = 0
     
-    dat <- strsplit(dat, ";")
+    if(is.na(meta_data$nbre_predictions))
+    meta_data$nbre_predictions = 0
     
-    target_names = toString(datNamed["predict","V2"])
     
-    target_names = strsplit(target_names, ',')[[1]]
-
+    # read data
     data      = read.csv (method_name, comment.char = "#", header=TRUE, sep=";")
     colnames = colnames(data)
-    normalized_data = normalize(data)
-
-    for (i in 1:length(target_names)) {
-        target_name = target_names[i]
-        for(j in 1:length(colnames)) {
-            if (colnames[j] == target_name) {
-                target_index = j
-                break;
-            }
+    
+    for (target_name in meta_data$target_names)
+    {
+        for(j in 1:length(colnames))
+        if (colnames[j] == target_name) {
+            target_index = j
+            break;
         }
         output_dir = paste0(prefix_out,"Auto.Arima_",target_name,"_",data_name[[1]][length(data_name[[1]])])
         #system(paste0(command,' > ', output_dir))
@@ -57,17 +55,19 @@ predictbase <- function (method_name, prefix_out){
         
 
         #determine the lag parameter
-        if (lag_p == 0){
+        if (meta_data$lag_p == 0){
             lagMax = as.integer ((nrow(data)  - 1)  / 4)
         }
-        else lagMax = lag_p
+        else lagMax = meta_data$lag_p
 
         ## determmine the number of predictions
-        nbrePreds = as.integer(nrow(normalized_data) * 10 / 100) # 10% predictions of the size of the data
+        if (meta_data$nbre_predictions == 0)
+            nbrePreds = as.integer(nrow(data) * 10 / 100) # 10% predictions of the size of the data
+        else nbrePreds = meta_data$nbre_predictions
 
         ## compute predictions
         tryCatch({
-        preds = auto_arima_prediction (normalized_data[,target_index],lagMax, nbrePreds,horizon)
+        preds = auto_arima_prediction (data[,target_index],lagMax, nbrePreds,meta_data$horizon)
         }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
         ####
 
