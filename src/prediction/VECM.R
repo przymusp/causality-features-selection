@@ -7,7 +7,6 @@ library(lmtest)
 library(vars)
 library(parallel)
 
-#source("../tools/prediction_tools.R")
 source("../tools/read_meta_data.R")
 
 vecm_rolling <- function (ts, p, nb_preds, horizon)
@@ -16,25 +15,22 @@ vecm_rolling <- function (ts, p, nb_preds, horizon)
     # p: the lag parameter
     # nb_preds: number of predictions
     
-    training_ts = ts
+    #training_ts = ts.tail[ts, (nrow(training_ts) - nb_preds - horizon) ]
     
-    results = data.frame ()
-    target = training_ts[,1]
     pred = data.frame()
     
     for (ind in 1:nb_preds)
     {
-        mthds = training_ts[1:(nrow(training_ts) - (nb_preds-ind) - horizon),]
+        df = ts[1:(nrow(ts) - (nb_preds-ind) - horizon),]
         ####### Apply the model
         tryCatch({
-            model = VECM (data.frame(mthds), p, include = c("const"), estim = c("ML"))
+            model = VECM (data.frame(df), p, include = c("const"), estim = c("ML"))
         }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
         y = predict(model,n.ahead = horizon)
         
         for (inh in 1 : horizon)
             pred[ind,inh] = y[inh,1]
     }
-    
     return (pred)
 }
 
