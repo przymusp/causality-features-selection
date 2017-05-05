@@ -30,7 +30,11 @@ gfsm_selection <- function (args){
     graphs = list.files(path = graph_dir, all.files = FALSE)
     for (k in 1:length(graphs))
     {
-        threshold = 0
+        graph_name = substr(graphs[[k]], 1, (nchar(graphs[[k]])-4) )
+        threshold = 0.01
+        if (is.element(graph_name, c("granger_graph","varnn_causality_graph")))
+        threshold = 0.8
+        
         graph_dir = paste0("../../results/pre_selection/",meta_data$data_name,"/",graphs[k])
 
         matrix = read.table(graph_dir, header = TRUE,row.names = 1, dec = '.',sep=";", comment.char = "#")
@@ -44,18 +48,12 @@ gfsm_selection <- function (args){
                 }
 
             ### G-feature selection method
-            graph_name = substr(graphs[[k]], 1, (nchar(graphs[[k]])-4) )
+            
             out_dir = paste0(output_dir,target_name,"_",graph_name,"_GFSM.csv")
-
-            if (is.element(graph_name, c("granger_graph","varnn_causality_graph")))
-                threshold = 0.9
 
             for (nk in 1:30)
             {
                 out_dir = paste0(output_dir,target_name,"_",graph_name,"_GFSM_K=",nk,".csv")
-                
-                if (graph_name == "granger_graph")
-                    threshold = 0.8
                 
                 gfsm = fgsm (data, matrix, target_index,threshold, clus = FALSE, nk= nk)
                 
