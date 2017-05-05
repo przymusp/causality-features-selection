@@ -47,8 +47,8 @@ gfsm_selection <- function (args){
             graph_name = substr(graphs[[k]], 1, (nchar(graphs[[k]])-4) )
             out_dir = paste0(output_dir,target_name,"_",graph_name,"_GFSM.csv")
 
-            if (graph_name == "granger_graph")
-                threshold = 0.8
+            if (is.element(graph_name, c("granger_graph","varnn_causality_graph")))
+                threshold = 0.9
 
             for (nk in 1:30)
             {
