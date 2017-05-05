@@ -49,7 +49,7 @@ gfsm_selection <- function (args){
 
             ### G-feature selection method
             
-            out_dir = paste0(output_dir,target_name,"_",graph_name,"_GFSM.csv")
+            #out_dir = paste0(output_dir,target_name,"_",graph_name,"_GFSM.csv")
 
             for (nk in 1:30)
             {

@@ -87,7 +87,8 @@ for (target_name in meta_data$target_names)
 
     # Apply the Univariate feature selection method (machine learning paper)
     causSelect = naiveSelection (data, target_index, 0.9, 20)
-    out_dir = paste0(output_dir,meta_data$data_name,"_",target_name,"_","UFSM.csv")
+    #out_dir = paste0(output_dir,meta_data$data_name,"_",target_name,"_","UFSM.csv")
+    out_dir = paste0(output_dir,target_name,"_","UFSM.csv")
     selectKc = data [,causSelect]
     selectKc = data.frame (data[,target_name], selectKc)
     colnames(selectKc) = c(target_name,colnames[causSelect])
