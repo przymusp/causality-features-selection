@@ -3,8 +3,8 @@ library(tsDyn)
 library(lmtest)
 library(vars)
 library(stats) ##hclus
-library(factoextra) # for the number of clusters
-library(NbClust) # for the number of clusters
+#library(factoextra) # for the number of clusters
+#library(NbClust) # for the number of clusters
 library (kernlab)
 
 source("../tools/selection_tools.R")
