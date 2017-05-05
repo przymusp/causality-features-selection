@@ -2,18 +2,46 @@
 require(compiler)
 enableJIT(3)
 
-# TODO: change input arguments from (files are passed as argv) to (glob pattern is passed by argument). This is important as for large number of selection files we exceed the permissible argv size.
-
-## Prediction using the VECM model
-
 library(tsDyn)
 library(lmtest)
 library(vars)
 library(parallel)
-#library (crayon) #print with colors
 
 source("../tools/prediction_tools.R")
 source("../tools/read_meta_data.R")
+
+vecm_rolling <- function (ts, p, nb_preds, horizon)
+{
+    # ts: multivariate time series to predict the first attribut
+    # p: the lag parameter
+    # nb_preds: number points to predict
+    
+    training_ts = ts
+    
+    results = data.frame ()
+    target = training_ts[,1]
+    #training_ts[,1] = NULL
+    #print (ts)
+    pred = data.frame()
+    
+    for (ind in 1:nb_preds)
+    {
+        mthds = training_ts[ind:(nrow(training_ts) - (nb_preds-ind) - horizon),]
+        real = target[(length(target)- (nb_preds-ind) - horizon + 1):(length(target) - (nb_preds-ind))]
+        
+        ####### Apply the VECM model
+        tryCatch({
+            model = VECM (data.frame(mthds), p, include = c("const"), estim = c("ML"))
+        }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
+        y = predict(model,n.ahead = horizon)
+        
+        for (inh in 1 : horizon)
+        pred[ind,inh] = y[inh,1]
+    }
+    
+    return (pred)
+}
+
 
 predictbase <- function (method_name, prefix_out){
 
