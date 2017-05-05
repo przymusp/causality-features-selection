@@ -3,6 +3,7 @@ library(lmtest)
 library(vars)
 library(stats) ##hclus
 
+source("../tools/read_meta_data.R")
 
 #### SELECTKBEST based on causality
 naiveSelection <- function (F, targetIndex, threshold, lag_max)
@@ -65,41 +66,28 @@ if (length(args) > 2){
 
 data_dir = args[1]
 output_dir = paste0(args[2],"/")
-#data_dir = "../../data/ebob-l.csv"
+
 ###### Initialisations
-command = paste0 ('awk /^#/ ',data_dir)
-dat <- system(command,  intern = TRUE)
-description = dat[[2]]
-dat <- strsplit(dat, ";")
-file_name_split = strsplit(data_dir, "/")[[1]]
-data_name = file_name_split[length(file_name_split)]
-data_name = gsub(".csv", "",data_name, fixed=TRUE)
-
-dat[[3]] = gsub(" ", "", dat[[3]], fixed = TRUE)
-dat[[3]] = gsub("\r", "", dat[[3]], fixed = TRUE)
-
-target_names = c(dat[[3]])
+meta_data = read_meta_data(data_dir)
 
 ## read the dataset
 data = read.csv(data_dir, header = TRUE, dec = '.',sep=";", comment.char = "#")
 colnames = colnames(data)
 
 ## Feature selection for each target
-for (i in 2:length(target_names)) {
-    target_name = target_names[i]
-    target_name
-    for(j in 1:length(colnames)) {
-        if (colnames[j] == target_name) {
-            target_index = j
-            break;
-        }
+for (target_name in meta_data$target_names)
+{
+    for(j in 1:length(colnames))
+    if (colnames[j] == target_name) {
+        target_index = j
+        break;
     }
-    ############# Matrice des causalités
+
     selectKc = data.frame()
 
     # Apply the Univariate feature selection method (machine learning paper)
     causSelect = naiveSelection (data, target_index, 0.9, 20)
-    out_dir = paste0(output_dir,data_name,"_",target_name,"_","UFSM.csv")
+    out_dir = paste0(output_dir,meta_data$data_name,"_",target_name,"_","UFSM.csv")
     selectKc = data [,causSelect]
     selectKc = data.frame (data[,target_name], selectKc)
     colnames(selectKc) = c(target_name,colnames[causSelect])
