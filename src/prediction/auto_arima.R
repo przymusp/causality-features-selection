@@ -15,7 +15,7 @@ source("../tools/read_meta_data.R")
 
 predictbase <- function (method_name, prefix_out){
     data_name = strsplit(method_name, "/")
-    command = paste0 ('awk \'BEGIN{printf("# predict_model;ARIMA\\n");} /^#/\' ', method_name)
+    command = paste0 ('awk \'BEGIN{printf("# predict_model;AUTO_ARIMA\\n");} /^#/\' ', method_name)
     meta_data = read_meta_data(method_name)
     
     if(is.na(meta_data$horizon))
@@ -46,12 +46,12 @@ predictbase <- function (method_name, prefix_out){
         system(paste0(command,' > ', output_dir))
         cat ("# predict;", file=output_dir,append=TRUE)
         cat (target_name, file=output_dir,append=TRUE, sep='\n')
-        cat ("# method; Univariate_Auto.Arima()",file=output_dir,append=TRUE, sep='\n')
+        cat ("# method; Univariate_model()",file=output_dir,append=TRUE, sep='\n')
         cat ("# predict_model; Auto_Arima Model",file=output_dir,append=TRUE, sep='\n')
 
         ### normalisation
-        max = max(data[,target_index])
-        min = min(data[,target_index])
+        #max = max(data[,target_index])
+        #min = min(data[,target_index])
         
 
         #determine the lag parameter
@@ -69,11 +69,7 @@ predictbase <- function (method_name, prefix_out){
         tryCatch({
         preds = auto_arima_prediction (data[,target_index],lagMax, nbrePreds,meta_data$horizon)
         }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
-        ####
 
-#names(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")
-#colnames(preds) = c("t+1", "t+2", "t+3", "t+4", "t+5")
-        preds = denormalize(preds,max,min)
         write.table(preds, file = output_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";",append = TRUE)
     }
 }
