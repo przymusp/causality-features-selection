@@ -46,8 +46,8 @@ predictbase <- function (method_name, prefix_out){
         system(paste0(command,' > ', output_dir))
         cat ("# predict;", file=output_dir,append=TRUE)
         cat (target_name, file=output_dir,append=TRUE, sep='\n')
-        cat ("# method; Auto.Arima()",file=output_dir,append=TRUE, sep='\n')
-        cat ("# predict_model; Univariate_model",file=output_dir,append=TRUE, sep='\n')
+        cat ("# method; Univariate_Auto.Arima()",file=output_dir,append=TRUE, sep='\n')
+        cat ("# predict_model; Auto_Arima Model",file=output_dir,append=TRUE, sep='\n')
 
         ### normalisation
         max = max(data[,target_index])
