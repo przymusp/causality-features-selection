@@ -64,7 +64,8 @@ for (i in 1:ncol(data))
              tryCatch({
                  ## the last parameter 1 means calculating causality with time series integration
                  test =   try (causality.test (data[,j],data [,i], lag = p, differencing = TRUE))
-                 gMat[i,j] = test$Ftest()
+                 #gMat[i,j] = test$Ftest)
+                 gMat[i,j] = 1 - test$pvalue
              })
     }
         else
