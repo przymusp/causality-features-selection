@@ -39,7 +39,8 @@ if (meta_data$nbre_predictions == 0)
     meta_data$nbre_predictions = as.integer(nrow(data) * 10 / 100)
 
 # construct the output directory
-output_dir = paste0(output_dir,meta_data$data_name,"_","granger_graph.csv")
+#output_dir = paste0(output_dir,meta_data$data_name,"_","granger_graph.csv")
+output_dir = paste0(output_dir,"granger_graph.csv")
 system(paste0(command,' > ', output_dir))
 
 # Delete the last rows on which the forecast evaluations will be done
