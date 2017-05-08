@@ -64,7 +64,7 @@ predictbase <- function (method_name, prefix_out){
     preds = vecm_rolling(fs_method, p, nbrePreds, meta_data$horizon)
 
     if (nrow (preds) > 0){
-        output_dir = paste0(prefix_out,"VECM_rolling",data_name[[1]][length(data_name[[1]])])
+        output_dir = paste0(prefix_out,"VECM_rolling_",data_name[[1]][length(data_name[[1]])])
         system(paste0(command,' > ', output_dir))
         write.table(preds, file = output_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";",append = TRUE)
       }
