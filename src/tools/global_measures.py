@@ -29,7 +29,7 @@ def MASE2(training_series, testing_series, prediction_series):
 
 # All used measures
 GLOBAL_MEASURES = {
-        'rmse': lambda x,y: sqrt(mean_squared_error(x,y)),
+        'rmse': lambda x,y: np.sqrt(mean_squared_error(x,y)),
         'mse': mean_squared_error,
         'mae': mean_absolute_error,
         'medae': median_absolute_error,
