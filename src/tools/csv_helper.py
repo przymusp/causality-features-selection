@@ -55,7 +55,7 @@ def read_metadata_from_csv_file(filename):
     def __parse_metadata(line):
         record = line[1:]
         values = record.split(';')
-        return values[0].strip(), [v.strip() for v in values[1:]]
+        return values[0].strip(), [v.strip().replace('"',"") for v in values[1:]]
 
     metadata = {}
     with open(filename) as file_in:

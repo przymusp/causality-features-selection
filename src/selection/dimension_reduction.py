@@ -76,7 +76,7 @@ def dimension_reduction(fname, column, output_directory):
             # Write reduced_ts with cols in correct order (reduced_ts[cols]) to filename generated from the method name with params
             write_csv_with_metadata(reduced_ts[cols], out_fname)
         except Exception as e:
-            print ("Error with method %s"%(method))
+            print ("Error with method %s: %s"%(method,e))
             continue
 
 def main():

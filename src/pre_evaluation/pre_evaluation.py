@@ -9,7 +9,7 @@ import pickle
 import pandas as pd
 import numpy as np
 import tools.csv_helper as tools
-from tools.global_measures import GLOBAL_MEASURES
+from tools.global_measures import GLOBAL_MEASURES, MASE2
 
 
 def transform_into_output_tables(results_collection, methods_to_hotizon_dict):
@@ -69,6 +69,8 @@ def evaluate_prediction(original_data, target, predictions, horizon_range):
     results = defaultdict(dict)
     testing_data_index = len(original_data) - len(predictions) - horizon_range
     testing_data = original_data[[target]].head(testing_data_index).values
+
+    GLOBAL_MEASURES['MASE'] = lambda x,y: MASE2(testing_data, x, y)
 
     for mkey, measure in GLOBAL_MEASURES.items():
         for horizon in range(horizon_range):
