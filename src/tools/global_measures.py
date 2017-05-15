@@ -24,7 +24,7 @@ def MASE2(training_series, testing_series, prediction_series):
     n = training_series.shape[0]
     d = np.abs(  np.diff( training_series) ).sum()/(n-1)
 
-    errors = np.abs(testing_series - prediction_series )
+    errors = np.abs(testing_series.T - prediction_series )
     return errors.mean()/d
 
 # All used measures
