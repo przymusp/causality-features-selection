@@ -50,11 +50,8 @@ def transform_into_output_tables(results_collection, methods_to_hotizon_dict):
     return tables
 
 
-def get_slice_with_horizon(df, nbre_preds, target, horizon, max_horizon=5):
-    # max_horizon is hardcoded into the prediction scripts
+def get_slice_with_horizon(df, nbre_preds, target, horizon, max_horizon):
     return df[[target]].tail(nbre_preds + max_horizon - 1 - horizon).head(nbre_preds).values
-
-
 
 
 def evaluate_prediction(original_data, target, predictions, horizon_range):
@@ -67,13 +64,15 @@ def evaluate_prediction(original_data, target, predictions, horizon_range):
     """
 
     results = defaultdict(dict)
-    testing_data_index = len(original_data) - len(predictions) - horizon_range
-    testing_data = original_data[[target]].head(testing_data_index).values
 
-    GLOBAL_MEASURES['MASE'] = lambda x,y: MASE2(testing_data, x, y)
 
     for mkey, measure in GLOBAL_MEASURES.items():
         for horizon in range(horizon_range):
+
+            testing_data_index = len(original_data) - (len(predictions) + horizon_range - 1 - horizon)
+            testing_data = original_data[[target]].head(testing_data_index).values.T[0]
+            GLOBAL_MEASURES['MASE'] = lambda x,y: MASE2(testing_data, x, y)
+
             data_slice = get_slice_with_horizon(
                 original_data, len(predictions), target, horizon, horizon_range)
             results[horizon][mkey] = measure(
