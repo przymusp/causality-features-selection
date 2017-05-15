@@ -135,7 +135,7 @@ def main():
     output_directory_pre_selection = output_directory.replace("selection", "pre_selection")
 
     for fname_graph in glob.glob(output_directory_pre_selection + "/*.csv"):
-        m = re.match(".*_(te|granger)(.*).csv", fname_graph)
+        m = re.match(".*(te|granger)(.*).csv", fname_graph)
         if m is None:
             print("Error: could not match graph_type in filename", fname_graph)
             continue
