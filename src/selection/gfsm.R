@@ -17,8 +17,7 @@ gfsm_selection <- function (args){
     if( substr(output_dir, nchar(output_dir),nchar(output_dir)) != '/')
         output_dir = paste0(output_dir,'/')
         
-        
-    #command = paste0 ('awk /^#/ ',data_dir)
+    # read meta-data
     meta_data = read_meta_data(data_dir)
 
     ## read the dataset
@@ -47,10 +46,6 @@ gfsm_selection <- function (args){
                     break;
                 }
 
-            ### G-feature selection method
-            
-            #out_dir = paste0(output_dir,target_name,"_",graph_name,"_GFSM.csv")
-
             for (nk in 1:30)
             {
                 out_dir = paste0(output_dir,target_name,"_",graph_name,"_GFSM_K=",nk,".csv")
@@ -72,9 +67,8 @@ gfsm_selection <- function (args){
                 cat ("# predict;", file=out_dir,append=TRUE)
                 cat (target_name, file=out_dir,append=TRUE, sep='\n')
                 cat (paste0("# method; Granger_FE_", graph_name, "(n_components=",nk,")"),file=out_dir,append=TRUE, sep='\n')
-                ## Store the selected variables
+                ## Store the results
                 write.table(gfsm, out_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
-
             }
         }
     }
