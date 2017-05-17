@@ -16,8 +16,8 @@ gfsm_selection <- function (args){
     output_dir = args[2]
     if( substr(output_dir, nchar(output_dir),nchar(output_dir)) != '/')
         output_dir = paste0(output_dir,'/')
-
-    # Read files descriptions
+        
+        
     #command = paste0 ('awk /^#/ ',data_dir)
     meta_data = read_meta_data(data_dir)
 
