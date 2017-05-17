@@ -76,7 +76,7 @@ gfsm_selection <- function (args){
                     break;
                 }
 
-            mclapply(1:40, function(i) try(gfsm_selection_inner(output_dir, target_name, graph_name, i, data, matrix, target_index,
+            mclapply(1:40, function(i) try(gfsm_selection_inner(output_dir, target_name, graph_name, i, data, matrix, target_index, threshold, data_dir)), mc.cores=no_cores, mc.preschedule = FALSE)
         }
     }
 }
