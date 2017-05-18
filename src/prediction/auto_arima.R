@@ -18,6 +18,8 @@ predictbase <- function (method_name, prefix_out){
     command = paste0 ('awk \'BEGIN{printf("# predict_model;AUTO_ARIMA\\n");} /^#/\' ', method_name)
     meta_data = read_meta_data(method_name)
     
+    print (meta_data)
+    
     if(is.na(meta_data$horizon))
     meta_data$horizon = 1
     

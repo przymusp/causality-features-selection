@@ -31,6 +31,29 @@ vecm_rolling <- function (ts, p, nb_preds, horizon)
 
   return (pred)
 }
+## evaluation using arima model
+ar_prediction <- function (target, p, nb_preds, horizon)
+{
+    # ts: multivariate time series to predict the first attribut
+    # p: the lag parameter
+    # nb_preds: number points to predict
+    
+    results = data.frame()
+    for (ind in 1:nb_preds)
+    {
+        training_data = target[1:(length(target) - (nb_preds-ind)  - horizon)]
+        
+        tryCatch({
+            model = auto.arima (training_data,  max.p = p, max.q = 0)
+        }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
+        
+        y = forecast(model, h = horizon)[[4]]
+        
+        for (j in 1:horizon)
+            results[ind,j] = y[j]
+    }
+    return (results)
+}
 
 ## evaluation using arima model
 arima_prediction <- function (target, p, ns, nb_preds, horizon)
@@ -72,7 +95,7 @@ auto_arima_prediction <- function (target, max_p, nb_preds, horizon)
             model = auto.arima (cutTarget,  max.p=max_p, max.q=2)
         }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
         y = forecast(model, h = horizon)[[4]]
-        print(y)
+        #print(y)
         #print(y[[4]])
 
         for (j in 1:horizon)
