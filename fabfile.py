@@ -174,7 +174,7 @@ def prediction(timeseries, methods = None, selected_files=None, filter_by_mdate=
     methods_prefix = 'prediction'
     scripts = __select_methods(methods, methods_prefix)
 
-    univariate_model_regex = re.compile(".*arima.*")
+    univariate_model_regex = re.compile(".*(arima|ar).*")
     for method in scripts:
         if univariate_model_regex.match(method):
             __run_method(method, timeseries, '%s/'%(methods_prefix,), timeseries_prefix)
