@@ -15,11 +15,11 @@ source("../tools/read_meta_data.R")
 predictbase <- function (method_name, prefix_out){
     
     data_name = strsplit(method_name, "/")
-    print (data_name)
+    #print (data_name)
     command = paste0 ('awk \'BEGIN{printf("# predict_model;AR\\n");} /^#/\' ', method_name)
     meta_data = read_meta_data(method_name)
     
-    print (meta_data)
+    #print (meta_data)
 
     if(is.na(meta_data$horizon))
     meta_data$horizon = 1
@@ -35,7 +35,7 @@ predictbase <- function (method_name, prefix_out){
     data      = read.csv (method_name, comment.char = "#", header=TRUE, sep=";")
     colnames = colnames(data)
 
-    print (meta_data$target_names)
+    #print (meta_data$target_names)
     for (target_name in meta_data$target_names)
     {
         for(j in 1:length(colnames))
