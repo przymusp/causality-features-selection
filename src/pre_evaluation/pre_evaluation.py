@@ -65,14 +65,12 @@ def evaluate_prediction(original_data, target, predictions, horizon_range):
 
     results = defaultdict(dict)
 
+    for horizon in range(horizon_range):
+        testing_data_index = len(original_data) - (len(predictions) + horizon_range - 1 - horizon)
+        testing_data = original_data[[target]].head(testing_data_index).values.T[0]
+        GLOBAL_MEASURES['MASE'] = lambda x,y: MASE2(testing_data, x, y)
 
-    for mkey, measure in GLOBAL_MEASURES.items():
-        for horizon in range(horizon_range):
-
-            testing_data_index = len(original_data) - (len(predictions) + horizon_range - 1 - horizon)
-            testing_data = original_data[[target]].head(testing_data_index).values.T[0]
-            GLOBAL_MEASURES['MASE'] = lambda x,y: MASE2(testing_data, x, y)
-
+        for mkey, measure in GLOBAL_MEASURES.items():
             data_slice = get_slice_with_horizon(
                 original_data, len(predictions), target, horizon, horizon_range)
             results[horizon][mkey] = measure(

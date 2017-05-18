@@ -25,12 +25,11 @@ def MASE2(training_series, testing_series, prediction_series):
     d = np.abs(  np.diff( training_series) ).sum()/(n-1)
 
     errors = np.abs(testing_series.T - prediction_series )
-    print errors.mean()/d
     return errors.mean()/d
 
 # All used measures
 GLOBAL_MEASURES = {
-        'rmse': lambda x,y: np.sqrt(mean_squared_error(x,y)),
+        'rmse': lambda x,y: np.sqrt(mean_squared_error(x,y)/len(x)),
         'mse': mean_squared_error,
         'mae': mean_absolute_error,
         'medae': median_absolute_error,
