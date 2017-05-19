@@ -18,13 +18,13 @@ predictbase <- function (method_name, prefix_out){
     meta_data = read_meta_data(method_name)
 
     if(is.na(meta_data$horizon))
-    meta_data$horizon = 1
+        meta_data$horizon = 1
 
     if(is.na(meta_data$lag_p))
-    meta_data$lag_p = 0
+        meta_data$lag_p = 0
 
     if(is.na(meta_data$nbre_predictions))
-    meta_data$nbre_predictions = 0
+        meta_data$nbre_predictions = 0
 
 
     # read data
@@ -62,7 +62,7 @@ predictbase <- function (method_name, prefix_out){
 
         ## compute predictions
         tryCatch({
-        preds = ar_prediction (data[,target_index], lagMax, nbrePreds,meta_data$horizon)
+            preds = ar_prediction (data[,target_index], lagMax, nbrePreds,meta_data$horizon)
         }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
         # print (preds)
 
