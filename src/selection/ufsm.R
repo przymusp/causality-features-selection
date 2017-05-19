@@ -9,52 +9,54 @@ source("../tools/read_meta_data.R")
 naiveSelection <- function (F, targetIndex, threshold, lag_max)
 {
   results = c()
-  naiveClasse = c()
-  p = 1
-  causalities = data.frame()
+  #naiveClasse = c()
+  #p = 1
+  #causalities = data.frame()
 
-  for (j in 1:ncol(F))
-  {
+#for (j in 1:ncol(F))
+#{
    # var = VARselect(F,lag.max=lag_max)
     #lag = var$selection[1]
-    lag = lag_max
-    if (j != targetIndex) {
-      tryCatch({
-              test = try (grangertest (F[,targetIndex] ~ F[,j], order = lag))
-              test1 = try (  grangertest (F[,j] ~ F[,targetIndex], order = lag))
-              if(test[1] == "Error in vc[ovar, ovar] : indice hors limites\n")
-              {
-                    causalities[p,1] = 0
-              } else {
-                     # causality[p,1] = 1 - test$`Pr(>F)`[2]
-                      causalities[p,1] = 1 - test$`Pr(>F)`[2]
-              }
+    #lag = lag_max
+    #if (j != targetIndex) {
+    # tryCatch({
+    #         test = try (grangertest (F[,targetIndex] ~ F[,j], order = lag))
+    #         test1 = try (  grangertest (F[,j] ~ F[,targetIndex], order = lag))
+    #         if(test[1] == "Error in vc[ovar, ovar] : indice hors limites\n")
+    #         {
+    #               causalities[p,1] = 0
+    #         } else {
+    #                # causality[p,1] = 1 - test$`Pr(>F)`[2]
+    #                 causalities[p,1] = 1 - test$`Pr(>F)`[2]
+    #         }
 
-              if(test1[1] == "Error in vc[ovar, ovar] : indice hors limites\n")
-                {
-                  causalities[p,2] = 0
-                } else {
-                        #causality[p,2] = 1 - test1$`Pr(>F)`[2]
-                        causalities[p,2] = 1 - test1$`Pr(>F)`[2]
-                        }
-              }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
+    #         if(test1[1] == "Error in vc[ovar, ovar] : indice hors limites\n")
+    #               {
+    #                 causalities[p,2] = 0
+    #               } else {
+    #                       #causality[p,2] = 1 - test1$`Pr(>F)`[2]
+    #                       causalities[p,2] = 1 - test1$`Pr(>F)`[2]
+    #                       }
+    #             }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
 
-      causalities[p,3] = j
-      p = p+1
-    }
-  }
+    #     causalities[p,3] = j
+    #     p = p+1
+    #   }
+    # }
+    
+    graph_dir = paste0("../../results/pre_selection/",meta_data$data_name,"/granger_graph.csv")
+    matrix = read.table(graph_dir, header = TRUE,row.names = 1, dec = '.',sep=";", comment.char = "#")
 
-  p = 1
-   for (i in 1:nrow(causalities))
+   j = 1
+   for (i in 1:ncol(causalities))
    {
-       if (causalities[i,1] >= threshold && causalities[i,2] < threshold)
-       {
-         results[p] = causalities[i,3]
-         p = p + 1
-       }
+       if (i != targetIndex && matrix[i,targetIndex] >= threshold && matrix[targetIndex,i] < threshold)
+        {
+            results[j] = i
+            j = j + 1
+        }
    }
   return (results)
-  #return (causalities)
 }
 ##### Read arguments
 args = commandArgs(trailingOnly=TRUE)
