@@ -52,29 +52,32 @@ gMat = data.frame(nrow=ncol(data), ncol=ncol(data))
 for (i in 1:ncol(data))
 {
     for (j in 1:ncol(data))
-     {
-         if (meta_data$lag_p == 0){
-         lagMax = as.integer ((nrow(data)  - 1)  / (2*(ncol(data) + 1)))
-         }
-         else lagMax = meta_data$lag_p
-         var = VARselect(data.frame(data[,j], data [,i]),lag.max= lagMax)
-         lag = var$selection[1]
+    {
+        if (meta_data$lag_p == 0){
+            lagMax = as.integer ((nrow(data)  - 1)  / (2*(ncol(data) + 1)))
+        }
+        else lagMax = meta_data$lag_p
+        var = VARselect(data.frame(data[,j], data [,i]),lag.max= lagMax)
+        lag = var$selection[1]
 
 
-         if (j != i) {
-             tryCatch({
-                 test =   try (grangertest (data[,j] ~ data [,i], order = lag))
-                 if(test[1] == "Error in vc[ovar, ovar] : indice hors limites\n")
-                 {
-                     gMat[i,j] = 0
-                 }
-                 else
-                    gMat[i,j] = 1 - test$`Pr(>F)`[2]}, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
-             #gMat[i,j] = test$
-    }
+        if (j != i) {
+            tryCatch(
+                     {
+                         test =   try (grangertest (data[,j] ~ data [,i], order = lag))
+                         if(test[1] == "Error in vc[ovar, ovar] : indice hors limites\n")
+                         {
+                             gMat[i,j] = 0
+                         }
+                         else
+                             gMat[i,j] = 1 - test$`Pr(>F)`[2]
+                     }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")}
+            )
+            #gMat[i,j] = test$
+        }
         else
             gMat[i,j] = 0
-  }
+    }
 }
 gMat = data.frame(c(colnames(data)),gMat)
 colnames(gMat) <- c(' ', colnames(data))

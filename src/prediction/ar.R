@@ -13,29 +13,24 @@ source("../tools/prediction_tools.R")
 source("../tools/read_meta_data.R")
 
 predictbase <- function (method_name, prefix_out){
-    
     data_name = strsplit(method_name, "/")
-    #print (data_name)
     command = paste0 ('awk \'BEGIN{printf("# predict_model;AR\\n");} /^#/\' ', method_name)
     meta_data = read_meta_data(method_name)
-    
-    #print (meta_data)
 
     if(is.na(meta_data$horizon))
-    meta_data$horizon = 1
-    
+        meta_data$horizon = 1
+
     if(is.na(meta_data$lag_p))
-    meta_data$lag_p = 0
-    
+        meta_data$lag_p = 0
+
     if(is.na(meta_data$nbre_predictions))
-    meta_data$nbre_predictions = 0
+        meta_data$nbre_predictions = 0
 
 
     # read data
     data      = read.csv (method_name, comment.char = "#", header=TRUE, sep=";")
     colnames = colnames(data)
 
-    #print (meta_data$target_names)
     for (target_name in meta_data$target_names)
     {
         for(j in 1:length(colnames))
@@ -60,14 +55,14 @@ predictbase <- function (method_name, prefix_out){
         }
         else lagMax = meta_data$lag_p
 
-        ## the number of predictions
-        if (meta_data$nbre_predictions == 0)
-            # 10% predictions of the size of the data
+        ## determmine the number of predictions
+        if (meta_data$nbre_predictions == 0) # 10% predictions of the size of the data
             nbrePreds = as.integer(nrow(data) * 10 / 100)
         else nbrePreds = meta_data$nbre_predictions
 
+        ## compute predictions
         tryCatch({
-        preds = ar_prediction (data[,target_index], lagMax, nbrePreds,meta_data$horizon)
+            preds = ar_prediction (data[,target_index], lagMax, nbrePreds,meta_data$horizon)
         }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
         # print (preds)
 
