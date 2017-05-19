@@ -4,6 +4,7 @@ import sys
 import subprocess
 from os import path
 import pandas as pd
+from six import StringIO
 
 if __name__ == "__main__":
     fname, output_directory = parse_selection_arguments(sys.argv)
@@ -12,34 +13,35 @@ if __name__ == "__main__":
     if len(sys.argv) == 4:
         is_rolling = True
 
+    df_in = read_csv_and_metadata(fname)
+    org_columns = list(df_in.columns)
+    m_columns = ['a%d'%(i) for i in range(len(org_columns))]
+    maping_of_columns = dict(zip(m_columns, org_columns))
 
-    # TODO: now writen as awk script.  Consider if it is worth rewrite as Python ? (mawk implementation may be faster then pure python)
-    to_te_tool = "awk '!/^#/{gsub(/;/,\" \"); gsub(/ +/,\" \"); print}'"
+    in_str_csv = df_in.to_csv(sep=' ', header=m_columns, index='False')
+
+    # External tool used for callculating TE
     te_tool = "~/src/libtransferentropy/bin/pairwise_transfer_entropy -b 16 -w 1"
-    from_te_tool = "awk '{gsub(/ +/,\" \"); gsub(/(^ +)|( +$)/,\"\"); print}'"
-    awk_cmd = " %(to_te_tool)s %(fname)s | %(te_tool)s | %(from_te_tool)s > %(out_fname)s "
+
+    p = subprocess.Popen(
+            te_tool.split(" "),
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            shell=True
+            )
+
+    te_stdout = p.communicate(input=in_str_csv)[0]
+    out_str_csv = te_stdout.decode()
+    df_out = pd.read_csv(StringIO(out_str_csv), sep=r"\s*", index_col=0, engine='python')
+    df_out.rename(index=maping_of_columns, columns=maping_of_columns, inplace=True)
+
 
     out_fname = output_directory + "/" + path.basename(fname).split(".")[0] + '_te_graph.csv'
 
-    params_dict = {
-            'fname':fname,
-            'te_tool':te_tool,
-            'to_te_tool': to_te_tool,
-            'from_te_tool': from_te_tool,
-            'out_fname':out_fname,
-            }
     if is_rolling:
         print('ERROR: no rolling version avalible now')
         # TODO: write special function
-        # awk_cmd = "awk '!/^#/' | awk 'NR == 1 || (NR >=%(START)s && <=%(END)s){gsub(/;/,\" \"); gsub(/ +/,\" \"); print}' %(fname)s | %(te_tool)s | awk '{gsub(/ +/,\" \"); gsub(/(^ +)|( +$)/,\"\"); print}' > %(out_fname)s "
-    # awk_cmd %= {'fname':fname, 'te_tool':te_tool, 'out_fname':out_fname}
-    else:
-        awk_cmd %= params_dict
-
-    subprocess.call(awk_cmd, shell=True)
-
-    df_out = pd.read_csv(out_fname, sep=' ', index_col=0)
-    df_in = read_csv_and_metadata(fname)
 
     # shallow copy is Ok here
     df_out.meta_header = df_in.meta_header
