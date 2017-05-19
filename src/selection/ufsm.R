@@ -80,28 +80,27 @@ matrix = read.table(graph_dir, header = TRUE,row.names = 1, dec = '.',sep=";", c
 for (target_name in meta_data$target_names)
 {
     for(j in 1:length(colnames))
-    if (colnames[j] == target_name) {
-        target_index = j
-        break;
-    }
+        if (colnames[j] == target_name) {
+            target_index = j
+            break;
+        }
 
     selectKc = data.frame()
 
     # Apply the Univariate feature selection method (machine learning paper)
     causSelect = naiveSelection (data, target_index,matrix, 0.9, meta_data$lag_p)
-    #out_dir = paste0(output_dir,meta_data$data_name,"_",target_name,"_","UFSM.csv")
     out_dir = paste0(output_dir,target_name,"_","UFSM.csv")
     selectKc = data [,causSelect]
     selectKc = data.frame (data[,target_name], selectKc)
     colnames(selectKc) = c(target_name,colnames[causSelect])
 
-    # Bref description of the file
+    # Output Metadata
     command = paste0 ('awk \'/^#/ && !/^# *predict/\' ',data_dir)
     system(paste0(command,' > ', out_dir))
     cat ("# predict;", file=out_dir,append=TRUE)
     cat (target_name, file=out_dir,append=TRUE, sep='\n')
-    cat ("# method; UFSM(Univariate feature selection method)",file=out_dir,append=TRUE, sep='\n')
+    cat ("# method; UFSM (Univariate feature selection method)",file=out_dir,append=TRUE, sep='\n')
 
-    ## Store the selected variables
+    ## Store the results
     write.table(selectKc, out_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
 }
