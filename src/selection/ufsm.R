@@ -6,7 +6,7 @@ library(stats) ##hclus
 source("../tools/read_meta_data.R")
 
 #### SELECTKBEST based on causality
-naiveSelection <- function (F, targetIndex, threshold, lag_max)
+naiveSelection <- function (F, targetIndex, matrix, threshold, lag_max)
 {
   results = c()
   #naiveClasse = c()
@@ -43,9 +43,6 @@ naiveSelection <- function (F, targetIndex, threshold, lag_max)
     #     p = p+1
     #   }
     # }
-    
-    graph_dir = paste0("../../results/pre_selection/",meta_data$data_name,"/granger_graph.csv")
-    matrix = read.table(graph_dir, header = TRUE,row.names = 1, dec = '.',sep=";", comment.char = "#")
 
    j = 1
    for (i in 1:ncol(causalities))
@@ -76,6 +73,9 @@ meta_data = read_meta_data(data_dir)
 data = read.csv(data_dir, header = TRUE, dec = '.',sep=";", comment.char = "#")
 colnames = colnames(data)
 
+graph_dir = paste0("../../results/pre_selection/",meta_data$data_name,"/granger_graph.csv")
+matrix = read.table(graph_dir, header = TRUE,row.names = 1, dec = '.',sep=";", comment.char = "#")
+
 ## Feature selection for each target
 for (target_name in meta_data$target_names)
 {
@@ -88,7 +88,7 @@ for (target_name in meta_data$target_names)
     selectKc = data.frame()
 
     # Apply the Univariate feature selection method (machine learning paper)
-    causSelect = naiveSelection (data, target_index, 0.9, 20)
+    causSelect = naiveSelection (data, target_index,matrix, 0.9, meta_data$lag_p)
     #out_dir = paste0(output_dir,meta_data$data_name,"_",target_name,"_","UFSM.csv")
     out_dir = paste0(output_dir,target_name,"_","UFSM.csv")
     selectKc = data [,causSelect]
