@@ -45,7 +45,7 @@ naiveSelection <- function (F, targetIndex, matrix, threshold, lag_max)
     # }
 
    j = 1
-   for (i in 1:ncol(causalities))
+   for (i in 1:ncol(matrix))
    {
        if (i != targetIndex && matrix[i,targetIndex] >= threshold && matrix[targetIndex,i] < threshold)
         {
