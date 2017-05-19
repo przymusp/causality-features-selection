@@ -1,3 +1,4 @@
+########################## vecm_rolling ##########################
 vecm_rolling <- function (ts, p, nb_preds, horizon)
 {
   # ts: multivariate time series to predict the first attribut
@@ -31,13 +32,27 @@ vecm_rolling <- function (ts, p, nb_preds, horizon)
 
   return (pred)
 }
-## evaluation using arima model
+
+####################### naive benchmark methode #########################
+naive_benchmark <- function (target, nb_preds, horizon)
+{
+    results = data.frame()
+    for (ind in 1:nb_preds)
+    {
+        training_data = target[1:(length(target) - (nb_preds-ind)  - horizon)]
+        
+        for (j in 1:horizon)
+        {
+            results[ind,j] = mean (training_data)
+            training_data[length(training_data) + 1] = results[ind,j]
+        }
+    }
+    return (results)
+}
+
+######################### ar model ###################################
 ar_prediction <- function (target, p, nb_preds, horizon)
 {
-    # ts: multivariate time series to predict the first attribut
-    # p: the lag parameter
-    # nb_preds: number points to predict
-    
     results = data.frame()
     for (ind in 1:nb_preds)
     {
@@ -55,7 +70,7 @@ ar_prediction <- function (target, p, nb_preds, horizon)
     return (results)
 }
 
-## evaluation using arima model
+##################### arima model #######################################
 arima_prediction <- function (target, p, ns, nb_preds, horizon)
 {
   # ts: multivariate time series to predict the first attribut
@@ -78,7 +93,8 @@ arima_prediction <- function (target, p, ns, nb_preds, horizon)
   }
   return (results)
 }
-## evaluation using auto.arima model
+
+########################## auto.arima model ##################################
 auto_arima_prediction <- function (target, max_p, nb_preds, horizon)
 {
     # ts: multivariate time series to predict the first attribut
@@ -94,9 +110,8 @@ auto_arima_prediction <- function (target, max_p, nb_preds, horizon)
         tryCatch({
             model = auto.arima (cutTarget,  max.p=max_p, max.q=2)
         }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
+        
         y = forecast(model, h = horizon)[[4]]
-        #print(y)
-        #print(y[[4]])
 
         for (j in 1:horizon)
             results[ind,j] = y[j]
@@ -104,7 +119,7 @@ auto_arima_prediction <- function (target, max_p, nb_preds, horizon)
     return (results)
 }
 
-### Normalize a dataframe
+######################## Normalize a dataframe ##########################
 normalize <- function (F)
 {
   for (i in 1 : ncol(F))
@@ -117,7 +132,7 @@ normalize <- function (F)
   return (F)
 }
 
-### denormalize a dataframe
+########################## denormalize a dataframe ##########################
 denormalize <- function (F,max,min)
 {
   for (i in 1 : ncol(F))
