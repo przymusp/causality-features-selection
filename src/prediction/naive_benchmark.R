@@ -12,6 +12,7 @@ library(forecast)
 source("../tools/prediction_tools.R")
 source("../tools/read_meta_data.R")
 
+####################################################################################
 predictbase <- function (method_name, prefix_out){
     data_name = strsplit(method_name, "/")
     command = paste0 ('awk \'BEGIN{printf("# predict_model;naive-benchmark\\n");} /^#/\' ', method_name)
@@ -40,15 +41,13 @@ predictbase <- function (method_name, prefix_out){
             }
         output_dir = paste0(prefix_out,"naive-approach_",target_name,"_",data_name[[1]][length(data_name[[1]])])
 
-        # Bref description of the file
+        # Output metadata
         command = paste0 ('awk \'/^#/ && !/^# *predict/\' ',method_name)
         system(paste0(command,' > ', output_dir))
         cat ("# predict;", file=output_dir,append=TRUE)
-        # print (target_name)
         cat (target_name, file=output_dir,append=TRUE, sep='\n')
         cat ("# method; Univariate_model()",file=output_dir,append=TRUE, sep='\n')
         cat ("# predict_model; naive_benchmark",file=output_dir,append=TRUE, sep='\n')
-
 
         ## determmine the number of predictions
         if (meta_data$nbre_predictions == 0) # 10% predictions of the size of the data
@@ -58,9 +57,11 @@ predictbase <- function (method_name, prefix_out){
         ## compute predictions
         preds = naive_benchmark (data[,target_index], nbrePreds,meta_data$horizon)
 
+        ## Store results
         write.table(preds, file = output_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";",append = TRUE)
     }
 }
+####################################################################################
 
 args = commandArgs(trailingOnly=TRUE)
 largs = length(args)
