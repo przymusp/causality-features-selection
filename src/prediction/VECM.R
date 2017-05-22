@@ -21,7 +21,7 @@ vecm_rolling <- function (ts, p, nb_preds, horizon)
 
     for (ind in 1:nb_preds)
     {
-        df = ts[1:(nrow(ts) - (nb_preds-ind) - horizon),]
+        df = ts[ind:(nrow(ts) - (nb_preds-ind) - horizon),]
         ####### Apply the model
         tryCatch({
             model = VECM (data.frame(df), p, include = c("const"), estim = c("ML"))
