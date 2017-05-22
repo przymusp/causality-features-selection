@@ -46,7 +46,7 @@ predictbase <- function (method_name, prefix_out){
         cat ("# predict;", file=output_dir,append=TRUE)
         # print (target_name)
         cat (target_name, file=output_dir,append=TRUE, sep='\n')
-        cat ("# method; naive_model()",file=output_dir,append=TRUE, sep='\n')
+        cat ("# method; Univariate_model()",file=output_dir,append=TRUE, sep='\n')
         cat ("# predict_model; naive_benchmark",file=output_dir,append=TRUE, sep='\n')
 
 
