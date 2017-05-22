@@ -17,30 +17,30 @@ predictbase <- function (method_name, prefix_out){
     data_name = strsplit(method_name, "/")
     command = paste0 ('awk \'BEGIN{printf("# predict_model;AUTO_ARIMA\\n");} /^#/\' ', method_name)
     meta_data = read_meta_data(method_name)
-    
+
     print (meta_data)
-    
+
     if(is.na(meta_data$horizon))
     meta_data$horizon = 1
-    
+
     if(is.na(meta_data$lag_p))
     meta_data$lag_p = 0
-    
+
     if(is.na(meta_data$nbre_predictions))
     meta_data$nbre_predictions = 0
-    
-    
+
+
     # read data
     data      = read.csv (method_name, comment.char = "#", header=TRUE, sep=";")
     colnames = colnames(data)
-    
+
     for (target_name in meta_data$target_names)
     {
         for(j in 1:length(colnames))
-        if (colnames[j] == target_name) {
-            target_index = j
-            break;
-        }
+            if (colnames[j] == target_name) {
+                target_index = j
+                break;
+            }
         output_dir = paste0(prefix_out,"Auto.Arima_",target_name,"_",data_name[[1]][length(data_name[[1]])])
         #system(paste0(command,' > ', output_dir))
         # Bref description of the file
@@ -49,14 +49,14 @@ predictbase <- function (method_name, prefix_out){
         cat ("# predict;", file=output_dir,append=TRUE)
         cat (target_name, file=output_dir,append=TRUE, sep='\n')
         cat ("# method; Univariate_model()",file=output_dir,append=TRUE, sep='\n')
-        cat ("# predict_model; Auto_Arima Model",file=output_dir,append=TRUE, sep='\n')
+        cat ("# predict_model; Auto_Arima",file=output_dir,append=TRUE, sep='\n')
 
         ### normalisation
         #max = max(data[,target_index])
         #min = min(data[,target_index])
-        
 
-        #determine the lag parameter
+
+        # determine the lag parameter
         if (meta_data$lag_p == 0){
             lagMax = as.integer ((nrow(data)  - 1)  / 4)
         }
