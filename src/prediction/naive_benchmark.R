@@ -53,9 +53,11 @@ predictbase <- function (method_name, prefix_out){
         if (meta_data$nbre_predictions == 0) # 10% predictions of the size of the data
             nbrePreds = as.integer(nrow(data) * 10 / 100)
         else nbrePreds = meta_data$nbre_predictions
+        
 
         ## compute predictions
         preds = naive_benchmark (data[,target_index], nbrePreds,meta_data$horizon)
+        
 
         ## Store results
         write.table(preds, file = output_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";",append = TRUE)
