@@ -60,9 +60,10 @@ predictbase <- function (method_name, prefix_out){
             nbrePreds = as.integer(nrow(data) * 10 / 100)
         else nbrePreds = meta_data$nbre_predictions
 
+        nd = ndiffs(data[,target_index],alpha=0.05,test="adf");
         ## compute predictions
         tryCatch({
-            preds = ar_prediction (data[,target_index], lagMax, nbrePreds,meta_data$horizon)
+            preds = ar_prediction (data[,target_index], 4,nd, nbrePreds,meta_data$horizon)
         }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
         # print (preds)
 
