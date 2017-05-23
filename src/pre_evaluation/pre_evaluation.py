@@ -5,6 +5,7 @@ import glob
 import re
 from collections import defaultdict, OrderedDict
 import pickle
+import hashlib
 
 import pandas as pd
 import numpy as np
@@ -181,11 +182,14 @@ def read_and_evaluate_results():
             print("Error: could parse the selection method name,\
                     please use 'method_group_name(other_params, n_components=k, other_params)'.\
                     If no n_components param is found group is treated as one element group.")
-        r_match = n_components_match.search(id_name)
 
-        id_name = 0
+        r_match = n_components_match.search(id_name)
+        m_id = hashlib.sha1(id_name.encode('UTF-8')).hexdigest()[:10]
         if r_match is not None:
-            id_name = int(r_match.group(1))
+            id_name = str(int(r_match.group(1))) + ":" + m_id
+        else:
+            id_name = str(0) + ":" + m_id
+
 
         for k, evaluation_result in ret.items():
             results_collection[predict_model][target][k][
