@@ -76,6 +76,8 @@ colnames = colnames(data)
 graph_dir = paste0("../../results/pre_selection/",meta_data$data_name,"/granger_graph.csv")
 matrix = read.table(graph_dir, header = TRUE,row.names = 1, dec = '.',sep=";", comment.char = "#")
 
+print (matrix)
+
 ## Feature selection for each target
 for (target_name in meta_data$target_names)
 {
@@ -91,7 +93,7 @@ for (target_name in meta_data$target_names)
     causSelect = naiveSelection (data, target_index,matrix, 0.9, meta_data$lag_p)
     out_dir = paste0(output_dir,target_name,"_","UFSM.csv")
     selectKc = data [,causSelect]
-    selectKc = data.frame (data[,target_name], selectKc)
+    selectKc = data.frame (data[,target_index], selectKc)
     colnames(selectKc) = c(target_name,colnames[causSelect])
 
     # Output Metadata
