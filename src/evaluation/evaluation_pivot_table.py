@@ -68,7 +68,7 @@ class transform_into_pivot_tables(object):
 
     def plot_comparison_summary(self, cmp_summary, out_fname):
         plt.gcf().subplots_adjust(left=0.30, bottom=0.30)
-        self.__plot_heatmap(cmp_summary/143, out_fname)
+        self.__plot_heatmap(cmp_summary, out_fname)
 
     def plot_rank_summary(self, rank_summary, out_fname):
         heat_map = pd.DataFrame.from_dict(rank_summary).fillna(0).T
@@ -107,8 +107,6 @@ class transform_into_pivot_tables(object):
 
         c = 0
         for target in self.tables:
-            if target not in ['RGDP', 'CPIALL']: 
-                continue
             for horizon in self.tables[target]:
                 for predict_model in self.tables[target][horizon]:
                     if horizon != select_horizon or predict_model in exclude_predict_models:
@@ -116,17 +114,17 @@ class transform_into_pivot_tables(object):
 
                     min_mase_matrix = self.get_min_of_of_group(target, horizon, predict_model, measure)
 
-                    for index, row in min_mase_matrix.iterrows():
-                        sum_measure[row['group']] += row[measure]
-                        count_measure[row['group']] += 1.0
-                        count_imp_measure[row['group']] += 1 if row[measure] < 1 else 0
-                        sum_imp_measure[row['group']] += row[measure] if row[measure] < 1 else 0
+                    # for index, row in min_mase_matrix.iterrows():
+                    #     sum_measure[row['group']] += row[measure]
+                    #     count_measure[row['group']] += 1.0
+                    #     count_imp_measure[row['group']] += 1 if row[measure] < 1 else 0
+                    #     sum_imp_measure[row['group']] += row[measure] if row[measure] < 1 else 0
 
-                    print min_mase_matrix, target
+                    # print min_mase_matrix, target
 
-                    rank_matrix = self.get_rank_mase_matrix(min_mase_matrix, measure)
-                    for row in rank_matrix.itertuples():
-                        rank_summary[row.group][int(row.rank)] += 1
+                    # rank_matrix = self.get_rank_mase_matrix(min_mase_matrix, measure)
+                    # for row in rank_matrix.itertuples():
+                    #     rank_summary[row.group][int(row.rank)] += 1
 
                     temp_cmp_summary = self.get_comparison_mase_matrix(min_mase_matrix, measure)
                     if cmp_summary is None:
@@ -135,14 +133,14 @@ class transform_into_pivot_tables(object):
                         cmp_summary += temp_cmp_summary
 
         plot_fname_prefix = "%s/%s" %(self.out_dir, timeseries_prefix)
-        self.plot_rank_summary(rank_summary, plot_fname_prefix + "_rank_%s.pdf"%(measure))
-        avg = pd.DataFrame.from_dict(sum_measure, orient='index')
-        avg['avg'] = avg / pd.DataFrame.from_dict(count_measure, orient='index')
-        avg['count'] = pd.DataFrame.from_dict(count_measure, orient='index')
-        avg['count_imp'] = pd.DataFrame.from_dict(count_imp_measure, orient='index')
-        avg['avg_imp'] = pd.DataFrame.from_dict(sum_imp_measure, orient='index')
-        avg['avg_imp'] /= avg['count_imp']
-        print avg
+        # self.plot_rank_summary(rank_summary, plot_fname_prefix + "_rank_%s.pdf"%(measure))
+        # avg = pd.DataFrame.from_dict(sum_measure, orient='index')
+        # avg['avg'] = avg / pd.DataFrame.from_dict(count_measure, orient='index')
+        # avg['count'] = pd.DataFrame.from_dict(count_measure, orient='index')
+        # avg['count_imp'] = pd.DataFrame.from_dict(count_imp_measure, orient='index')
+        # avg['avg_imp'] = pd.DataFrame.from_dict(sum_imp_measure, orient='index')
+        # avg['avg_imp'] /= avg['count_imp']
+        # print (avg)
 
         # avg_measure_matrix[measure] /= float(c)
         # print c
@@ -161,8 +159,8 @@ def main():
         tables_real = pickle.load(in_file)
         error_list  = pickle.load(in_file)
 
-    exclude_pmodels = ['Auto_Arima Model', 'Arima', 'Univariate_model', 'VECM-rolling']
-    # exclude_pmodels = ['Arima']
+    # exclude_pmodels = ['Auto_Arima Model', 'Arima', 'Univariate_model', 'VECM-rolling']
+    exclude_pmodels = []
     exclude_smodels = []
 
     transform_into_pivot_tables(out_dir, tables_real, error_list).write(timeseries_prefix, 'MASE', 0, exclude_pmodels)
