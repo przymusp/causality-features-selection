@@ -5,6 +5,7 @@ import glob
 import re
 from collections import defaultdict, OrderedDict
 import pickle
+import hashlib
 
 import pandas as pd
 import numpy as np
@@ -14,33 +15,34 @@ from tools.global_measures import GLOBAL_MEASURES, MASE2
 
 def transform_into_output_tables(results_collection, methods_to_hotizon_dict):
 
-    # Add univariate model to other prediction models
-    u_model = None
-    if "Univariate_model" in results_collection:
-        u_model = results_collection['Univariate_model']
-
+    univariate_models = ['Auto_Arima', 'naive_benchmark', 'Arima', 'Ar']
     tables = defaultdict(lambda: defaultdict(dict))
+    results_collection = dict(results_collection)
 
     for predict_model in results_collection:
-        if predict_model == "Univariate_model":
+        # Univariate models will be added to all multivatiate tables for easy comparison
+        if predict_model in univariate_models:
             continue
 
         for target in results_collection[predict_model]:
             # diffrent timehorizons
             for horizon in range(methods_to_hotizon_dict[predict_model]):
+
+                # Add results multivariate prediction
                 new_row = [
                     OrderedDict({'predict': predict_model, 'group': group, 'method': mtype}.items() + measures.items())
                     for group in results_collection[predict_model][target][horizon]
                     for mtype, measures in results_collection[predict_model][target][horizon][group].items()
                 ]
-                if u_model is not None:
+                for u_model in univariate_models:
                     try:
-                        prefix_cols = {'predict': 'Univariate_model', 'group': 'Univariate_model', 'method': 0}
-                        new_row.append(OrderedDict(
-                            prefix_cols.items() + u_model[target][horizon]['Univariate_model'][0].items()
-                        ))
+                        new_row.extend([
+                            OrderedDict({'predict': u_model, 'group': u_model, 'method': mtype}.items() + measures.items())
+                            for group in results_collection[u_model][target][horizon]
+                            for mtype, measures in results_collection[u_model][target][horizon][group].items()
+                        ])
                     except Exception as e:
-                        print e
+                        print(e)
                         pass
 
                 df = pd.DataFrame.from_dict(new_row)
@@ -180,11 +182,14 @@ def read_and_evaluate_results():
             print("Error: could parse the selection method name,\
                     please use 'method_group_name(other_params, n_components=k, other_params)'.\
                     If no n_components param is found group is treated as one element group.")
-        r_match = n_components_match.search(id_name)
 
-        id_name = 0
+        r_match = n_components_match.search(id_name)
+        m_id = hashlib.sha1(id_name.encode('UTF-8')).hexdigest()[:10]
         if r_match is not None:
-            id_name = int(r_match.group(1))
+            id_name = str(int(r_match.group(1))) + ":" + m_id
+        else:
+            id_name = str(0) + ":" + m_id
+
 
         for k, evaluation_result in ret.items():
             results_collection[predict_model][target][k][
