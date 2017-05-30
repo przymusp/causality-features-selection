@@ -1,45 +1,15 @@
-########################## vecm_rolling ##########################
-vecm_rolling <- function (ts, p, nb_preds, horizon)
-{
-  # ts: multivariate time series to predict the first attribut
-  # p: the lag parameter
-  # nb_preds: number points to predict
-
-  training_ts = ts
-  
-  results = data.frame ()
-  target = training_ts[,1]
-  #training_ts[,1] = NULL
-  #print (ts)
-  pred = data.frame()
-
-  for (ind in 1:nb_preds)
-  {
-    
-    #cutTarget = target[nb_preds:(length(target) - (nb_preds-ind)  - horizon)]
-    mthds = training_ts[ind:(nrow(training_ts) - (nb_preds-ind) - horizon),]
-    real = target[(length(target)- (nb_preds-ind) - horizon + 1):(length(target) - (nb_preds-ind))]
-
-    ####### Apply the VECM model
-    tryCatch({
-      model = VECM (data.frame(mthds), p, include = c("const"), estim = c("ML"))
-    }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
-    y = predict(model,n.ahead = horizon)
-    
-    for (inh in 1 : horizon)
-        pred[ind,inh] = y[inh,1]
-  }
-
-  return (pred)
-}
 
 ####################### naive benchmark methode #########################
-naive_benchmark <- function (target, nb_preds, horizon)
+naive_benchmark <- function (target, nb_preds, horizon, type = "cross_validation")
 {
     results = data.frame()
     for (ind in 1:nb_preds)
     {
-        training_data = target[ind:(length(target) - (nb_preds-ind)  - horizon)]
+        if (type == "cross_validation")
+            training_data = target[1:(length(target) - (nb_preds - ind)  - horizon)]
+        
+        esle if (type == "rolling")
+            training_data = target[ind:(length(target) - (nb_preds - ind)  - horizon)]
         
         for (j in 1:horizon)
         {
@@ -51,12 +21,16 @@ naive_benchmark <- function (target, nb_preds, horizon)
 }
 
 ######################### ar model ###################################
-ar_prediction <- function (target, p, ns, nb_preds, horizon)
+ar_prediction <- function (target, p, ns, nb_preds, horizon, type = "cross_validation")
 {
     results = data.frame()
     for (ind in 1:nb_preds)
     {
-        training_data = target[ind:(length(target) - (nb_preds - ind)  - horizon)]
+        if (type == "cross_validation")
+            training_data = target[1:(length(target) - (nb_preds - ind)  - horizon)]
+        
+        esle if (type == "rolling")
+            training_data = target[ind:(length(target) - (nb_preds - ind)  - horizon)]
         
         tryCatch({
             model = arima (training_data,  order = c(p, 0, 0))
@@ -73,7 +47,7 @@ ar_prediction <- function (target, p, ns, nb_preds, horizon)
 }
 
 ##################### arima model #######################################
-arima_prediction <- function (target, p, ns, nb_preds, horizon)
+arima_prediction <- function (target, p, ns, nb_preds, horizon, type = "cross_validation")
 {
   # ts: multivariate time series to predict the first attribut
   # p: the lag parameter
@@ -82,11 +56,14 @@ arima_prediction <- function (target, p, ns, nb_preds, horizon)
   results = data.frame()
   for (ind in 1:nb_preds)
   {
-    cutTarget = target[ind:(length(target) - (nb_preds-ind)  - horizon)]
-    real = target[(length(target)- (nb_preds-ind) -horizon+1):(length(target) - (nb_preds-ind))]
+      if (type == "cross_validation")
+        training_data = target[1:(length(target) - (nb_preds - ind)  - horizon)]
+      
+      esle if (type == "rolling")
+        training_data = target[ind:(length(target) - (nb_preds - ind)  - horizon)]
     
     tryCatch({
-      model = arima (cutTarget,  order = c(p, ns, 1))
+      model = arima (training_data,  order = c(p, ns, 1))
     }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
     y = predict(model, n.ahead = horizon)$pred
 
@@ -97,7 +74,7 @@ arima_prediction <- function (target, p, ns, nb_preds, horizon)
 }
 
 ########################## auto.arima model ##################################
-auto_arima_prediction <- function (target, max_p, nb_preds, horizon)
+auto_arima_prediction <- function (target, max_p, nb_preds, horizon, type = "cross_validation")
 {
     # ts: multivariate time series to predict the first attribut
     # max_p: max lag parameter
@@ -106,11 +83,14 @@ auto_arima_prediction <- function (target, max_p, nb_preds, horizon)
     results = data.frame()
     for (ind in 1:nb_preds)
     {
-        cutTarget = target[ind:(length(target) - (nb_preds-ind)  - horizon)]
-        real = target[(length(target)- (nb_preds-ind) -horizon+1):(length(target) - (nb_preds-ind))]
+        if (type == "cross_validation")
+            training_data = target[1:(length(target) - (nb_preds - ind)  - horizon)]
+        
+        esle if (type == "rolling")
+            training_data = target[ind:(length(target) - (nb_preds - ind)  - horizon)]
         
         tryCatch({
-            model = auto.arima (cutTarget,  max.p=max_p, max.q=2)
+            model = auto.arima (training_data,  max.p=max_p, max.q=2)
         }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
         
         y = forecast(model, h = horizon)[[4]]
