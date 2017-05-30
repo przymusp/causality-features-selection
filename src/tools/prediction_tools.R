@@ -8,7 +8,7 @@ naive_benchmark <- function (target, nb_preds, horizon, type = "cross_validation
         if (type == "cross_validation")
             training_data = target[1:(length(target) - (nb_preds - ind)  - horizon)]
         
-        esle if (type == "rolling")
+        else if (type == "rolling")
             training_data = target[ind:(length(target) - (nb_preds - ind)  - horizon)]
         
         for (j in 1:horizon)
