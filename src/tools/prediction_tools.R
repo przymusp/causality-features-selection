@@ -29,7 +29,7 @@ ar_prediction <- function (target, p, ns, nb_preds, horizon, type = "cross_valid
         if (type == "cross_validation")
             training_data = target[1:(length(target) - (nb_preds - ind)  - horizon)]
         
-        esle if (type == "rolling")
+        else if (type == "rolling")
             training_data = target[ind:(length(target) - (nb_preds - ind)  - horizon)]
         
         tryCatch({
@@ -59,7 +59,7 @@ arima_prediction <- function (target, p, ns, nb_preds, horizon, type = "cross_va
       if (type == "cross_validation")
         training_data = target[1:(length(target) - (nb_preds - ind)  - horizon)]
       
-      esle if (type == "rolling")
+      else if (type == "rolling")
         training_data = target[ind:(length(target) - (nb_preds - ind)  - horizon)]
     
     tryCatch({
@@ -86,7 +86,7 @@ auto_arima_prediction <- function (target, max_p, nb_preds, horizon, type = "cro
         if (type == "cross_validation")
             training_data = target[1:(length(target) - (nb_preds - ind)  - horizon)]
         
-        esle if (type == "rolling")
+        else if (type == "rolling")
             training_data = target[ind:(length(target) - (nb_preds - ind)  - horizon)]
         
         tryCatch({
