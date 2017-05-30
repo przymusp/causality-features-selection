@@ -16,7 +16,8 @@ source("../tools/read_meta_data.R")
 
 no_cores <- detectCores()
 
-gfsm_selection_inner <- function (output_dir, target_name, graph_name, nk, data, matrix, target_index, threshold, data_dir){
+gfsm_selection_inner <- function (output_dir, target_name, prediction_type, graph_name, nk, data, matrix, target_index, threshold, data_dir){
+    
     out_dir = paste0(output_dir,target_name,"_",graph_name,"_GFSM_K=",nk,".csv")
 
     gfsm = fgsm (data, matrix, target_index, threshold, clus = FALSE, nk= nk)
@@ -35,6 +36,8 @@ gfsm_selection_inner <- function (output_dir, target_name, graph_name, nk, data,
 
     cat ("# predict;", file=out_dir, append=TRUE)
     cat (target_name, file=out_dir, append=TRUE, sep='\n')
+    cat ("# prediction_type;", file=out_dir, append=TRUE)
+    cat (paste0(prediction_type), file=out_dir, append=TRUE, sep='\n')
     cat (paste0("# method; Granger_FE_", graph_name, "(n_components=",nk,")"),file=out_dir, append=TRUE, sep='\n')
     ## Store the selected variables
     write.table(gfsm, out_dir, row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
@@ -57,16 +60,18 @@ gfsm_selection <- function (args){
     # Graphs directory
     graph_dir = paste0("../../results/pre_selection/",meta_data$data_name)
     graphs = list.files(path = graph_dir, all.files = FALSE)
+    
     for (k in 1:length(graphs))
     {
         graph_name = substr(graphs[[k]], 1, (nchar(graphs[[k]])-4) )
         threshold = 0.01
-        if (is.element(graph_name, c("granger_graph","varnn_causality_graph")))
-        threshold = 0.8
+        if (is.element(graph_name, c("granger_graph")))
+        threshold = 0.95
 
         graph_dir = paste0("../../results/pre_selection/",meta_data$data_name,"/",graphs[k])
 
         matrix = read.table(graph_dir, header = TRUE,row.names = 1, dec = '.',sep=";", comment.char = "#")
+        
         ############# Execute the method  for each target
         for (target_name in meta_data$target_names)
         {
@@ -76,7 +81,7 @@ gfsm_selection <- function (args){
                     break;
                 }
 
-            mclapply(1:40, function(i) try(gfsm_selection_inner(output_dir, target_name, graph_name, i, data, matrix, target_index, threshold, data_dir)), mc.cores=no_cores, mc.preschedule = FALSE)
+            mclapply(1:20, function(i) try(gfsm_selection_inner(output_dir, target_name,meta_data$prediction_type, graph_name, i, data, matrix, target_index, threshold, data_dir)), mc.cores=no_cores, mc.preschedule = FALSE)
         }
     }
 }
