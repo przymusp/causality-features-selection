@@ -22,6 +22,8 @@ read_meta_data <- function (data_dir)
     meta_data$description = toString(datNamed["description",1])
     meta_data$target_names = datNamed["predict",]
     meta_data$target_names = meta_data$target_names[!is.na(meta_data$target_names)]
+    
+    meta_data$prediction_type = datNamed["prediction_type",1]
 
     if(is.na(meta_data$horizon))
         meta_data$horizon = 1
