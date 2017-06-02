@@ -10,6 +10,8 @@ from tools.global_measures import GLOBAL_MEASURES
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+from tqdm import tqdm
+
 class transform_into_pivot_tables(object):
     """Generates pivot tables with diffrent mesures grouped by method type"""
 
@@ -35,7 +37,8 @@ class transform_into_pivot_tables(object):
         # TODO: fix that
         # groups_to_remove = [ 'jdit', '_graph_reverse', 'reverse_0', 'lstoch', 'rstoch']
         # groups_to_remove = ['_graph_reverse', '_dstoch']
-        groups_to_remove = ['UFSM', '_lstoch', '_rstoch', '_dstoch', 'jdit',]# '_granger__graph_reverse', 'te_graph']
+        # groups_to_remove = ['UFSM', '_lstoch', '_rstoch', '_dstoch', 'jdit',]# '_granger__graph_reverse', 'te_graph']
+        groups_to_remove = []
         for grm in groups_to_remove:
             data_slice = data_slice[~data_slice.group.str.contains(grm)]
 
@@ -68,7 +71,7 @@ class transform_into_pivot_tables(object):
 
     def plot_comparison_summary(self, cmp_summary, out_fname):
         plt.gcf().subplots_adjust(left=0.30, bottom=0.30)
-        self.__plot_heatmap(cmp_summary, out_fname)
+        self.__plot_heatmap(cmp_summary.T, out_fname)
 
     def plot_rank_summary(self, rank_summary, out_fname):
         heat_map = pd.DataFrame.from_dict(rank_summary).fillna(0).T
@@ -81,8 +84,22 @@ class transform_into_pivot_tables(object):
         self.__plot_heatmap(heat_map, out_fname)
 
     def __plot_heatmap(self, heat_map, out_fname):
+        # vmax = heat_map.max(1).max(0)
+        # vmin=0
+        namemap = {
+                'Ar': 'Ar',
+                'Auto_Arima': 'Arima',
+                'Granger_FE_granger_graph': 'GFSM',
+                'dm_KernelPCA_fit_inverse_transform_True_kernel_rbf': 'KernelPCA',
+                'dm_PCA': 'PCA',
+                'UFSM ':'Sun et al.',
+                'naive_benchmark':'naive',
+                'LinkAnalysis_granger__graph': 'GRWR',
+                "LinkAnalysis_te__graph":'TRWR',
+                }
         sns.set()
-        sns.heatmap(heat_map, annot=True, linewidths=.5, cmap="YlGnBu", robust=True, annot_kws={'size':5})
+        heat_map.rename(namemap, namemap, inplace=True)
+        sns.heatmap(heat_map, annot=True, linewidths=.5, cmap="YlGnBu", robust=True, annot_kws={'size':8}, fmt='g')
         plt.setp( plt.gca().yaxis.get_majorticklabels(), rotation='horizontal' )
         plt.setp( plt.gca().xaxis.get_majorticklabels(), rotation='vertical' )
         plt.tick_params(axis='y', which='major', labelsize=5)
@@ -92,27 +109,38 @@ class transform_into_pivot_tables(object):
         plt.savefig(out_fname)
         plt.clf()
 
-    def write(self, timeseries_prefix, measure, select_horizon, exclude_predict_models=[]):
+    def write(self, timeseries_prefix, measure, select_horizon, exclude_predict_models=[], exclude_select_models=[]):
         self.timeseries_prefix = timeseries_prefix
         factory = lambda: defaultdict(factory)
         # summary = factory()
 
-        rank_summary = defaultdict(Counter)
-        sum_measure = defaultdict(float)
-        sum_imp_measure = defaultdict(float)
-        count_measure = defaultdict(int)
-        count_imp_measure = defaultdict(int)
-        cmp_summary = None
-        avg_measure_matrix = None
 
-        c = 0
-        for target in self.tables:
+        max_h = 0
+        for target in tqdm(self.tables):
             for horizon in self.tables[target]:
+                max_h = max(int(horizon), max_h)
+
+
+        for horizon in range(max_h + 1):
+            print(measure, horizon)
+
+            rank_summary = defaultdict(Counter)
+            sum_measure = defaultdict(float)
+            sum_imp_measure = defaultdict(float)
+            count_measure = defaultdict(int)
+            count_imp_measure = defaultdict(int)
+            cmp_summary = None
+            avg_measure_matrix = None
+            min_mase_list = []
+
+            c = 0
+            for target in tqdm(self.tables):
                 for predict_model in self.tables[target][horizon]:
-                    if horizon != select_horizon or predict_model in exclude_predict_models:
+                    if predict_model in exclude_predict_models:
                         continue
 
                     min_mase_matrix = self.get_min_of_of_group(target, horizon, predict_model, measure)
+                    min_mase_list.append(min_mase_matrix.rename(None, {'MASE':target, 'rmse':target}).drop(['target','horizon'],axis=1))
 
                     # for index, row in min_mase_matrix.iterrows():
                     #     sum_measure[row['group']] += row[measure]
@@ -122,9 +150,11 @@ class transform_into_pivot_tables(object):
 
                     # print min_mase_matrix, target
 
-                    # rank_matrix = self.get_rank_mase_matrix(min_mase_matrix, measure)
-                    # for row in rank_matrix.itertuples():
-                    #     rank_summary[row.group][int(row.rank)] += 1
+                    rank_matrix = self.get_rank_mase_matrix(min_mase_matrix, measure)
+                    for row in rank_matrix.itertuples():
+                        if row.group in exclude_select_models:
+                            continue
+                        rank_summary[row.group][int(row.rank)] += 1
 
                     temp_cmp_summary = self.get_comparison_mase_matrix(min_mase_matrix, measure)
                     if cmp_summary is None:
@@ -132,8 +162,20 @@ class transform_into_pivot_tables(object):
                     else:
                         cmp_summary += temp_cmp_summary
 
-        plot_fname_prefix = "%s/%s" %(self.out_dir, timeseries_prefix)
-        # self.plot_rank_summary(rank_summary, plot_fname_prefix + "_rank_%s.pdf"%(measure))
+            fprefix = "%s/%s" % (self.out_dir, timeseries_prefix)
+
+            excel_min_fname = fprefix + "h_%d_min_%s.xls" % (int(horizon), measure)
+            df_final = reduce(lambda left,right: pd.merge(left,right, how='outer', on=['group', 'predict']), min_mase_list).T.to_excel(excel_min_fname)
+
+            rank_fname = fprefix + "h_%d_rank_%s.pdf" % (int(horizon), measure)
+            self.plot_rank_summary(rank_summary, rank_fname)
+            cmp_fname = fprefix + "h_%d_cmp_%s.pdf" % (int(horizon), measure)
+
+            cmp_summary.drop(exclude_select_models, inplace=True, errors='ignore')
+            cmp_summary.drop(exclude_select_models, axis=1, inplace=True, errors='ignore')
+            
+            self.plot_comparison_summary(cmp_summary, cmp_fname)
+
         # avg = pd.DataFrame.from_dict(sum_measure, orient='index')
         # avg['avg'] = avg / pd.DataFrame.from_dict(count_measure, orient='index')
         # avg['count'] = pd.DataFrame.from_dict(count_measure, orient='index')
@@ -146,7 +188,6 @@ class transform_into_pivot_tables(object):
         # print c
         # print avg_measure_matrix[measure]/c
         # self.__plot_heatmap(avg_measure_matrix, plot_fname_prefix + "_avg_%s.pdf"%(measure))
-        self.plot_comparison_summary(cmp_summary, plot_fname_prefix + "_cmp_%s.pdf"%(measure))
 
 def main():
     # Set the output prefix
@@ -161,10 +202,12 @@ def main():
 
     # exclude_pmodels = ['Auto_Arima Model', 'Arima', 'Univariate_model', 'VECM-rolling']
     exclude_pmodels = []
-    exclude_smodels = []
+    exclude_smodels = ['Granger_FE_us_te_graph', 'dm_FactorAnalysis', 'dm_FastICA', 'dm_IncrementalPCA' ]
 
-    transform_into_pivot_tables(out_dir, tables_real, error_list).write(timeseries_prefix, 'MASE', 0, exclude_pmodels)
-
+    t = transform_into_pivot_tables(out_dir, tables_real, error_list)
+    print(">>>>>")
+    t.write(timeseries_prefix, 'MASE', 0, exclude_pmodels, exclude_smodels)
+    t.write(timeseries_prefix, 'rmse', 0, exclude_pmodels, exclude_smodels)
 
 if __name__ == "__main__":
     main()
