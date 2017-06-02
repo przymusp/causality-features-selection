@@ -33,7 +33,7 @@ ar_prediction <- function (target, p, ns, nb_preds, horizon, type = "cross_valid
             training_data = target[ind:(length(target) - (nb_preds - ind)  - horizon)]
         
         tryCatch({
-            model = arima (training_data,  order = c(p, 0, 0))
+            model = arima (training_data,  order = c(p, 1, 0))
             #model = auto.arima (training_data,  max.p = p, start.p = p, max.q = 0)
         }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
         
