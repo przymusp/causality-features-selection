@@ -28,7 +28,7 @@ vecm <- function (ts, p, nb_preds, horizon, type = "cross_validation")
         
         ####### Apply the model
         tryCatch({
-            model = VECM (data.frame(df), p, include = c("const"), estim = c("ML"))
+            model = VECM (data.frame(df), p, include = c("both"), estim = c("ML"))
         }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
         
         y = predict(model,n.ahead = horizon)
