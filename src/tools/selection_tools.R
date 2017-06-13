@@ -1,4 +1,156 @@
-fgsm <- function (F,gmat, targetIndex,threshold, clus, nk)
+library (stats)
+library(cluster)
+library (kernlab)
+############### Hierarchical gsm ###########################
+h_gfsm <- function (F,gmat, targetIndex,threshold, clus, nk)
+{
+    gsmCluster = c()
+    mincaus = 0
+    #### eliminate variables that not cause the target
+    delet = c()
+    n = 1
+    m = 1
+    for (i in 1:ncol(gmat))
+    {
+        if (i == targetIndex)
+        target = m
+        if (i != targetIndex)
+        if (gmat[i,targetIndex] < threshold)
+        {
+            delet[n] = i
+            n = n + 1
+        }
+        else {
+            m = m + 1
+        }
+    }
+    
+    ### Applying the PAM methode
+    if ((length(delet) + 1) == ncol(F))
+    return (data.frame())
+    
+    if (length(delet) > 0)
+    {
+        gmat = gmat[-delet, -delet]
+        F = F[,-delet]
+    }
+    x = gmat
+    
+    clusters = hclust (as.dist (x))
+    #print (clusters)
+    clusteringVector = cutree(clusters, k)
+    print (clusteringVector)
+}
+############### Hierarchical gsm ###########################
+hgfsm <- function (F,gmat, targetIndex,threshold, clus, nk)
+{
+    gsmCluster = c()
+    mincaus = 0
+    #### eliminate variables that not cause the target
+    delet = c()
+    n = 1
+    m = 1
+    for (i in 1:ncol(gmat))
+    {
+        if (i == targetIndex)
+        target = m
+        if (i != targetIndex)
+        if (gmat[i,targetIndex] < threshold)
+        {
+            delet[n] = i
+            n = n + 1
+        }
+        else {
+            m = m + 1
+        }
+    }
+    
+    ### Applying the PAM methode
+    if ((length(delet) + 1) == ncol(F))
+    return (data.frame())
+    
+    if (length(delet) > 0)
+    {
+        gmat = gmat[-delet, -delet]
+        F = F[,-delet]
+    }
+    x = gmat[-target, -target]
+    ## determine the optimal number of cluster
+    if(clus == TRUE)
+    {
+        kmax = nrow(x)-1
+        if (kmax < 2)
+        return (F[,-target])
+        
+        a=fviz_nbclust(as.dist(x), pam, method = "silhouette",k.max = kmax)
+        #a=fviz_nbclust(x, pam, method = "silhouette",k.max = kmax)
+        k = which.max(a$data[,2])
+    }
+    else
+    k = nk
+    ######
+    if (k < ncol(x))
+    {
+        for (l in 2:ncol(x))
+        for(m in 1: (l-1))
+        x[l,m] = x[m,l] = 1 - mean(x[l,m], x[m,l])
+        
+        clusters = hclust (as.dist (x))
+        print (clusters)
+        clusteringVector = cutree(clusters, k)
+        print (clusteringVector)
+        #clusteringVector = clusters$cluster
+        #clusteringVector = clusters (clusters)
+        
+        classes = data.frame()
+        for (j in 1:k)
+        {
+            l = 1
+            for ( i in 1:ncol(x))
+            if (clusteringVector[i] == j)
+            {
+                classes[l,j] = i
+                if (classes[l,j] >= target)
+                {
+                    classes[l,j] = classes[l,j] + 1
+                }
+                l = l + 1
+            }
+        }
+        ### buildind the gsm cluster from the PAM clusters
+        for (j in 1:k)
+        {
+            bestInGroup = 1;
+            if (ncol(classes) >= j)
+            {
+                caus = gmat[classes[1,j],target];
+                for (l in 2:length(classes[,j]))
+                {
+                    if(is.na(classes[l,j]) == FALSE)
+                    {
+                        if (gmat[classes[l,j],target] > caus)
+                        {
+                            caus = gmat[classes[l,j],target];
+                            bestInGroup = l;
+                        }
+                    }
+                    gsmCluster[j] = classes[bestInGroup,j];
+                }
+            }
+        }
+        GSM = data.frame()
+        GSM = F [,gsmCluster]
+        return (GSM)
+    }
+    else
+    return (F[,-target])
+}
+
+
+
+
+#########################################################
+gfsm <- function (F,gmat, targetIndex,threshold, clus, nk)
 {
   gsmCluster = c()
   mincaus = 0
@@ -49,9 +201,10 @@ fgsm <- function (F,gmat, targetIndex,threshold, clus, nk)
   {
     for (l in 2:ncol(x))
       for(m in 1: (l-1))
-        x[l,m] = x[m,l] = 1 - max(x[l,m], x[m,l])
+        x[l,m] = x[m,l] = 1 - mean(x[l,m], x[m,l])
 
-      clusters = pam (as.dist(x),k)
+#clusters = pam (as.dist(x),k)
+      clusters = pam (x, diss = TRUE, k)
       clusteringVector = clusters$cluster
       #clusteringVector = clusters (clusters)
 
