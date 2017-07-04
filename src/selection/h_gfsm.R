@@ -5,10 +5,6 @@ enableJIT(3)
 library(tsDyn)
 library(lmtest)
 library(vars)
-#library(stats) ##hclus
-#library(factoextra) # for the number of clusters
-#library(NbClust) # for the number of clusters
-#library (kernlab)
 library(parallel)
 
 source("../tools/selection_tools.R")
@@ -54,7 +50,7 @@ gfsm_selection <- function (args){
     meta_data = read_meta_data(data_dir)
 
     ## read the dataset
-    data = read.csv(data_dir, header = TRUE, dec = '.',sep=";", comment.char = "#")
+    data = read.csv(data_dir,check.names=FALSE, header = TRUE, dec = '.',sep=";", comment.char = "#")
     colnames = colnames(data)
 
     # Graphs directory
@@ -66,7 +62,7 @@ gfsm_selection <- function (args){
         graph_name = substr(graphs[[k]], 1, (nchar(graphs[[k]])-4) )
         threshold = 0.01
         if (is.element (graph_name, c("granger_graph")))
-        threshold = 0.9
+        threshold = 0.95
 
         graph_dir = paste0("../../results/pre_selection/",meta_data$data_name,"/",graphs[k])
 
@@ -81,7 +77,7 @@ gfsm_selection <- function (args){
                     break;
                 }
 
-            mclapply(1:20, function(i) try(gfsm_selection_inner(output_dir, target_name,meta_data$prediction_type, graph_name, i, data, matrix, target_index, threshold, data_dir)), mc.cores=no_cores, mc.preschedule = FALSE)
+            mclapply(1:9, function(i) try(gfsm_selection_inner(output_dir, target_name,meta_data$prediction_type, graph_name, i, data, matrix, target_index, threshold, data_dir)), mc.cores=no_cores, mc.preschedule = FALSE)
         }
     }
 }

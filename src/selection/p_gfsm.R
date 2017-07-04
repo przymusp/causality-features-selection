@@ -40,6 +40,7 @@ gfsm_selection_inner <- function (output_dir, target_name, prediction_type, grap
     cat (paste0(prediction_type), file=out_dir, append=TRUE, sep='\n')
     cat (paste0("# method; Part-GFS_", graph_name, "(n_components=",nk,")"),file=out_dir, append=TRUE, sep='\n')
     ## Store the selected variables
+    
     write.table(p_gfsm, out_dir, row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
 }
 
@@ -54,7 +55,8 @@ gfsm_selection <- function (args){
     meta_data = read_meta_data(data_dir)
 
     ## read the dataset
-    data = read.csv(data_dir, header = TRUE, dec = '.',sep=";", comment.char = "#")
+    data = read.csv(data_dir,check.names=FALSE, header = TRUE, dec = '.',sep=";", comment.char = "#")
+    #print (data[1:10,])
     colnames = colnames(data)
 
     # Graphs directory
@@ -66,11 +68,11 @@ gfsm_selection <- function (args){
         graph_name = substr(graphs[[k]], 1, (nchar(graphs[[k]])-4) )
         threshold = 0.01
         if (is.element (graph_name, c("granger_graph")))
-        threshold = 0.9
+        threshold = 0.95
 
         graph_dir = paste0("../../results/pre_selection/",meta_data$data_name,"/",graphs[k])
 
-        matrix = read.table(graph_dir, header = TRUE,row.names = 1, dec = '.',sep=";", comment.char = "#")
+        matrix = read.table(graph_dir,check.names=FALSE, header = TRUE,row.names = 1, dec = '.',sep=";", comment.char = "#")
         
         ############# Execute the method  for each target
         for (target_name in meta_data$target_names)
@@ -81,7 +83,7 @@ gfsm_selection <- function (args){
                     break;
                 }
 
-            mclapply(1:20, function(i) try(gfsm_selection_inner(output_dir, target_name,meta_data$prediction_type, graph_name, i, data, matrix, target_index, threshold, data_dir)), mc.cores=no_cores, mc.preschedule = FALSE)
+            mclapply(1:9, function(i) try(gfsm_selection_inner(output_dir, target_name,meta_data$prediction_type, graph_name, i, data, matrix, target_index, threshold, data_dir)), mc.cores=no_cores, mc.preschedule = FALSE)
         }
     }
 }
