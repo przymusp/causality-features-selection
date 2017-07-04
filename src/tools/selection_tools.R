@@ -1,46 +1,7 @@
 library (stats)
 library(cluster)
 library (kernlab)
-############### Hierarchical gsm ###########################
-h_gfsm <- function (F,gmat, targetIndex,threshold, clus, nk)
-{
-    gsmCluster = c()
-    mincaus = 0
-    #### eliminate variables that not cause the target
-    delet = c()
-    n = 1
-    m = 1
-    for (i in 1:ncol(gmat))
-    {
-        if (i == targetIndex)
-        target = m
-        if (i != targetIndex)
-        if (gmat[i,targetIndex] < threshold)
-        {
-            delet[n] = i
-            n = n + 1
-        }
-        else {
-            m = m + 1
-        }
-    }
-    
-    ### Applying the PAM methode
-    if ((length(delet) + 1) == ncol(F))
-    return (data.frame())
-    
-    if (length(delet) > 0)
-    {
-        gmat = gmat[-delet, -delet]
-        F = F[,-delet]
-    }
-    x = gmat
-    
-    clusters = hclust (as.dist (x))
-    #print (clusters)
-    clusteringVector = cutree(clusters, k)
-    print (clusteringVector)
-}
+
 ############### Hierarchical gsm ###########################
 hgfsm <- function (F,gmat, targetIndex,threshold, clus, nk)
 {
@@ -204,7 +165,7 @@ gfsm <- function (F,gmat, targetIndex,threshold, clus, nk)
         x[l,m] = x[m,l] = 1 - mean(x[l,m], x[m,l])
 
 #clusters = pam (as.dist(x),k)
-      clusters = pam (x, diss = TRUE, k)
+      clusters = pam (as.dist (x), diss = TRUE, k)
       clusteringVector = clusters$cluster
       #clusteringVector = clusters (clusters)
 
@@ -335,8 +296,9 @@ gsmPCA <- function (F,gmat, targetIndex,threshold, clus, nk)
           vect = classes[,j]
           vect <- vect[!is.na(vect)]
           if (length(vect) > 1) {
-              prinComp = kpca(~.,data=F[,vect], kernel="rbfdot",sigma=0.2,features=1)
-              variables = pcv(prinComp)
+              #prinComp = kpca(~.,data=F[,vect], kernel="rbfdot",sigma=0.2,features=1)
+              fit = princomp (~.,data=F[,vect])
+              variables = fit$scores
               for (l in 1:nrow(variables))
                 gsmCluster[l,j] = variables[l,1]
           }
@@ -403,17 +365,13 @@ gfsm_dms_reduction <- function (F,gmat, targetIndex,threshold, clus, nk, methode
 	k <- which.max(asw)
 	print (k)
     
-    #gap_stat <- clusGap(x, FUN = pam, K.max = kmax)
-    #a = fviz_gap_stat (gap_stat)
-    #a=fviz_nbclust(as.dist(x), diss = as.dist(x),FUNcluster = pam, method = "silhouette",k.max = kmax)
-    #k = which.max(a$data[,2])
   }
   else
     k = nk
   ######
   if (k < ncol(x))
   {   
-      clusters = pam (as.dist(x),diss=TRUE, k)
+      clusters = pam (as.dist (x), diss = TRUE, k)
       clusteringVector = clusters$cluster
 
       classes = data.frame()
@@ -452,10 +410,9 @@ gfsm_dms_reduction <- function (F,gmat, targetIndex,threshold, clus, nk, methode
           	if (methode_name == "PCA"){
           		print ("PCA method")
           		#the functions prcomp() use the singular value decomposition (SVD).
-          		fit = princomp (~.,data=F[,vect],rank = 1)
-                variables = fit$scores[,1]
-          		#fit = principal(F[,vect], 1)
-              	#variables = fit$scores
+                fit = princomp (~.,data=F[,vect])
+                variables = fit$scores
+
           	}
             for (l in 1:nrow(variables))
                 gsmCluster[l,j] = variables[l,1]
