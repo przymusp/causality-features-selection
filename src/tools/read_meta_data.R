@@ -15,7 +15,7 @@ read_meta_data <- function (data_dir)
 
     datNamed <- read.table(text=gsub("^# *", "",gsub(" +", "",dat)), row.names = 1, sep=";",header=FALSE, fill = TRUE)
 
-    meta_data$lag_p = strtoi(datNamed["lag_p","V2"])
+    meta_data$lag_p = strtoi(datNamed["lag_parameter","V2"])
     meta_data$horizon = strtoi(datNamed["horizon","V2"])
     meta_data$nbre_predictions = strtoi(datNamed["number_predictions","V2"])
 
