@@ -9,6 +9,8 @@ from keras.models import Sequential
 from keras.layers import LSTM, Dense
 from math import sqrt
 
+from joblib import Parallel, delayed
+
 import numpy as np
 import pandas as pd
 import pprint
@@ -135,7 +137,7 @@ def LSTM_MODEL (X_train, nbre_preds, p, nbre_iterations, neurons):
 
     predictions = np.empty ([nbre_preds, 1])
 
-    #reals = targets[targets.shape[0] - nbre_preds:targets.shape[0],:]
+    reals = targets[targets.shape[0] - nbre_preds:targets.shape[0],:]
     
     limit = X.shape[0] - nbre_preds
 
@@ -159,24 +161,19 @@ def LSTM_MODEL (X_train, nbre_preds, p, nbre_iterations, neurons):
         Xx, yy = X_update[:, 1:X.shape[1]], X_update[:, 0]
         Xx = Xx.reshape(Xx.shape[0], 1, Xx.shape[1])
 
-        lstm_models.fit(Xx, yy, epochs=1, batch_size=1)
-        lstm_models.reset_states()
+        lstm_model.fit(Xx, yy, epochs=1, batch_size=1)
+        lstm_model.reset_states()
     
     
     predictions[:,0] = prediction
-        
-
-
     predictions = inverse_normalize (predictions,minMax[0,:])
     reals = inverse_normalize (reals, minMax[0,:])
     
-#print (pd.DataFrame (predictions))
     return np.array(predictions),reals
 #################################################################################
 
-def main():
-    fname, output_directory = sys.argv[1], sys.argv[len(sys.argv) - 1]
-    print ("############")
+def predictbase(fname, output_directory):
+ 
     X_train = read_csv_and_metadata(fname)
     
     meta_header = X_train.meta_header
@@ -184,7 +181,7 @@ def main():
     # Read meta-data
     barch_size= 1
     nbre_preds = int (meta_header['number_predictions'][0])
-    nbre_iterations = 500
+    nbre_iterations = 1
     p = int (meta_header['lag_parameter'][0])
     horizon = int (meta_header['horizon'][0])
     target_names =  (meta_header['predict'])
@@ -209,6 +206,12 @@ def main():
 
 
 #################################################################################
+def main ():
+    
+    fnames, output_directory = sys.argv[1:-1], sys.argv[-1]
+    Parallel(-1)(delayed(predictbase)(fname, output_directory) for fname in fnames)
+
+
 if __name__ == "__main__":
     main()
 

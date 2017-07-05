@@ -9,6 +9,8 @@ from keras.models import Sequential
 from keras.layers import LSTM, Dense
 from math import sqrt
 
+from joblib import Parallel, delayed
+
 import numpy as np
 import pandas as pd
 import pprint
@@ -91,26 +93,29 @@ def inverse_normalize (M,minMax):
 
 #################################################################################
 
-# fit an LSTM network to training data
 def fit_mlp(train, batch_size, nb_epoch, neurons):
     X, y = train[:, 1:train.shape[1]], train[:, 0]
-    X = X.reshape(X.shape[0], 1, X.shape[1])
+    model = Sequential()
     
-    model.add(Dense(1, input_dim= X.shape[1], activation='sigmoid'))
+    model.add(Dense(neurons, input_dim= X.shape[1], activation='sigmoid'))
     model.add(Dense(neurons, activation='sigmoid'))
     model.add(Dense(neurons, activation='sigmoid'))
+    # model.add(Dense(neurons, activation='sigmoid'))
+    #model.add(Dense(neurons, activation='sigmoid'))
     model.add(Dense(1))
     
     model.compile(loss='mean_squared_error', optimizer='SGD')
     
+    
     for i in range(nb_epoch):
-        model.fit(X, y, epochs=1, batch_size=batch_size, verbose=0, shuffle=False)
+        model.fit(X, y, epochs=1, batch_size=batch_size)
         model.reset_states()
+    
     return model
 #################################################################################
 # make a one-step forecast
-def forecast_lstm(model, batch_size, X):
-    X = X.reshape(1, 1, len(X))
+def forecast_mlp(model, batch_size, X):
+    #X = X.reshape(1, 1, len(X))
     yhat = model.predict(X, batch_size=batch_size)
     return yhat[0,0]
 
@@ -136,13 +141,13 @@ def MLP_MODEL (X_train, nbre_preds, p, nbre_iterations, neurons):
 
     predictions = np.empty ([nbre_preds, 1])
 
-    #reals = targets[targets.shape[0] - nbre_preds:targets.shape[0],:]
+    reals = targets[targets.shape[0] - nbre_preds:targets.shape[0],:]
 
     
     limit = X.shape[0] - nbre_preds
 
     train, test = X[0:limit], X[limit:X.shape[0]]
-    mlp_model =  fit_lstm(train, 1, nbre_iterations, neurons)
+    mlp_model =  fit_mlp(train, 1, nbre_iterations, neurons)
 
     prediction = []
     
@@ -152,23 +157,17 @@ def MLP_MODEL (X_train, nbre_preds, p, nbre_iterations, neurons):
         Xx, yy = test[0:1, 1:test.shape[1]], test[0:1, 0]
             
         # prediction
-        yhat = forecast_lstm(mlp_model, 1, Xx)
-        prediction.append(yhat)
-        #print (yhat)
+        yhat = mlp_model.predict (Xx)
+        prediction.append(yhat[0,0])
     
         # update the model: online learning
         X_update = np.concatenate ((train, test), axis = 0)
         Xx, yy = X_update[:, 1:X.shape[1]], X_update[:, 0]
-        Xx = Xx.reshape(Xx.shape[0], 1, Xx.shape[1])
-
         mlp_model.fit(Xx, yy, epochs=1, batch_size=1)
         mlp_model.reset_states()
     
     
     predictions[:,0] = prediction
-        
-
-
     predictions = inverse_normalize (predictions,minMax[0,:])
     reals = inverse_normalize (reals, minMax[0,:])
     
@@ -176,9 +175,8 @@ def MLP_MODEL (X_train, nbre_preds, p, nbre_iterations, neurons):
     return np.array(predictions),reals
 #################################################################################
 
-def main():
-    fname, output_directory = sys.argv[1], sys.argv[len(sys.argv) - 1]
-    print ("############")
+def predictbase(fname, output_directory):
+
     X_train = read_csv_and_metadata(fname)
     
     meta_header = X_train.meta_header
@@ -186,7 +184,7 @@ def main():
     # Read meta-data
     barch_size= 1
     nbre_preds = int (meta_header['number_predictions'][0])
-    nbre_iterations = 500
+    nbre_iterations = 1
     p = int (meta_header['lag_parameter'][0])
     horizon = int (meta_header['horizon'][0])
     target_names =  (meta_header['predict'])
@@ -200,19 +198,26 @@ def main():
     
     # Put meta-data for the output file
     predictions.meta_header = X_train.meta_header
-    predictions.meta_header['predict_model'] = ["lstm_prediction"]
+    predictions.meta_header['predict_model'] = ["mlp_prediction"]
     predictions.meta_header['predict'] = [target_names[0],]
     
     fname = fname.split('/')[-1]
     
-    out_fname = output_directory + "/_lstm_predict_" + fname
+    out_fname = output_directory + "/_mlp_predict_" + fname
     
     write_csv_with_metadata(predictions, out_fname)
 
 
 #################################################################################
+def main ():
+
+    fnames, output_directory = sys.argv[1:-1], sys.argv[-1]
+    Parallel(-1)(delayed(predictbase)(fname, output_directory) for fname in fnames)
+
+
 if __name__ == "__main__":
     main()
+
 
 
 
