@@ -184,7 +184,7 @@ def predictbase(fname, output_directory):
     # Read meta-data
     barch_size= 1
     nbre_preds = int (meta_header['number_predictions'][0])
-    nbre_iterations = 1
+    nbre_iterations = 1000
     p = int (meta_header['lag_parameter'][0])
     horizon = int (meta_header['horizon'][0])
     target_names =  (meta_header['predict'])
