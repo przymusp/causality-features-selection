@@ -50,11 +50,14 @@ class transform_into_pivot_tables(object):
         data_slice_group = data_slice.groupby(['group', 'predict'], as_index=False)
 
         min_mase_group = data_slice_group['group','predict', measure].min()
-        tmp = min_mase_group.merge(data_slice,  on=['group', 'predict',measure])
+
 
         min_mase_group['horizon'] = horizon
         min_mase_group['target'] = target
-        min_mase_group['group'] += tmp['method']
+
+        # Special request fix -- just for the competition
+        # tmp = min_mase_group.merge(data_slice,  on=['group', 'predict',measure])
+        # min_mase_group['group'] += tmp['method']
 
         return min_mase_group
 
