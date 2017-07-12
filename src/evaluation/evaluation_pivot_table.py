@@ -46,11 +46,15 @@ class transform_into_pivot_tables(object):
         for grm in groups_to_select:
             data_slice = data_slice[data_slice.group.str.contains(grm)]
 
+
         data_slice_group = data_slice.groupby(['group', 'predict'], as_index=False)
 
         min_mase_group = data_slice_group['group','predict', measure].min()
+        tmp = min_mase_group.merge(data_slice,  on=['group', 'predict',measure])
+
         min_mase_group['horizon'] = horizon
         min_mase_group['target'] = target
+        min_mase_group['group'] += tmp['method']
 
         return min_mase_group
 
@@ -202,7 +206,7 @@ def main():
 
     # exclude_pmodels = ['Auto_Arima Model', 'Arima', 'Univariate_model', 'VECM-rolling']
     exclude_pmodels = []
-    exclude_smodels = ['Granger_FE_us_te_graph', 'dm_FactorAnalysis', 'dm_FastICA', 'dm_IncrementalPCA' ]
+    exclude_smodels = ['Granger_FE_us_te_graph', 'dm_FactorAnalysis', 'dm_FastICA', 'dm_IncrementalPCA', 'Granger_FE_ausmacrodata_JAPHV_2016_te_graph']
 
     t = transform_into_pivot_tables(out_dir, tables_real, error_list)
     print(">>>>>")
