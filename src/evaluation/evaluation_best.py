@@ -14,6 +14,7 @@ class transform_into_best_excel(object):
         self.out_dir = out_dir
 
     def write(self, timeseries_prefix):
+        # TODO: fix callculate it per horizon
         # Write excel
         # TODO: write error list to separate spreadsheet
         target_min = {}
