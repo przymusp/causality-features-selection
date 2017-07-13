@@ -146,6 +146,9 @@ def read_and_evaluate_results():
         predict_model = predictions.meta_header['predict_model'][0]
         selection_method = predictions.meta_header['method'][0]
         target = predictions.meta_header['predict'][0]
+        if predictions.meta_header.has_key('experiment_type'):
+            original_data = original_data.copy()
+            original_data[:] = 0
         horizon = len(predictions.columns)
 
         # For each prediction method only one prediction horizon is available
