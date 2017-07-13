@@ -17,15 +17,17 @@ class transform_into_best_excel(object):
         # TODO: fix callculate it per horizon
         # Write excel
         # TODO: write error list to separate spreadsheet
-        target_min = {}
+        writer = pd.ExcelWriter(
+            "%s/%s_best.xls" % (self.out_dir, timeseries_prefix,))
+        target_min = defaultdict(dict)
         for target_name in self.tables:
             for horizon in self.tables[target_name]:
                 for predict_model, val in self.tables[target_name][horizon].items():
-                    target_min[target_name] = val.iloc[val['rmse'].idxmin()][['rmse', 'group', 'predict', 'method']]
+                    target_min[horizon][target_name] = val.iloc[val['rmse'].idxmin()][['rmse', 'group', 'predict', 'method']]
 
-        writer = pd.ExcelWriter(
-            "%s/%s_best.xls" % (self.out_dir, timeseries_prefix,))
-        pd.DataFrame.from_dict(target_min).to_excel(writer)
+        for horizon in target_min:
+            pd.DataFrame.from_dict(target_min[horizon]).to_excel(writer, sheet_name=str(horizon))
+
         writer.close()
 
 class transform_into_best_horizon_excel(object):
