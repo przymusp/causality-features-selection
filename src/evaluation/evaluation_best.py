@@ -16,9 +16,7 @@ class transform_into_best_excel(object):
     def write(self, timeseries_prefix):
         target_min = defaultdict(lambda : defaultdict(list))
         for target_name in self.tables:
-            c = 0
             for horizon in self.tables[target_name]:
-                c += 1
                 for predict_model, val in self.tables[target_name][horizon].items():
                     val['horizon'] = horizon
                     target_min[horizon][target_name].append(val)
@@ -47,7 +45,9 @@ class transform_into_best_excel(object):
         avg_count = len(target_min)
         for target_name in target_avg:
             ret[target_name] = target_avg[target_name].iloc[target_avg[target_name]['rmse'].idxmin(axis=0)][['rmse', 'group', 'predict', 'method']]
+            # print target_name, ret[target_name]['rmse']
             ret[target_name]['rmse'] /= avg_count
+            # print target_name, ret[target_name]['rmse']
 
         # print target_avg
 
