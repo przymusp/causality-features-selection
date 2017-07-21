@@ -38,7 +38,13 @@ gfsm_selection_inner <- function (output_dir, target_names,colnames, prediction_
         
         out_dir = paste0(output_dir,target_name,"_",graph_name,"_GSM-V3_K=",nk,".csv")
         
-        gfsm = data.frame (data[,target_index], data[,gsm_ranking[1:nk]])
+        if (nk == 1){
+            gfsm = data.frame (data[,target_index], data[,gsm_ranking[1]])
+            colnames (gfsm) = c(colnames(data)[target_index],colnames(data)[gsm_ranking[1]])
+        }
+        else
+            gfsm = data.frame (data[,target_index], data[,gsm_ranking[1:nk]])
+        
         
         # Set metadata
         command = paste0 ('awk \'/^#/ && !/^# *predict/\' ',data_dir)
@@ -51,7 +57,7 @@ gfsm_selection_inner <- function (output_dir, target_names,colnames, prediction_
         cat (paste0("# method; GSM-V3", graph_name, "(n_components=",nk,")"),file=out_dir,append=TRUE, sep='\n')
         
         ## Store the selected variables
-        write.table(gfsm, out_dir,row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
+        write.table(gfsm, out_dir, row.names = FALSE, na = "",col.names = TRUE, sep = ";", append = TRUE)
     }
 
 }
@@ -68,7 +74,7 @@ gfsm_selection <- function (args){
     meta_data = read_meta_data(data_dir)
 
     ## read the dataset
-    data = read.csv(data_dir, header = TRUE, dec = '.',sep=";", comment.char = "#")
+    data = read.csv(data_dir,check.names=FALSE, header = TRUE, dec = '.',sep=";", comment.char = "#")
     colnames = colnames(data)
 
     # Graphs directory
@@ -80,8 +86,8 @@ gfsm_selection <- function (args){
         threshold = 0.01
         graph_dir = paste0("../../results/pre_selection/",meta_data$data_name,"/",graphs[k])
 
-        matrix = read.table(graph_dir, header = TRUE,row.names = 1, dec = '.',sep=";", comment.char = "#")
-        colnames = colnames(matrix)
+        matrix = read.table(graph_dir,check.names=FALSE, header = TRUE,row.names = 1, dec = '.',sep=";", comment.char = "#")
+
         
         graph_name = substr(graphs[[k]], 1, (nchar(graphs[[k]])-4) )
 
