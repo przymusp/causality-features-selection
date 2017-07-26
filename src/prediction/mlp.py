@@ -1,0 +1,244 @@
+#!/usr/local/bin/python
+# -*- coding: utf-8 -*-
+from __future__ import print_function
+import sys
+
+from sklearn.metrics import mean_squared_error
+from sklearn.preprocessing import MinMaxScaler
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import LSTM
+from math import sqrt
+
+from joblib import Parallel, delayed
+
+import numpy as np
+import pandas as pd
+import pprint
+
+from tools.csv_helper import *
+
+###################################################
+class toSuppervisedData:
+    targets = np.empty([0,0],dtype=float)
+    data = np.empty([0,0],dtype=float)
+    
+    ## constructor
+    def __init__(self, X, p):
+        self.targets = self.targets_decomposition (X,p)
+        self.data = self.matrix_decomposition (X,p)
+
+    ## p-decomposition of a vector
+    def vector_decomposition (self,x,p):
+        n = len(x)
+        output = np.empty([n-p,p],dtype=float)
+        for i in range (n-p):
+            for j in range (p):
+                output[i,j] = x[i+j]
+        return output
+ #########
+    # p-decomposition of a target
+    def target_decomposition (self,x,p):
+        n = len(x)
+        output = np.empty([n-p,1],dtype=float)
+        for i in range (n-p):
+            output[i] = x[i+p]
+        return output
+ ########
+    # p-decomposition of a matrix
+    def matrix_decomposition (self,x,p):
+        output = np.empty([0,0],dtype=float)
+        out = np.empty([0,0],dtype=float)
+        for i in range(x.shape[1]):
+            out = self.vector_decomposition(x[:,i],p)
+            #print (out)
+            if output.size == 0:
+                output = out
+            else:
+                output = np.concatenate ((output,out),axis=1)
+
+        return output
+#########
+    # extract all the targets decomposed
+    def targets_decomposition (self,x,p):
+        output = np.empty([0,0],dtype=float)
+        out = np.empty([0,0],dtype=float)
+        for i in range(x.shape[1]):
+            out = self.target_decomposition(x[:,i],p)
+            if output.size == 0:
+                output = out
+            else:
+                output = np.concatenate ((output,out),axis=1)
+
+        return output
+
+################################################################################
+def normalize (M):
+    minMax = np.empty ([M.shape[1], 2])
+    for i in range(M.shape[1]):
+        #print (M[:,i])
+        max = np.max(M[:,i])
+        min = np.min(M[:,i])
+        minMax[i,0] = min
+        minMax[i,1] = max
+
+        for j in range(M.shape[0]):
+            M[j,i] = (M[j,i] - min) / (max - min)
+
+    return minMax
+################################################################################
+def inverse_normalize (M,minMax):
+    for i in range(M.shape[0]):
+        M[i] = M[i] * (minMax[1] - minMax[0]) + minMax[0]
+    return M
+
+
+#################################################################################
+# fit the network to training data
+def fit_mlp(train, batch_size, nb_epoch, neurons):
+    X, y = train[:, 1:train.shape[1]], train[:, 0]
+    model = Sequential()
+    
+    model.add(Dense(neurons, input_dim= X.shape[1], activation='sigmoid'))
+    model.add(Dense(neurons, activation='sigmoid'))
+    model.add(Dense(neurons, activation='sigmoid'))
+    model.add(Dense(1))
+    
+    model.compile(loss='mean_squared_error', optimizer='SGD')
+    
+
+    for i in range(nb_epoch):
+        model.fit(X, y, epochs=1, batch_size=batch_size)
+        model.reset_states()
+
+    return model
+
+#################################################################################
+def MLP (X_train, nbre_preds, p, nbre_iterations, neurones):
+
+    # normalize the data
+    minMax = normalize(X_train)
+
+    # transform the data to supervised learning
+    model = toSuppervisedData(X_train,p)
+    X = model.data
+    
+    # Extract current values of all variables
+    targets = model.targets
+
+    predictions = np.empty ([nbre_preds, 1])
+
+    reals = targets[targets.shape[0] - nbre_preds:targets.shape[0],:]
+
+    X = np.concatenate ((targets[:,0:1], X), axis = 1)
+    
+    limit = X.shape[0] - nbre_preds
+
+    train, test = X[0:limit], X[limit:X.shape[0]]
+    mlp_models =  fit_mlp(train, 1, nbre_iterations, neurones)
+
+    prediction = []
+    
+    for j in range(0, nbre_preds):
+        limit = X.shape[0] - nbre_preds + j
+        train, test = X[0:limit], X[limit:limit+1]
+        Xx, yy = test[0:1, 1:test.shape[1]], test[0:1, 0]
+        
+        # prediction
+        yhat = mlp_models.predict (Xx)
+        prediction.append(yhat[0,0])
+    
+        # update the model: online learning
+        X_update = np.concatenate ((train, test), axis = 0)
+        Xx, yy = X_update[:, 1:X.shape[1]], X_update[:, 0]
+        
+        for i in range(nbre_iterations):
+            mlp_models.fit(Xx, yy, epochs=1, batch_size=1, verbose=0, shuffle=False)
+            mlp_models.reset_states()
+    
+    
+    predictions[:,0] = prediction
+        
+
+
+    predictions = inverse_normalize (predictions,minMax[0,:])
+    reals = inverse_normalize (reals, minMax[0,:])
+    
+    return np.array(predictions),reals
+
+#################################################################################
+def predictbase (fname, output_directory):
+    X_train = read_csv_and_metadata(fname)
+    
+    meta_header = X_train.meta_header
+    
+    # Read meta-data
+    barch_size= 1
+    nbre_preds = int (meta_header['number_predictions'][0])
+    nbre_iterations = 500
+    p = int (meta_header['lag_parameter'][0])
+    horizon = int (meta_header['horizon'][0])
+    target_names =  (meta_header['predict'])
+    
+    # Compute the number of neurones
+    neurones = int (2.0 / 3.0 * X_train.values.shape[1] * p)
+    
+    predictions, reals = MLP (X_train.values, nbre_preds, p, nbre_iterations, neurones)
+    predictions = pd.DataFrame (predictions[:,0])
+    
+    # Put meta-data for the output file
+    predictions.meta_header = X_train.meta_header
+    predictions.meta_header['predict_model'] = ["mlp"]
+    predictions.meta_header['predict'] = [target_names[0],]
+    
+    fname = fname.split('/')[-1]
+    
+    out_fname = output_directory + "/_mlp_" + fname
+    
+    write_csv_with_metadata(predictions, out_fname)
+
+#################################################################################
+def main():
+    fnames, output_directory = sys.argv[1:-1], sys.argv[-1]
+    Parallel(-1)(delayed(predictbase)(fname, output_directory) for fname in fnames[1])
+    print ("############")
+
+
+
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
