@@ -17,7 +17,7 @@ import pprint
 
 from tools.csv_helper import *
 
-###################################################
+
 class toSuppervisedData:
     targets = np.empty([0,0],dtype=float)
     data = np.empty([0,0],dtype=float)
@@ -26,7 +26,7 @@ class toSuppervisedData:
     def __init__(self, X, p):
         self.targets = self.targets_decomposition (X,p)
         self.data = self.matrix_decomposition (X,p)
-
+    
     ## p-decomposition of a vector
     def vector_decomposition (self,x,p):
         n = len(x)
@@ -35,7 +35,7 @@ class toSuppervisedData:
             for j in range (p):
                 output[i,j] = x[i+j]
         return output
- #########
+    #########
     # p-decomposition of a target
     def target_decomposition (self,x,p):
         n = len(x)
@@ -43,7 +43,7 @@ class toSuppervisedData:
         for i in range (n-p):
             output[i] = x[i+p]
         return output
- ########
+    ########
     # p-decomposition of a matrix
     def matrix_decomposition (self,x,p):
         output = np.empty([0,0],dtype=float)
@@ -55,7 +55,7 @@ class toSuppervisedData:
                 output = out
             else:
                 output = np.concatenate ((output,out),axis=1)
-
+        
         return output
 #########
     # extract all the targets decomposed
@@ -70,8 +70,17 @@ class toSuppervisedData:
                 output = np.concatenate ((output,out),axis=1)
 
         return output
+###################################################
+def timeseries_to_supervised(data, lag = 1):
+    df = pd.DataFrame(data[:,1:])
+    columns = [df.shift(i) for i in range (0, lag+1)]
+    #columns.append(pd.DataFrame(data[:,0]))
+    columns = pd.concat(columns, axis=1)
+    columns = pd.concat((pd.DataFrame(data[:,0]),columns), axis=1)
+    #df.fillna(0, inplace=True)
+    return columns[lag:]
 
-################################################################################
+####################################################
 def normalize (M):
     minMax = np.empty ([M.shape[1], 2])
     for i in range(M.shape[1]):
@@ -85,18 +94,18 @@ def normalize (M):
             M[j,i] = (M[j,i] - min) / (max - min)
 
     return minMax
-################################################################################
+#####################################################
 def inverse_normalize (M,minMax):
     for i in range(M.shape[0]):
         M[i] = M[i] * (minMax[1] - minMax[0]) + minMax[0]
     return M
 
-#################################################################################
+######################################################
 
 # fit an LSTM network to training data
-def fit_lstm(train, batch_size, nb_epoch, neurons):
+def fit_lstm(train, look_back, batch_size, nb_epoch, neurons):
     X, y = train[:, 1:train.shape[1]], train[:, 0]
-    X = X.reshape(X.shape[0], 1, X.shape[1])
+    X = X.reshape(X.shape[0], look_back, X.shape[1] / look_back)
     
     model = Sequential()
     model.add (LSTM (neurons, batch_input_shape = (batch_size, X.shape[1], X.shape[2])))
@@ -108,24 +117,26 @@ def fit_lstm(train, batch_size, nb_epoch, neurons):
         model.fit(X, y, epochs=1, batch_size=batch_size, verbose=1, shuffle=False)
         model.reset_states()
     return model
-#################################################################################
+#####################################################
 # make a one-step forecast
-def forecast_lstm(model, batch_size, X):
-    X = X.reshape(1, 1, len(X))
+def forecast_lstm(model,look_back, batch_size, X):
+    X = X.reshape(1, look_back, len(X)/look_back)
     yhat = model.predict(X, batch_size=batch_size)
     return yhat[0,0]
 
 #################################################################################
-def imp_LSTM (X_train, nbre_preds, p, nbre_iterations, neurons):
+def imp_LSTM (data, nbre_preds, p, nbre_iterations, neurons):
 
     # normalize the data
-    minMax = normalize(X_train)
+    minMax = normalize(data)
 
     # transform the data to supervised learning
-    model = toSuppervisedData(X_train,p)
+    model = toSuppervisedData(data,p)
     X = model.data
     # Extract target variables
     targets = model.targets
+    
+    print (targets.shape[1],X.shape[1])
 
     predictions = np.empty ([nbre_preds, 1])
 
@@ -136,7 +147,7 @@ def imp_LSTM (X_train, nbre_preds, p, nbre_iterations, neurons):
     limit = X.shape[0] - nbre_preds
 
     train, test = X[0:limit], X[limit:X.shape[0]]
-    lstm_model =  fit_lstm(train, 1, nbre_iterations, neurons)
+    lstm_model =  fit_lstm(train, p, 1, nbre_iterations, neurons)
 
     prediction = []
     
@@ -146,14 +157,14 @@ def imp_LSTM (X_train, nbre_preds, p, nbre_iterations, neurons):
         Xx, yy = test[0, 1:test.shape[1]], test[0, 0]
             
         # prediction
-        yhat = forecast_lstm(lstm_model, 1, Xx)
+        yhat = forecast_lstm(lstm_model,p, 1, Xx)
         prediction.append(yhat)
         #print (yhat)
     
         # update the model: online learning
         X_update = np.concatenate ((train, test), axis = 0)
         Xx, yy = X_update[:, 1:X.shape[1]], X_update[:, 0]
-        Xx = Xx.reshape(Xx.shape[0], 1, Xx.shape[1])
+        Xx = Xx.reshape(Xx.shape[0], p, Xx.shape[1] / p)
 
         lstm_model.fit(Xx, yy, epochs=1, batch_size=1)
         lstm_model.reset_states()
@@ -180,7 +191,7 @@ def predictbase (fname, output_directory):
     # Read meta-data
     barch_size= 1
     nbre_preds = int (meta_header['number_predictions'][0])
-    nbre_iterations = 1000
+    nbre_iterations = 100
     p = int (meta_header['lag_parameter'][0])
     horizon = int (meta_header['horizon'][0])
     target_names =  (meta_header['predict'])
