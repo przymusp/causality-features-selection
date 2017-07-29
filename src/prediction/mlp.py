@@ -168,6 +168,10 @@ def MLP (X_train, nbre_preds, p, nbre_iterations, neurones):
 
 #################################################################################
 def predictbase (fname, output_directory):
+    
+    print ("Processing file %s" % fname)
+    
+    ##exit()
     X_train = read_csv_and_metadata(fname)
     
     meta_header = X_train.meta_header
@@ -197,11 +201,13 @@ def predictbase (fname, output_directory):
     
     write_csv_with_metadata(predictions, out_fname)
 
+    print ("Done ...")
+
 #################################################################################
 def main():
     fnames, output_directory = sys.argv[1:-1], sys.argv[-1]
-    Parallel(-1)(delayed(predictbase)(fname, output_directory) for fname in fnames[1])
-    print ("############")
+    Parallel(-1)(delayed(predictbase)(fname, output_directory) for fname in fnames)
+
 
 
 
