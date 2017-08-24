@@ -30,14 +30,14 @@ def transform_into_output_tables(results_collection, methods_to_hotizon_dict):
 
                 # Add results multivariate prediction
                 new_row = [
-                    OrderedDict(list({'predict': predict_model, 'group': group, 'method': mtype}.items()).expand(measures.items()))
+                    OrderedDict(list({'predict': predict_model, 'group': group, 'method': mtype}.items()).extend(measures.items()))
                     for group in results_collection[predict_model][target][horizon]
                     for mtype, measures in results_collection[predict_model][target][horizon][group].items()
                 ]
                 for u_model in univariate_models:
                     try:
                         new_row.extend([
-                            OrderedDict(list({'predict': u_model, 'group': u_model, 'method': mtype}.items()).expand(measures.items()))
+                            OrderedDict(list({'predict': u_model, 'group': u_model, 'method': mtype}.items()).extend(measures.items()))
                             for group in results_collection[u_model][target][horizon]
                             for mtype, measures in results_collection[u_model][target][horizon][group].items()
                         ])
