@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 import tools.csv_helper as tools
 from tools.global_measures import GLOBAL_MEASURES, MASE2
+import tqdm
 
 
 def transform_into_output_tables(results_collection, methods_to_hotizon_dict):
@@ -125,9 +126,12 @@ def read_and_evaluate_results():
     out_dir = sys.argv[2]
     in_dir = out_dir.replace("pre_evaluation","prediction")
 
-    for fname in glob.glob(in_dir + "/*.csv"):
+    print(">>>>>>>>>>>>>>")
+    for fname in tqdm.tqdm(glob.iglob(in_dir + "/*.csv")):
         # Read the predictions
         try:
+            if "reduced" in fname:
+                print(fname)
             predictions = tools.read_csv_and_metadata(fname)
         except Exception as e:
             # print(e)

@@ -64,7 +64,7 @@ class transform_into_pivot_tables(object):
 
     def get_rank_mase_matrix(self, min_mase_group, measure):
         rank_mase = min_mase_group.copy()
-        rank_mase['rank'] = min_mase_group[measure].rank(method="min")
+        rank_mase['rank'] = min_mase_group[measure].rank(method="dense")
         return rank_mase
 
     def get_comparison_mase_matrix(self, min_mase_group, measure):

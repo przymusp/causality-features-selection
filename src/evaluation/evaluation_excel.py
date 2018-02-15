@@ -21,6 +21,8 @@ class transform_into_excel(object):
                 for predict_model, val in self.tables[target_name][horizon].items():
                     val.to_excel(writer, sheet_name="%s_%s_%s" %
                                  (target_name, horizon, predict_model))
+
+                    print predict_model, type(val)
         writer.close()
 
 
