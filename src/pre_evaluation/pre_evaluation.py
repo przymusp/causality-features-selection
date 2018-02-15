@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 import tools.csv_helper as tools
 from tools.global_measures import GLOBAL_MEASURES, MASE2
+import tqdm
 
 
 def transform_into_output_tables(results_collection, methods_to_hotizon_dict):
@@ -30,14 +31,22 @@ def transform_into_output_tables(results_collection, methods_to_hotizon_dict):
 
                 # Add results multivariate prediction
                 new_row = [
+<<<<<<< HEAD
                     OrderedDict({'predict': predict_model, 'group': group, 'method': mtype}.items() + measures.items())
+=======
+                    OrderedDict(list({'predict': predict_model, 'group': group, 'method': mtype}.items()).extend(measures.items()))
+>>>>>>> c9ea0c376e20f7af40f500dd3a6cdf8834766c26
                     for group in results_collection[predict_model][target][horizon]
                     for mtype, measures in results_collection[predict_model][target][horizon][group].items()
                 ]
                 for u_model in univariate_models:
                     try:
                         new_row.extend([
+<<<<<<< HEAD
                             OrderedDict({'predict': u_model, 'group': u_model, 'method': mtype}.items() + measures.items())
+=======
+                            OrderedDict(list({'predict': u_model, 'group': u_model, 'method': mtype}.items()).extend(measures.items()))
+>>>>>>> c9ea0c376e20f7af40f500dd3a6cdf8834766c26
                             for group in results_collection[u_model][target][horizon]
                             for mtype, measures in results_collection[u_model][target][horizon][group].items()
                         ])
@@ -125,9 +134,12 @@ def read_and_evaluate_results():
     out_dir = sys.argv[2]
     in_dir = out_dir.replace("pre_evaluation","prediction")
 
-    for fname in glob.glob(in_dir + "/*.csv"):
+    print(">>>>>>>>>>>>>>")
+    for fname in tqdm.tqdm(glob.iglob(in_dir + "/*.csv")):
         # Read the predictions
         try:
+            if "reduced" in fname:
+                print(fname)
             predictions = tools.read_csv_and_metadata(fname)
         except Exception as e:
             # print(e)
