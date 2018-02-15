@@ -15,7 +15,20 @@ import numpy as np
 import pandas as pd
 import pprint
 
+import os
 from tools.csv_helper import *
+
+
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 
 class toSuppervisedData:
@@ -125,7 +138,7 @@ def forecast_lstm(model,look_back, batch_size, X):
     return yhat[0,0]
 
 #################################################################################
-def imp_LSTM (data, nbre_preds, p, nbre_iterations, neurons):
+def imp_LSTM (data, nbre_preds, p, nbre_iterations, neurons, batchSize = 1):
 
     # normalize the data
     minMax = normalize(data)
@@ -135,20 +148,12 @@ def imp_LSTM (data, nbre_preds, p, nbre_iterations, neurons):
     X = model.data
     # Extract target variables
     targets = model.targets
-    
-    print (targets.shape[1],X.shape[1])
-
     predictions = np.empty ([nbre_preds, 1])
-
     reals = targets[targets.shape[0] - nbre_preds:targets.shape[0],:]
-
     X = np.concatenate ((targets[:,0:1], X), axis = 1)
-    
     limit = X.shape[0] - nbre_preds
-
     train, test = X[0:limit], X[limit:X.shape[0]]
-    lstm_model =  fit_lstm(train, p, 1, nbre_iterations, neurons)
-
+    lstm_model =  fit_lstm(train, p, batchSize, nbre_iterations, neurons)
     prediction = []
     
     for j in range(0, nbre_preds):
@@ -157,7 +162,7 @@ def imp_LSTM (data, nbre_preds, p, nbre_iterations, neurons):
         Xx, yy = test[0, 1:test.shape[1]], test[0, 0]
             
         # prediction
-        yhat = forecast_lstm(lstm_model,p, 1, Xx)
+        yhat = forecast_lstm(lstm_model,p, batchSize, Xx)
         prediction.append(yhat)
         #print (yhat)
     
@@ -166,60 +171,63 @@ def imp_LSTM (data, nbre_preds, p, nbre_iterations, neurons):
         Xx, yy = X_update[:, 1:X.shape[1]], X_update[:, 0]
         Xx = Xx.reshape(Xx.shape[0], p, Xx.shape[1] / p)
 
-        lstm_model.fit(Xx, yy, epochs=1, batch_size=1)
-        lstm_model.reset_states()
+        lstm_model.fit(Xx, yy, epochs=1, batch_size= min (batchSize, Xx.shape[0]))
+    #lstm_model.reset_states()
     
     
     predictions[:,0] = prediction
-        
-
-
     predictions = inverse_normalize (predictions,minMax[0,:])
     reals = inverse_normalize (reals, minMax[0,:])
-    
-#print (pd.DataFrame (predictions))
+
     return np.array(predictions),reals
 #################################################################################
 
-def predictbase (fname, output_directory):
+def predictbase (fname, output_directory, reset = 0):
     
+    fname_ = fname.split('/')[-1]
+    out_fname = output_directory + "/_lstm_" + fname_
     
     X_train = read_csv_and_metadata(fname)
-    
     meta_header = X_train.meta_header
-    
-    # Read meta-data
-    barch_size= 1
     nbre_preds = int (meta_header['number_predictions'][0])
-    nbre_iterations = 100
     p = int (meta_header['lag_parameter'][0])
     horizon = int (meta_header['horizon'][0])
     target_names =  (meta_header['predict'])
+    #rest  =  (X_train.shape[0] - nbre_preds - p) % 10
+    X_train = X_train.tail (X_train.shape[0] * 7 / 10)
+    batchSize = 1
+    nbre_iterations = 100
     
-    # Compute the number of neurones
-    neurones = int (float ((X_train.values.shape[1] * p + 1) * (2.0 / 3.0)))
-    #neurones = int (X_train.values.shape[1] * p)
+    if not os.path.exists(out_fname):
+        n_predictions = 0
     
-    predictions, reals = imp_LSTM (X_train.values, nbre_preds, p, nbre_iterations, neurones)
-    predictions = pd.DataFrame (predictions[:,0])
+    if os.path.exists(out_fname):
+        predictions = read_csv_and_metadata(out_fname)
+        n_predictions = predictions.shape [0]
     
-    # Put meta-data for the output file
-    predictions.meta_header = X_train.meta_header
-    predictions.meta_header['predict_model'] = ["lstm"]
-    predictions.meta_header['predict'] = [target_names[0],]
+    if n_predictions < nbre_preds or reset == 1:
+        print ("Processing file %s" % out_fname)
+        neurones = int (X_train.values.shape[1] * p)
+        predictions, reals = imp_LSTM (X_train.values, nbre_preds, p, nbre_iterations, neurones, batchSize)
+        predictions = pd.DataFrame (predictions[:,0])
     
-    fname = fname.split('/')[-1]
+        # Put meta-data for the output file
+        predictions.meta_header = X_train.meta_header
+        predictions.meta_header['predict_model'] = ["lstm"]
+        predictions.meta_header['predict'] = [target_names[0],]
+
     
-    out_fname = output_directory + "/_lstm_" + fname
-    
-    write_csv_with_metadata(predictions, out_fname)
+        write_csv_with_metadata(predictions, out_fname)
+    else:
+        print ( bcolors.OKGREEN + "File %s already exist" % out_fname + bcolors.ENDC)
+    print ("Done...")
 
 
 #################################################################################
 def main ():
     print ("############")
     fnames, output_directory = sys.argv[1:-1], sys.argv[-1]
-    Parallel(-1)(delayed(predictbase)(fname, output_directory) for fname in fnames)
+    Parallel(-1)(delayed(predictbase)(fname, output_directory, reset = 0) for fname in fnames)
                  
                  
 if __name__ == "__main__":
