@@ -29,26 +29,41 @@ def transform_into_output_tables(results_collection, methods_to_hotizon_dict):
             # diffrent timehorizons
             for horizon in range(methods_to_hotizon_dict[predict_model]):
 
+                # try:
                 # Add results multivariate prediction
-                new_row = [
-                    OrderedDict(list({'predict': predict_model, 'group': group, 'method': mtype}.items()).extend(measures.items()))
-                    for group in results_collection[predict_model][target][horizon]
-                    for mtype, measures in results_collection[predict_model][target][horizon][group].items()
-                ]
+                new_row = []
+                for group in results_collection[predict_model][target][horizon]:
+                    for mtype, measures in results_collection[predict_model][target][horizon][group].items():
+                        try:
+                            item = [('predict', predict_model), ('group', group), ('method', mtype)]
+                            item.extend(measures.items())
+                            new_row.append(dict(item))
+                        except Exception as e:
+                            print("First", predict_model, mtype, target, e, measures)
                 for u_model in univariate_models:
-                    try:
-                        new_row.extend([
-                            OrderedDict(list({'predict': u_model, 'group': u_model, 'method': mtype}.items()).extend(measures.items()))
-                            for group in results_collection[u_model][target][horizon]
-                            for mtype, measures in results_collection[u_model][target][horizon][group].items()
-                        ])
-                    except Exception as e:
-                        print(e)
-                        pass
+                    if u_model not in results_collection:
+                        continue
+                    for group in results_collection[u_model][target][horizon]:
+                        for mtype, measures in results_collection[u_model][target][horizon][group].items():
+                            try:
+                                item = [('predict', u_model), ('group', u_model), ('method', mtype)]
+                                item.extend(measures.items())
+                                new_row.append(dict(item))
+                            except Exception as e:
+                                print("Second", e, measures)
+                            # pass
 
                 df = pd.DataFrame.from_dict(new_row)
-                df.set_index(["predict", "group", "method"])
-                tables[target][horizon][predict_model] = df
+                try:
+                    df.set_index(["predict", "group", "method"])
+                    tables[target][horizon][predict_model] = df
+                except Exception as e:
+                    print(df)
+                    exit()
+                    df = None
+                    print("third", e)
+                # except Exception as e:
+                #     pass
 
     return tables
 
@@ -126,15 +141,12 @@ def read_and_evaluate_results():
     out_dir = sys.argv[2]
     in_dir = out_dir.replace("pre_evaluation","prediction")
 
-    print(">>>>>>>>>>>>>>")
     for fname in tqdm.tqdm(glob.iglob(in_dir + "/*.csv")):
         # Read the predictions
         try:
-            if "reduced" in fname:
-                print(fname)
             predictions = tools.read_csv_and_metadata(fname)
         except Exception as e:
-            # print(e)
+            print("error", fname, e)
             error_list.append(
                 "Error: Could not read file %s, moving to next file" % (fname))
             continue
