@@ -84,7 +84,7 @@ class toSuppervisedData:
         
         return output
 ######################################################
-def Ridge (X, targets, nbre_preds, model_):
+def regularized_VAR (X, targets, nbre_preds, model_):
 
     targets = np.array (targets)
     predictions = np.empty ([nbre_preds, targets.shape[1]])
@@ -135,7 +135,7 @@ def predictbase (fname, output_directory, reset = 0):
             out_fname = output_directory + "/" + model + "_" + fname_ + "_" + target + "_" + model + ".csv"
             #print (out_fname)
             #continue
-            predictions = Ridge (X, data[[target]], nbre_preds, sh_models[model])
+            predictions = regularized_VAR (X, data[[target]], nbre_preds, sh_models[model])
             
             predictions.meta_header = data.meta_header
             predictions.meta_header['predict_model'] = ["VAR"+ model]
