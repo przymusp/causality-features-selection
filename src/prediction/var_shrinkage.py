@@ -21,6 +21,18 @@ import os
 from tools.csv_helper import *
 from tqdm import tqdm
 
+sh_models = {
+    "BayesianRidge" :linear_model.BayesianRidge(),
+    "Lasso1" :linear_model.Lasso(alpha = 0.1),
+    "Lasso2" :linear_model.Lasso(alpha = 0.2),
+    "Lasso3" :linear_model.Lasso(alpha = 0.3),
+    "Ridge1" :linear_model.Ridge(alpha = 0.1),
+    "Ridge2" :linear_model.Ridge(alpha = 0.2),
+    "Ridge3" :linear_model.Ridge(alpha = 0.3),
+}
+
+
+##########################
 class toSuppervisedData:
     targets = np.empty([0,0],dtype=float)
     data = np.empty([0,0],dtype=float)
@@ -59,8 +71,20 @@ class toSuppervisedData:
                 output = np.concatenate ((output,out),axis=1)
 
         return output
+    # extract all the targets decomposed
+    def targets_decomposition (self,x,p):
+        output = np.empty([0,0],dtype=float)
+        out = np.empty([0,0],dtype=float)
+        for i in range(x.shape[1]):
+            out = self.target_decomposition(x[:,i],p)
+            if output.size == 0:
+                output = out
+            else:
+                output = np.concatenate ((output,out),axis=1)
+        
+        return output
 ######################################################
-def Ridge (X, targets, nbre_preds):
+def Ridge (X, targets, nbre_preds, model_):
 
     targets = np.array (targets)
     predictions = np.empty ([nbre_preds, targets.shape[1]])
@@ -70,8 +94,8 @@ def Ridge (X, targets, nbre_preds):
     X_train, test = X[0:limit], X[limit:X.shape[0]]
     Y_train = targets [0:limit]
 
-    reg = linear_model.Ridge (alpha = .5)
-    model = reg.fit (X_train, Y_train)
+    #reg = linear_model.Ridge (alpha = .5)
+    model = model_.fit (X_train, Y_train)
 
     for j in range(0, nbre_preds):
         limit = X.shape[0] - nbre_preds + j
@@ -79,12 +103,12 @@ def Ridge (X, targets, nbre_preds):
         target, target_test = targets[limit-1:limit], targets[limit:limit+1]
 
         # prediction
-        yhat = reg.predict (test)
+        yhat = model.predict (test)
         predictions [j] = yhat
             
         # update the model: online learning
         X_update = np.concatenate ((train, test), axis = 0)
-        model = reg.fit (X_update, np.concatenate ((target, target_test), axis = 0))
+        model = model.fit (X_update, np.concatenate ((target, target_test), axis = 0))
     
     return pd.DataFrame (predictions)
 
@@ -103,16 +127,21 @@ def predictbase (fname, output_directory, reset = 0):
     model = toSuppervisedData (data.values, p)
     X = model.data
     targets_ = model.targets
+    #exit (1)
     
-    for target in targets:
-        out_fname = output_directory + "/Ridge_" + fname_ + "_" + target + "_Ridge.csv"
-        predictions = Ridge (X, data[[target]], nbre_preds)
-        
-        predictions.meta_header = data.meta_header
-        predictions.meta_header['predict_model'] = ["VAR-Ridge"]
-        predictions.meta_header['method'] = ["Ridge"]
-        predictions.meta_header['predict'] = [target,]
-        write_csv_with_metadata(predictions, out_fname)
+    for model in sh_models:
+        #print (model)
+        for target in targets:
+            out_fname = output_directory + "/" + model + "_" + fname_ + "_" + target + "_" + model + ".csv"
+            #print (out_fname)
+            #continue
+            predictions = Ridge (X, data[[target]], nbre_preds, sh_models[model])
+            
+            predictions.meta_header = data.meta_header
+            predictions.meta_header['predict_model'] = ["VAR"+ model]
+            predictions.meta_header['method'] = [model]
+            predictions.meta_header['predict'] = [target,]
+            write_csv_with_metadata(predictions, out_fname)
 
 
 ###########################################################
