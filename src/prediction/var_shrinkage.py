@@ -94,7 +94,6 @@ def regularized_VAR (X, targets, nbre_preds, model_):
     X_train, test = X[0:limit], X[limit:X.shape[0]]
     Y_train = targets [0:limit]
 
-    #reg = linear_model.Ridge (alpha = .5)
     model = model_.fit (X_train, Y_train)
 
     for j in range(0, nbre_preds):
@@ -115,7 +114,7 @@ def regularized_VAR (X, targets, nbre_preds, model_):
 #########################################################
 
 def predictbase (fname, output_directory, reset = 0):
-    fname_ = fname.split('/')[-1]
+    fname_ = fname.split('/')[-1].split ('.')[0]
     print ("Processing: %s \n" % fname_)
     data = read_csv_and_metadata(fname)
     meta_header = data.meta_header
@@ -127,19 +126,19 @@ def predictbase (fname, output_directory, reset = 0):
     model = toSuppervisedData (data.values, p)
     X = model.data
     targets_ = model.targets
-    #exit (1)
     
     for model in sh_models:
-        #print (model)
         for target in targets:
             out_fname = output_directory + "/" + model + "_" + fname_ + "_" + target + "_" + model + ".csv"
-            #print (out_fname)
-            #continue
-            predictions = regularized_VAR (X, data[[target]], nbre_preds, sh_models[model])
+            print (target)
+            try:
+                predictions = regularized_VAR (X, data[[target]], nbre_preds, sh_models[model])
+            except Exception as e:
+                print (e)
             
             predictions.meta_header = data.meta_header
             predictions.meta_header['predict_model'] = ["VAR"+ model]
-            predictions.meta_header['method'] = [model]
+            predictions.meta_header['method'] = [model + "(n_components=all)"]
             predictions.meta_header['predict'] = [target,]
             write_csv_with_metadata(predictions, out_fname)
 
