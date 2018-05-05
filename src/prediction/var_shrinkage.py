@@ -98,16 +98,15 @@ def regularized_VAR (X, targets, nbre_preds, model_):
 
     for j in range(0, nbre_preds):
         limit = X.shape[0] - nbre_preds + j
-        train, test = X[limit-1:limit], X[limit:limit+1]
-        target, target_test = targets[limit-1:limit], targets[limit:limit+1]
+        train, X_test = X[limit-1:limit], X[j:limit+1]
+        target, Y_test = targets[limit-1:limit], targets[j:limit+1]
 
         # prediction
-        yhat = model.predict (test)
+        yhat = model.predict (train)
         predictions [j] = yhat
             
-        # update the model: online learning
-        X_update = np.concatenate ((train, test), axis = 0)
-        model = model.fit (X_update, np.concatenate ((target, target_test), axis = 0))
+        # update the model: rolling window learning
+        model = model.fit (X_test, Y_test)
     
     return pd.DataFrame (predictions)
 
@@ -133,14 +132,14 @@ def predictbase (fname, output_directory, reset = 0):
             print (target)
             try:
                 predictions = regularized_VAR (X, data[[target]], nbre_preds, sh_models[model])
+                predictions.meta_header = data.meta_header
+                predictions.meta_header['predict_model'] = ["VAR"+ model]
+                predictions.meta_header['method'] = [model + "(n_components=all)"]
+                predictions.meta_header['predict'] = [target,]
+                write_csv_with_metadata(predictions, out_fname)
+
             except Exception as e:
                 print (e)
-            
-            predictions.meta_header = data.meta_header
-            predictions.meta_header['predict_model'] = ["VAR"+ model]
-            predictions.meta_header['method'] = [model + "(n_components=all)"]
-            predictions.meta_header['predict'] = [target,]
-            write_csv_with_metadata(predictions, out_fname)
 
 
 ###########################################################
