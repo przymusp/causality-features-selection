@@ -116,6 +116,7 @@ def predictbase (fname, output_directory, reset = 0):
     fname_ = fname.split('/')[-1].split ('.')[0]
     print ("Processing: %s \n" % fname_)
     data = read_csv_and_metadata(fname)
+    data = data.dropna(axis=1, how='all')
     meta_header = data.meta_header
     nbre_preds = int (meta_header['number_predictions'][0])
     targets = meta_header['predict']
